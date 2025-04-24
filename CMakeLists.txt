@@ -27,6 +27,11 @@ if (WIN32)
     set(windows_defines _USE_MATH_DEFINES WIN32_LEAN_AND_MEAN)
 endif()
 
+# Some Linux specific defines (libcurl does not link for whatever reason)
+if (LINUX)
+    set(linux_defines JUCE_USE_CURL=0 JUCE_JACK=1)
+endif()
+
 # Add JUCE
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependencies/JUCE)
 
@@ -103,7 +108,8 @@ function(add_plugin target)
             JUCE_ASIO=1 JUCE_DIRECTSOUND=0 JUCE_USE_FLAC=0 JUCE_USE_OGGVORBIS=0
             JUCE_USE_WINDOWS_MEDIA_FORMAT=0 JUCE_WEB_BROWSER=0
             JUCE_VST3_CAN_REPLACE_VST2=0 JUCE_SILENCE_XCODE_15_LINKER_WARNING=1
-            ${windows_defines})
+            ${windows_defines}
+            ${linux_defines})
 
     target_link_libraries(${target}
         PRIVATE

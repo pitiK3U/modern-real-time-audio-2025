@@ -5,7 +5,7 @@ This repository contains code examples and framework to be used along the course
 ## Pre-requisites
 
 **MacOS**:
- - [XCode](https://developer.apple.com/xcode/) 
+ - [XCode](https://developer.apple.com/xcode/)
  - [Developer Command Line Tools](https://www.youtube.com/watch?v=sF9UszljnZU)
  - [CMake](https://cmake.org/) - Can also be installed with [Homebrew](https://formulae.brew.sh/formula/cmake)
 
@@ -15,7 +15,7 @@ This repository contains code examples and framework to be used along the course
  - [CMake](https://cmake.org/)
 
 **Linux**:
- - [Linux JUCE dep.](https://github.com/juce-framework/JUCE/blob/master/docs/Linux%20Dependencies.md)
+ - [Linux instructions](readme-linux.md)
 
 **Nice to have**:
  - [VSCode](https://code.visualstudio.com/) - Alternative cross-platform IDE.
