@@ -53,7 +53,7 @@ void MainProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     juce::uint32 numChannels { static_cast<juce::uint32>(std::max(getMainBusNumInputChannels(), getMainBusNumOutputChannels())) };
     // filter.prepare({ sampleRate, static_cast<juce::uint32>(samplesPerBlock), numChannels });
-    sampleRate = sampleRate;
+    this->sampleRate = sampleRate;
     outputGain.reset(sampleRate, 0.01f);
     parameterManager.updateParameters(true);
 }
@@ -64,42 +64,23 @@ void MainProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuf
     parameterManager.updateParameters();
     if (!enabled) return;
     
- 
-    // {
-    //     juce::dsp::AudioBlock<float> audioBlock(buffer.getArrayOfWritePointers(), buffer.getNumChannels(), buffer.getNumSamples());
-    //     // juce::dsp::ProcessContextReplacing<float> ctx(audioBlock);
+    {
+        juce::dsp::AudioBlock<float> audioBlock(buffer.getArrayOfWritePointers(), buffer.getNumChannels(), buffer.getNumSamples());
+        // juce::dsp::ProcessContextReplacing<float> ctx(audioBlock);
+        float omega = frequency / sampleRate;
 
-    //     juce::HeapBlock<char> heapBlock;
-    //     juce::dsp::AudioBlock<float> result(heapBlock, buffer.getNumChannels(), buffer.getNumSamples());
-    //     juce::dsp::AudioBlock<float>::process(audioBlock, result, [this](float value) {
-    //         auto result = value * ( 1.0f + cos(frequency * phase / sampleRate) );
-    //         // phase += 1.0f;
-    //         phase = fmod((phase + 1.0f), 2 * juce::MathConstants<float>::pi);
-    //         return result;
-    //     });
+        juce::HeapBlock<char> heapBlock;
+        juce::dsp::AudioBlock<float> result(heapBlock, buffer.getNumChannels(), buffer.getNumSamples());
+        juce::dsp::AudioBlock<float>::process(audioBlock, result, [this, omega](float value) {
+            auto result = value * ( cos( phase ) );
+            phase = fmod((phase + omega), 2 * juce::MathConstants<float>::pi);
+            return result;
+        });
 
-    //     result.copyTo(buffer);
-    // }
-
-    for (auto channel = 0; channel < buffer.getNumChannels(); channel++) {
-      auto *samples = buffer.getWritePointer(channel);
-      for (auto sample = 0; sample < buffer.getNumSamples(); sample++) {
-        auto sample_data = samples[sample];
-        auto amp = frequency * phase / sampleRate;
-        buffer.setSample(channel, sample, sample_data * ( 1.0f + cos(amp)) );
-        phase = fmod((phase + 1.0f), 2 * juce::MathConstants<float>::pi);
-      }
+        result.copyTo(buffer);
     }
 
-    // {
-    //     juce::dsp::AudioBlock<float> audioBlock(buffer.getArrayOfWritePointers(), buffer.getNumChannels(), buffer.getNumSamples());
-    //     juce::dsp::ProcessContextReplacing<float> ctx(audioBlock);
-    //     // filter.process(ctx);
-    // }
-
     outputGain.applyGain(buffer, buffer.getNumSamples());
-
-    // buffer.applyGain(1.0f);
 }
 
 void MainProcessor::releaseResources()
