@@ -29,7 +29,7 @@ endif()
 
 # Some Linux specific defines (libcurl does not link for whatever reason)
 if (LINUX)
-    set(linux_defines JUCE_USE_CURL=0 JUCE_JACK=1)
+    set(linux_defines JUCE_USE_CURL=0 JUCE_JACK=1 JUCE_DEBUG=1)
 endif()
 
 # Add JUCE
@@ -101,7 +101,7 @@ function(add_plugin target)
 
     target_compile_features(${target}
         PUBLIC
-            cxx_std_17)
+            cxx_std_20)
 
     target_compile_definitions(${target}
         PRIVATE
@@ -143,3 +143,18 @@ add_plugin(mfrtaa
         ${mfrtaa_source}/PluginProcessor.cpp
     INCLUDE_DIRS
         ${mfrtaa_source})
+
+
+set(ringmod_source ${CMAKE_CURRENT_SOURCE_DIR}/projects/RingModulator)
+
+add_plugin(ringmod
+    VERSION 0.1.0
+    PLUGIN_NAME "RingModulator"
+    PROD_NAME RingModulator
+    PROD_CODE Rmod
+    SYNTH FALSE
+    SOURCES
+        ${ringmod_source}/PluginEditor.cpp
+        ${ringmod_source}/PluginProcessor.cpp
+    INCLUDE_DIRS
+        ${ringmod_source})
