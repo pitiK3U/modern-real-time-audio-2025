@@ -63,7 +63,6 @@ private:
 
     float offsetMs { 0.f };
     float modDepthMs { 0.f };
-    float feedback { 0.f };
     float modRate { 0.f };
 
     ModulationType modType { Sin };
