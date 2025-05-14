@@ -149,9 +149,9 @@ set(ringmod_source ${CMAKE_CURRENT_SOURCE_DIR}/projects/RingModulator)
 
 add_plugin(ringmod
     VERSION 0.1.0
-    PLUGIN_NAME "RingModulator"
-    PROD_NAME RingModulator
-    PROD_CODE Rmod
+    PLUGIN_NAME "AssignmentRingModulator"
+    PROD_NAME AssignmentRingModulator
+    PROD_CODE ARmd
     SYNTH FALSE
     SOURCES
         ${ringmod_source}/PluginEditor.cpp
