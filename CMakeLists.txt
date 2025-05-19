@@ -175,6 +175,7 @@ add_plugin(parameq
         ${parameq_source}/PluginProcessor.cpp
         ${dsp_source}/Biquad.cpp
         ${dsp_source}/ParametricEqualizer.cpp
+        ${gui_source}/MrtaLAF.cpp
     INCLUDE_DIRS
         ${gui_source}
         ${dsp_source}
@@ -216,6 +217,7 @@ add_plugin(delay
         ${dsp_source}/ParametricEqualizer.cpp
         ${dsp_source}/Meter.cpp
         ${gui_source}/MeterComponent.cpp
+        ${gui_source}/MrtaLAF.cpp
     INCLUDE_DIRS
         ${dsp_source}
         ${gui_source}
