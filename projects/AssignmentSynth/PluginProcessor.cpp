@@ -7,11 +7,12 @@
 #include "SynthVoiceEnvelope.h"
 #include "mrta_utils/Source/Parameter/ParameterInfo.h"
 #include "mrta_utils/Source/Parameter/ParameterManager.h"
+#include <vector>
 
 
 static const std::vector<mrta::ParameterInfo> paramVector
 {
-    { Param::ID::WaveType, Param::Name::WaveType, Param::Ranges::WaveType, 0 },
+    { Param::ID::WaveType, Param::Name::WaveType, Param::Ranges::WaveType, DSP::Oscillator::Sin },
     { Param::ID::Analog,       Param::Name::Analog,       Param::Ranges::AnalogOff,  Param::Ranges::AnalogOn, false },
     { Param::ID::AttackTime,   Param::Name::AttackTime,   Param::Unit::Ms,  50.0f, Param::Ranges::TimeMin,    Param::Ranges::TimeMax,    Param::Ranges::TimeInc,    Param::Ranges::TimeSkw },
     { Param::ID::DecayTime,    Param::Name::DecayTime,    Param::Unit::Ms,  25.0f, Param::Ranges::TimeMin,    Param::Ranges::TimeMax,    Param::Ranges::TimeInc,    Param::Ranges::TimeSkw },
@@ -21,7 +22,9 @@ static const std::vector<mrta::ParameterInfo> paramVector
     { Param::ID::BandFreq, Param::Name::BandFreq, Param::Unit::Freq, 10000.f, Param::Ranges::FreqMin, Param::Ranges::FreqMax, Param::Ranges::FreqInc, Param::Ranges::FreqSkw },
     { Param::ID::BandReso, Param::Name::BandReso, "", 0.71f, Param::Ranges::ResoMin, Param::Ranges::ResoMax, Param::Ranges::ResoInc, Param::Ranges::ResoSkw },
     { Param::ID::BandGain, Param::Name::BandGain, Param::Unit::Gain, 0.f, Param::Ranges::GainMin, Param::Ranges::GainMax, Param::Ranges::GainInc, Param::Ranges::GainSkw },
-
+    { Param::ID::LfoEnable, Param::Name::LfoEnable, Param::Ranges::LfoDisabled, Param::Ranges::LfoEnabled, false},
+    { Param::ID::LfoType, Param::Name::LfoType, Param::Ranges::LfoTypes, DSP::Oscillator::Sin },
+    { Param::ID::LfoFreq, Param::Name::LfoFreq, Param::Unit::Freq, 1.f, Param::Ranges::LfoFreqMin, Param::Ranges::LfoFreqMax, Param::Ranges::LfoFreqInc, Param::Ranges::LfoFreqSkw }
 };
 
 AssignmentSynthAudioProcessor::AssignmentSynthAudioProcessor() :
@@ -92,6 +95,25 @@ AssignmentSynthAudioProcessor::AssignmentSynthAudioProcessor() :
     {
         equalizer.setBandGain(0, val);
     });
+
+    parameterManager.registerParameterCallback(Param::ID::LfoEnable,
+    [this](float value, bool /* force */)
+    {
+        lfo_enabled = value > 0.5f;
+    });
+
+    parameterManager.registerParameterCallback(Param::ID::LfoType, 
+    [this](float val, bool /* force */) 
+    {
+        lfo.setType(static_cast<DSP::Oscillator::OscType>(val));
+    });
+
+    parameterManager.registerParameterCallback(Param::ID::LfoFreq,
+    [this](float val, bool /* force */)
+    {
+        lfo.setFrequency(val);
+    });
+
 }
 
 AssignmentSynthAudioProcessor::~AssignmentSynthAudioProcessor()
@@ -104,6 +126,7 @@ void AssignmentSynthAudioProcessor::prepareToPlay(double sampleRate, int /*sampl
 
     synth.setCurrentPlaybackSampleRate(sampleRate);
     equalizer.prepare(sampleRate, maxNumChannels);
+    lfo.prepare(sampleRate);
     parameterManager.updateParameters(true);
 }
 
@@ -123,9 +146,16 @@ void AssignmentSynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     synth.renderNextBlock(buffer, midiMessages, 0, numSamples);
     equalizer.process(buffer.getArrayOfWritePointers(), buffer.getArrayOfReadPointers(), buffer.getNumChannels(), buffer.getNumSamples());
 
-    // for (int channel = 0; channel < numChannels; channel++) {
-    //     envelope.process(buffer.getWritePointer(channel), numSamples);
-    // }
+    if (lfo_enabled) {
+        std::vector<float> lfo_val(numSamples);
+        lfo.process(lfo_val.data(), numSamples);
+        
+        for (int channel = 0; channel < numChannels; channel++){
+            for (int sample = 0; sample < numSamples; sample++) {
+                buffer.setSample(channel, sample, lfo_val[sample] * buffer.getSample(channel, sample));
+            }
+        }
+    }
 }
 
 void AssignmentSynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

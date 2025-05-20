@@ -1,14 +1,21 @@
 #include "PluginEditor.h"
+#include "PluginProcessor.h"
 #include "mrta_utils/Source/GUI/GenericParameterEditor.h"
 
 AssignmentSynthAudioProcessorEditor::AssignmentSynthAudioProcessorEditor(AssignmentSynthAudioProcessor& p) :
     juce::AudioProcessorEditor(p), audioProcessor(p),
-    paramEditor(audioProcessor.getParameterManager())
+    synthEditor(audioProcessor.getParameterManager(), ParamHeight,
+     {Param::ID::WaveType, Param::ID::AttackTime, Param::ID::DecayTime, Param::ID::SustainLevel, Param::ID::ReleaseTime}),
+    filterEditor(audioProcessor.getParameterManager(), ParamHeight,
+        {Param::ID::BandType, Param::ID::BandFreq, Param::ID::BandReso, Param::ID::BandGain}),
+    lfoEditor(audioProcessor.getParameterManager(), ParamHeight,
+        {Param::ID::LfoEnable, Param::ID::LfoType, Param::ID::LfoFreq})
 {
-    int height = static_cast<int>(audioProcessor.getParameterManager().getParameters().size())
-               * paramEditor.parameterWidgetHeight;
-    setSize(300, height);
-    addAndMakeVisible(paramEditor);
+    
+    addAndMakeVisible(synthEditor);
+    addAndMakeVisible(filterEditor);
+    addAndMakeVisible(lfoEditor);
+    setSize(ColumWidth * Columns, MaxNumberOfParams * ParamHeight);
 }
 
 
@@ -24,5 +31,9 @@ void AssignmentSynthAudioProcessorEditor::paint(juce::Graphics& g)
 
 void AssignmentSynthAudioProcessorEditor::resized()
 {
-    paramEditor.setBounds(getLocalBounds());
+    auto localBounds { getLocalBounds() };
+
+    synthEditor.setBounds(localBounds.removeFromLeft(ColumWidth));
+    filterEditor.setBounds(localBounds.removeFromLeft(ColumWidth));
+    lfoEditor.setBounds(localBounds);
 }

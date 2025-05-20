@@ -2,11 +2,13 @@
 
 #include <JuceHeader.h>
 
+#include "Oscillator.h"
 #include "ParametricEqualizer.h"
 #include "StateVariableFilter.h"
 #include "SynthVoice.h"
 #include "EnvelopeGenerator.h"
 #include "SynthVoiceEnvelope.h"
+#include "juce_core/juce_core.h"
 #include "mrta_utils/Source/Parameter/ParameterManager.h"
 
 namespace Param
@@ -26,6 +28,10 @@ namespace Param
         static const juce::String BandFreq { "band_freq" };
         static const juce::String BandReso { "band_reso" };
         static const juce::String BandGain { "band_gain" };
+
+        static const juce::String LfoEnable { "lfo_enable" };
+        static const juce::String LfoType { "lfo_type" };
+        static const juce::String LfoFreq { "lfo_freq" };
     }
 
     namespace Name
@@ -43,6 +49,10 @@ namespace Param
         static const juce::String BandFreq { "Band Frequency" };
         static const juce::String BandReso { "Band Resonance" };
         static const juce::String BandGain { "Band Gain" };
+
+        static const juce::String LfoEnable { "Low Freq. Osc. Enable"};
+        static const juce::String LfoType { "Low Freq. Osc. Type" };
+        static const juce::String LfoFreq { "Low Freq. Osc. Frequency" };
     }
 
     namespace Ranges
@@ -62,22 +72,31 @@ namespace Param
         static const juce::String AnalogOn { "Analog" };
         static const juce::String AnalogOff { "Digital" };
 
-        static const float FreqMin { 20.f };
-        static const float FreqMax { 20000.f };
-        static const float FreqInc { 1.f };
-        static const float FreqSkw { 0.3f };
+        static constexpr float FreqMin { 20.f };
+        static constexpr float FreqMax { 20000.f };
+        static constexpr float FreqInc { 1.f };
+        static constexpr float FreqSkw { 0.3f };
 
-        static const float ResoMin { 0.1f };
-        static const float ResoMax { 10.f };
-        static const float ResoInc { 0.01f };
-        static const float ResoSkw { 0.5f };
+        static constexpr float ResoMin { 0.1f };
+        static constexpr float ResoMax { 10.f };
+        static constexpr float ResoInc { 0.01f };
+        static constexpr float ResoSkw { 0.5f };
 
-        static const float GainMin { -24.f };
-        static const float GainMax { 24.f };
-        static const float GainInc { 0.1f };
-        static const float GainSkw { 1.f };
+        static constexpr float GainMin { -24.f };
+        static constexpr float GainMax { 24.f };
+        static constexpr float GainInc { 0.1f };
+        static constexpr float GainSkw { 1.f };
 
         static const juce::StringArray BandTypes { "Flat", "High Pass", "Low Shelf", "Peak", "Low Pass", "High Shelf" };
+    
+        static const juce::String LfoDisabled {"Off" };
+        static const juce::String LfoEnabled { "On" };
+        static const juce::StringArray LfoTypes { "Sin", "TriAliased", "SawAliased", "TriAA", "SawAA" };
+        
+        static constexpr float LfoFreqMin { 0.f };
+        static constexpr float LfoFreqMax { 20.f };
+        static constexpr float LfoFreqInc { 0.01f };
+        static constexpr float LfoFreqSkw { 0.1f };
     }
 
     namespace Unit
@@ -122,8 +141,9 @@ private:
     mrta::ParameterManager parameterManager;
     juce::Synthesiser synth;
     DSP::SynthVoiceEnvelope* voice { nullptr };
-    // DSP::EnvelopeGenerator envelope;
     DSP::ParametricEqualizer equalizer;
+    DSP::Oscillator lfo;
+    bool lfo_enabled = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AssignmentSynthAudioProcessor)
 };
