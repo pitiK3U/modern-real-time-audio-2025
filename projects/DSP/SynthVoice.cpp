@@ -1,4 +1,5 @@
 #include "SynthVoice.h"
+#include "SynthSound.h"
 
 namespace DSP
 {

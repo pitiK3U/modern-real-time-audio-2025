@@ -3,6 +3,7 @@
 #include "Oscillator.h"
 #include "PluginEditor.h"
 #include "SynthVoice.h"
+#include "SynthSound.h"
 #include "mrta_utils/Source/Parameter/ParameterInfo.h"
 #include "mrta_utils/Source/Parameter/ParameterManager.h"
 

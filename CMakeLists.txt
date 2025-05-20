@@ -292,3 +292,38 @@ add_plugin(svf
     INCLUDE_DIRS
         ${dsp_source}
         ${svf_source})
+
+set(asynth_source ${CMAKE_CURRENT_SOURCE_DIR}/projects/AssignmentSynth)
+
+add_plugin(asynth
+    VERSION 0.1.0
+    PLUGIN_NAME "Assignment Synth"
+    PROD_NAME AssignmentSynth
+    PROD_CODE ASth
+    SYNTH True
+    SOURCES
+        ${asynth_source}/PluginEditor.cpp
+        ${asynth_source}/PluginProcessor.cpp
+        ${dsp_source}/Oscillator.cpp
+        ${dsp_source}/SynthVoiceEnvelope.cpp
+        ${dsp_source}/EnvelopeGenerator.cpp
+        ${dsp_source}/Biquad.cpp
+        ${dsp_source}/ParametricEqualizer.cpp
+    INCLUDE_DIRS
+        ${dsp_source}
+        ${asynth_source})
+
+set(ramp_source ${CMAKE_CURRENT_SOURCE_DIR}/projects/NonlinearRamp)
+
+add_plugin(nonramp
+    VERSION 0.1.0
+    PLUGIN_NAME "Nonlinear Ramp"
+    PROD_NAME NonlinearRamp
+    PROD_CODE Nrmp
+    SYNTH FALSE
+    SOURCES
+        ${ramp_source}/PluginEditor.cpp
+        ${ramp_source}/PluginProcessor.cpp
+    INCLUDE_DIRS
+        ${dsp_source}
+        ${ramp_source})

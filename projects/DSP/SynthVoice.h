@@ -10,13 +10,6 @@ namespace DSP
 
 float convertMidiNoteToFreq(int MidiNote);
 
-class SynthSound : public juce::SynthesiserSound
-{
-public:
-    bool appliesToNote(int) override { return true; }
-    bool appliesToChannel(int) override { return true; }
-};
-
 class SynthVoice : public juce::SynthesiserVoice
 {
 public:

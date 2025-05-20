@@ -1,5 +1,6 @@
 #include "Meter.h"
 #include <algorithm>
+#include <cmath>
 
 namespace DSP
 {
