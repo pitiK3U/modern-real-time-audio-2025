@@ -18,6 +18,8 @@ void EnvelopeGenerator::prepare(double newSampleRate)
 {
     sampleRate = newSampleRate;
 
+    sustainLevel.prepare(newSampleRate, true);
+
     // update time in samples with new sample rate
     attackTimeSamples = std::rint(attackTimeMs * static_cast<float>(sampleRate * 0.001));
     decayTimeSamples = std::rint(decayTimeMs * static_cast<float>(sampleRate * 0.001));
@@ -98,7 +100,8 @@ void EnvelopeGenerator::setDecayTime(float newDecayTimeMs)
 
 void EnvelopeGenerator::setSustainLevel(float newSustainLevelLinear)
 {
-    sustainLevel = std::clamp(newSustainLevelLinear, 0.f, 1.f);
+    float clampLevel = std::clamp(newSustainLevelLinear, 0.f, 1.f);
+    sustainLevel.setTarget(clampLevel);
 }
 
 void EnvelopeGenerator::setReleaseTime(float newReleaseTimeMs)
@@ -140,7 +143,7 @@ void EnvelopeGenerator::doDigital(float* output, unsigned int numSamples)
         case DECAY:
             if (decaySamplesCounter < decayTimeSamples)
             {
-                currentEnvelope += (sustainLevel - currentEnvelope) / std::fmax(static_cast<float>(decayTimeSamples - decaySamplesCounter), 1.f);
+                currentEnvelope += (sustainLevel.targetValue - currentEnvelope) / std::fmax(static_cast<float>(decayTimeSamples - decaySamplesCounter), 1.f);
                 ++decaySamplesCounter;
             }
             else
@@ -152,7 +155,8 @@ void EnvelopeGenerator::doDigital(float* output, unsigned int numSamples)
 
         case SUSTAIN:
             {
-                currentEnvelope = sustainLevel;
+                currentEnvelope = 0;
+                sustainLevel.applySum(&currentEnvelope, 1);
             }
             break;
 
@@ -202,20 +206,21 @@ void EnvelopeGenerator::doAnalog(float* output, unsigned int numSamples)
             break;
 
         case DECAY:
-            if (std::fabs(currentEnvelope - sustainLevel) > delta)
+            if (std::fabs(currentEnvelope - sustainLevel.targetValue) > delta)
             {
-                currentEnvelope = (currentEnvelope - sustainLevel) * decayLeakyIntCoeff + sustainLevel;
+                currentEnvelope = (currentEnvelope - sustainLevel.targetValue) * decayLeakyIntCoeff + sustainLevel.targetValue;
             }
             else
             {
-                currentEnvelope = sustainLevel;
+                currentEnvelope = sustainLevel.targetValue;
                 state = SUSTAIN;
             }
             break;
 
         case SUSTAIN:
             {
-                currentEnvelope = sustainLevel;
+                currentEnvelope = 0;
+                sustainLevel.applySum(&currentEnvelope, 1);
             }
             break;
 

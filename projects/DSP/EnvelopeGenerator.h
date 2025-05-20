@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Ramp.h"
 namespace DSP
 {
 
@@ -36,7 +37,8 @@ private:
     float decayTimeMs { 5.f };
     float releaseTimeMs { 50.f };
 
-    float sustainLevel { 1.f };
+    // float sustainLevel { 1.f };
+    Ramp<float> sustainLevel;
 
     unsigned int attackTimeSamples { 0 };
     unsigned int decayTimeSamples { 0 };

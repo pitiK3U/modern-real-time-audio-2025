@@ -45,7 +45,9 @@ private:
     double sampleRate { 48000.0 };
 
     Ramp<float> gain = DefaultGainTime;
+    
     Oscillator osc;
+
     EnvelopeGenerator envelope;
 };
 

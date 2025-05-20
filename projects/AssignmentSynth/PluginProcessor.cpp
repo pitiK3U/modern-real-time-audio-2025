@@ -49,25 +49,25 @@ AssignmentSynthAudioProcessor::AssignmentSynthAudioProcessor() :
     });
 
     parameterManager.registerParameterCallback(Param::ID::AttackTime,
-    [this] (float value, bool /*force*/)
+    [this] (float value, bool force)
     {
         voice->setAttackTime(value);
     });
 
     parameterManager.registerParameterCallback(Param::ID::DecayTime,
-    [this] (float value, bool /*force*/)
+    [this] (float value, bool force)
     {
         voice->setDecayTime(value);
     });
 
     parameterManager.registerParameterCallback(Param::ID::SustainLevel,
-    [this] (float value, bool /*force*/)
+    [this] (float value, bool force)
     {
         voice->setSustainLevel(value);
     });
 
     parameterManager.registerParameterCallback(Param::ID::ReleaseTime,
-    [this] (float value, bool /*force*/)
+    [this] (float value, bool force)
     {
         voice->setReleaseTime(value);
     });
@@ -79,21 +79,24 @@ AssignmentSynthAudioProcessor::AssignmentSynthAudioProcessor() :
     });
 
     parameterManager.registerParameterCallback(Param::ID::BandFreq,
-    [this] (float val, bool /*force*/)
+    [this] (float value, bool force)
     {
-        equalizer.setBandFrequency(0, val);
+        equalizer.setBandFrequency(0, value);
+        eqFreq.setTarget(value, force);
     });
 
     parameterManager.registerParameterCallback(Param::ID::BandReso,
-    [this] (float val, bool /*force*/)
+    [this] (float value, bool force)
     {
-        equalizer.setBandResonance(0, val);
+        equalizer.setBandResonance(0, value);
+        eqReso.setTarget(value, force);
     });
 
     parameterManager.registerParameterCallback(Param::ID::BandGain,
-    [this] (float val, bool /*force*/)
+    [this] (float value, bool force)
     {
-        equalizer.setBandGain(0, val);
+        equalizer.setBandGain(0, value);
+        eqGain.setTarget(value, force);
     });
 
     parameterManager.registerParameterCallback(Param::ID::LfoEnable,
@@ -111,10 +114,11 @@ AssignmentSynthAudioProcessor::AssignmentSynthAudioProcessor() :
     parameterManager.registerParameterCallback(Param::ID::LfoFreq,
     [this](float val, bool force)
     {
-        // lfo.setFrequency(val);
-        lfo_freq.setTarget(val, force);
+        lfoFreq.setTarget(val, force);
     });
 
+     // TODO: to fix issue with unset target on inital launch
+     voice->setSustainLevel(0.7f);
 }
 
 AssignmentSynthAudioProcessor::~AssignmentSynthAudioProcessor()
@@ -129,8 +133,12 @@ void AssignmentSynthAudioProcessor::prepareToPlay(double sampleRate, int /*sampl
     equalizer.prepare(sampleRate, maxNumChannels);
     lfo.prepare(sampleRate);
 
-    lfo_freq.prepare(sampleRate);
+    eqFreq.prepare(sampleRate);
+    eqReso.prepare(sampleRate);
+    eqGain.prepare(sampleRate);
+    lfoFreq.prepare(sampleRate);
 
+    parameterManager.parameterChanged(Param::ID::SustainLevel, 0.7f);
     parameterManager.updateParameters(true);
 }
 
@@ -148,14 +156,34 @@ void AssignmentSynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     const unsigned int numSamples{ static_cast<unsigned int>(buffer.getNumSamples()) };
 
     synth.renderNextBlock(buffer, midiMessages, 0, numSamples);
-    equalizer.process(buffer.getArrayOfWritePointers(), buffer.getArrayOfReadPointers(), buffer.getNumChannels(), buffer.getNumSamples());
+
+    for (int sample = 0; sample < numSamples; sample++) {
+        float freq = 0;
+        eqFreq.applySum(&freq, 1);
+        equalizer.setBandFrequency(0, freq);
+
+        float reso = 0;
+        eqReso.applySum(&reso, 1);
+        equalizer.setBandFrequency(0, reso);
+
+        float gain = 0;
+        eqGain.applySum(&gain, 1);
+        equalizer.setBandFrequency(0, gain);
+
+        for (int channel = 0; channel < numChannels; channel++){
+            auto currentSample = buffer.getSample(channel, sample);
+            float outSample;
+            equalizer.process(&outSample, &currentSample, 1);
+            buffer.setSample(channel, sample, outSample);
+        }
+    }
 
     if (lfo_enabled) {
         for (int sample = 0; sample < numSamples; sample++) {
-            float current_lfo_freq = 0.0f;
-            lfo_freq.applySum(&current_lfo_freq, 1);
+            float current_lfoFreq = 0.0f;
+            lfoFreq.applySum(&current_lfoFreq, 1);
             
-            lfo.setFrequency(current_lfo_freq);
+            lfo.setFrequency(current_lfoFreq);
             auto lfo_out = lfo.process();
             
             for (int channel = 0; channel < numChannels; channel++){
@@ -167,10 +195,12 @@ void AssignmentSynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
 
 void AssignmentSynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
+    parameterManager.getStateInformation(destData);
 }
 
 void AssignmentSynthAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
+    parameterManager.setStateInformation(data, sizeInBytes);
 }
 
 bool AssignmentSynthAudioProcessor::acceptsMidi() const

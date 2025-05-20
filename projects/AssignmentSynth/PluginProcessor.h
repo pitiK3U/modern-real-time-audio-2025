@@ -4,9 +4,6 @@
 
 #include "Oscillator.h"
 #include "ParametricEqualizer.h"
-#include "StateVariableFilter.h"
-#include "SynthVoice.h"
-#include "EnvelopeGenerator.h"
 #include "SynthVoiceEnvelope.h"
 #include "juce_core/juce_core.h"
 #include "mrta_utils/Source/Parameter/ParameterManager.h"
@@ -143,9 +140,13 @@ private:
     DSP::SynthVoiceEnvelope* voice { nullptr };
     DSP::ParametricEqualizer equalizer;
     DSP::Oscillator lfo;
+
     bool lfo_enabled = false;
 
-    DSP::Ramp<float> lfo_freq;
+    DSP::Ramp<float> eqFreq;
+    DSP::Ramp<float> eqReso;
+    DSP::Ramp<float> eqGain;
+    DSP::Ramp<float> lfoFreq;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AssignmentSynthAudioProcessor)
 };

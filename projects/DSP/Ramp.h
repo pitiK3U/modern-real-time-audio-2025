@@ -158,12 +158,13 @@ public:
     // Minimun absolute differente between target and current value
     static constexpr F minDelta { static_cast<F>(1e-9) };
 
+    F targetValue { static_cast<F>(0.7f) };
+    F currentValue { static_cast<F>(0) };
+
 private:
     double sampleRate { 48000.0 };
     F rampTime;
     F rampStep { static_cast<F>(0) };
-    F targetValue { static_cast<F>(0) };
-    F currentValue { static_cast<F>(0) };
 };
 
 }
