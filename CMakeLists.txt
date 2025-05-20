@@ -292,3 +292,24 @@ add_plugin(svf
     INCLUDE_DIRS
         ${dsp_source}
         ${svf_source})
+
+# mono synth project
+set(synth ${CMAKE_CURRENT_SOURCE_DIR}/projects/Synth)
+
+add_plugin(synth
+    VERSION 0.1.0
+    PLUGIN_NAME "Synth"
+    PROD_NAME Synth
+    PROD_CODE Syth
+    SYNTH TRUE
+    SOURCES
+        ${synth}/PluginEditor.cpp
+        ${synth}/PluginProcessor.cpp
+        ${dsp_source}/Synth.cpp
+        ${dsp_source}/Oscillator.cpp
+        ${dsp_source}/EnvelopeGenerator.cpp
+        ${dsp_source}/StateVariableFilter.cpp
+    INCLUDE_DIRS
+        ${gui_source}
+        ${dsp_source}
+        ${synth})
