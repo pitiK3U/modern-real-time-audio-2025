@@ -145,5 +145,7 @@ private:
     DSP::Oscillator lfo;
     bool lfo_enabled = false;
 
+    DSP::Ramp<float> lfo_freq;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AssignmentSynthAudioProcessor)
 };

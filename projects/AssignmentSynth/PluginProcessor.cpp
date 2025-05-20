@@ -109,9 +109,10 @@ AssignmentSynthAudioProcessor::AssignmentSynthAudioProcessor() :
     });
 
     parameterManager.registerParameterCallback(Param::ID::LfoFreq,
-    [this](float val, bool /* force */)
+    [this](float val, bool force)
     {
-        lfo.setFrequency(val);
+        // lfo.setFrequency(val);
+        lfo_freq.setTarget(val, force);
     });
 
 }
@@ -127,6 +128,9 @@ void AssignmentSynthAudioProcessor::prepareToPlay(double sampleRate, int /*sampl
     synth.setCurrentPlaybackSampleRate(sampleRate);
     equalizer.prepare(sampleRate, maxNumChannels);
     lfo.prepare(sampleRate);
+
+    lfo_freq.prepare(sampleRate);
+
     parameterManager.updateParameters(true);
 }
 
@@ -147,12 +151,15 @@ void AssignmentSynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     equalizer.process(buffer.getArrayOfWritePointers(), buffer.getArrayOfReadPointers(), buffer.getNumChannels(), buffer.getNumSamples());
 
     if (lfo_enabled) {
-        std::vector<float> lfo_val(numSamples);
-        lfo.process(lfo_val.data(), numSamples);
-        
-        for (int channel = 0; channel < numChannels; channel++){
-            for (int sample = 0; sample < numSamples; sample++) {
-                buffer.setSample(channel, sample, lfo_val[sample] * buffer.getSample(channel, sample));
+        for (int sample = 0; sample < numSamples; sample++) {
+            float current_lfo_freq = 0.0f;
+            lfo_freq.applySum(&current_lfo_freq, 1);
+            
+            lfo.setFrequency(current_lfo_freq);
+            auto lfo_out = lfo.process();
+            
+            for (int channel = 0; channel < numChannels; channel++){
+                buffer.setSample(channel, sample, lfo_out * buffer.getSample(channel, sample));
             }
         }
     }
