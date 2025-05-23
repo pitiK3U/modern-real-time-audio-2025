@@ -331,3 +331,24 @@ add_plugin(amp_model
         ${gui_source}
         ${dsp_source}
         ${amp_model_source})
+
+# mono synth project
+set(wave-synth ${CMAKE_CURRENT_SOURCE_DIR}/projects/WavetableSynth)
+
+add_plugin(wave-synth
+    VERSION 0.1.0
+    PLUGIN_NAME "Wavetable Synth"
+    PROD_NAME WavetableSynth
+    PROD_CODE Wsth
+    SYNTH TRUE
+    SOURCES
+        ${wave-synth}/PluginEditor.cpp
+        ${wave-synth}/PluginProcessor.cpp
+        ${dsp_source}/Synth.cpp
+        ${dsp_source}/Oscillator.cpp
+        ${dsp_source}/EnvelopeGenerator.cpp
+        ${dsp_source}/StateVariableFilter.cpp
+    INCLUDE_DIRS
+        ${gui_source}
+        ${dsp_source}
+        ${wave-synth})
