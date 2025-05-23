@@ -348,6 +348,7 @@ add_plugin(wave-synth
         ${dsp_source}/Oscillator.cpp
         ${dsp_source}/EnvelopeGenerator.cpp
         ${dsp_source}/StateVariableFilter.cpp
+        ${dsp_source}/LFO.cpp
     INCLUDE_DIRS
         ${gui_source}
         ${dsp_source}
