@@ -349,6 +349,7 @@ add_plugin(wave-synth
         ${dsp_source}/EnvelopeGenerator.cpp
         ${dsp_source}/StateVariableFilter.cpp
         ${dsp_source}/LFO.cpp
+        ${gui_source}/HistoryPlotComponent.cpp
     INCLUDE_DIRS
         ${gui_source}
         ${dsp_source}
