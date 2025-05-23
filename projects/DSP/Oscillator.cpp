@@ -94,6 +94,37 @@ float Oscillator::process()
     return osc;
 }
 
+float Oscillator::getCurrentValue() {
+    float osc { 0.f };
+
+    switch (type)
+    {
+    case Sin:
+        osc = std::sin(static_cast<float>(2.0 * M_PI) * phaseState);
+        break;
+
+    case TriAliased:
+        osc = 4.f * std::fabs(phaseState - 0.5f) - 1.f;
+        break;
+
+    case SawAliased:
+        osc = 2.f * phaseState - 1.f;
+        break;
+
+    case TriAA:
+        osc = dpwTri();
+        break;
+
+    case SawAA:
+        osc = dpwSaw();
+        break;
+
+    default: break;
+    }
+
+    return osc;
+}
+
 void Oscillator::setFrequency(float freqHz)
 {
     frequency = std::clamp(freqHz, 0.1f, 10000.f);

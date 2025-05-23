@@ -1,7 +1,10 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "Parameter.h"
 #include "Synth.h"
+#include "LFO.h"
+#include "juce_core/juce_core.h"
 
 namespace Param
 {
@@ -11,6 +14,7 @@ namespace Param
         static const juce::String OscillatorTriVol { "oscillator_tri_vol" };
         static const juce::String OscillatorSinVol { "oscillator_sin_vol" };
         static const juce::String OscillatorVol { "oscillator_volume" };
+        
         static const juce::String OutputVol { "output_vol" };
 
         static const juce::String VCA_AttTime { "vca_att_time" };
@@ -31,6 +35,10 @@ namespace Param
         static const juce::String VCF_Type { "vcf_type" };
         static const juce::String VCF_EnvAmount { "vcf_env_amount" };
         static const juce::String VCF_LFOAmount { "vcf_lfo_amount" };
+
+        static const juce::String FinalVol { "final_vol" };
+        static const juce::String LFO_freq { "lfo_freq" };
+        static const juce::String LFO_mult { "lfo_amount" };
     }
 
     namespace Name
@@ -60,6 +68,10 @@ namespace Param
 
         static const juce::String VCF_EnvAmount { "VCF Env. Amount" };
         static const juce::String VCF_LFOAmount { "VCF LFO Amount" };
+
+        static const juce::String FinalVol { "Final Vol." };
+        static const juce::String LFO_freq {"LFO freq" };
+        static const juce::String LFO_mult {"LFO volume multiplier" };
     }
 
     namespace Ranges
@@ -111,11 +123,11 @@ namespace Param
     }
 }
 
-class SynthAudioProcessor : public juce::AudioProcessor
+class WavetableSynthAudioProcessor : public juce::AudioProcessor
 {
 public:
-    SynthAudioProcessor();
-    ~SynthAudioProcessor() override;
+    WavetableSynthAudioProcessor();
+    ~WavetableSynthAudioProcessor() override;
 
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
@@ -148,5 +160,9 @@ private:
     std::vector<DSP::SynthVoice*> voices;
     juce::Synthesiser synth;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SynthAudioProcessor)
+    DSP::LFO lfo;
+    DSP::Parameter<float> volume;
+
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableSynthAudioProcessor)
 };
