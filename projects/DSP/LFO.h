@@ -28,6 +28,9 @@ namespace DSP
             // Advance the phase by one sample
             void advancePhase();
 
+            // Set a new frequency for the oscillator in Hz
+            void setFrequency(float freqHz);
+
             //---- Disable default ctor, copy and move semantics -----
 
             // No default ctor

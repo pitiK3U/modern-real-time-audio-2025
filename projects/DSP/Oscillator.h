@@ -32,6 +32,8 @@ public:
     // Process a single sample of the oscillator
     float process();
 
+    float getCurrentValue();
+
     // Set a new frequency for the oscillator in Hz
     void setFrequency(float freqHz);
 

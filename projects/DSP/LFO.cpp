@@ -51,4 +51,9 @@ void LFO::advancePhase()
         phase -= 1.0f;
 }
 
+// Set a new frequency for the oscillator in Hz
+void LFO::setFrequency(float freqHz) {
+    frequency = freqHz;
+};
+
 }

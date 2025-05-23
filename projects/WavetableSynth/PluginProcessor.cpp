@@ -1,4 +1,5 @@
 #include "PluginProcessor.h"
+#include "LFO.h"
 #include "PluginEditor.h"
 
 void setOscSawVol(std::vector<DSP::SynthVoice*> voices, float dB, bool skipRamp)
@@ -128,11 +129,16 @@ static const std::vector<mrta::ParameterInfo> paramVector
     { Param::ID::VCF_EnvAmount, Param::Name::VCF_EnvAmount, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
     { Param::ID::VCF_LFOAmount, Param::Name::VCF_LFOAmount, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
 
-    { Param::ID::OutputVol, Param::Name::OutputVol, Param::Units::dB, 0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw }
+    { Param::ID::OutputVol, Param::Name::OutputVol, Param::Units::dB, 0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
+
+    { Param::ID::FinalVol, Param::Name::FinalVol, Param::Units::dB, 0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
+    { Param::ID::LFO_freq, Param::Name::LFO_freq, Param::Units::Hz, 0.5f, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
+    { Param::ID::LFO_mult, Param::Name::LFO_mult, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw }
 };
 
-SynthAudioProcessor::SynthAudioProcessor() :
-    paramManager(*this, ProjectInfo::projectName, paramVector)
+WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
+    paramManager(*this, ProjectInfo::projectName, paramVector),
+    lfo(DSP::LFO(44100.f, 0.5f, DSP::Waveform::Sine))
 {
     synth.addSound(new DSP::SynthSound());
     for (size_t i = 0; i < NUM_VOICES; ++i)
@@ -162,63 +168,73 @@ SynthAudioProcessor::SynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::VCF_EnvAmount, [this] (float value, bool force) { setEnvAmountVCF(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::VCF_LFOAmount, [this] (float value, bool force) { setLFOAmountVCF(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::OutputVol, [this] (float value, bool force) { setOutputVol(voices, value, force); });
+    paramManager.registerParameterCallback(Param::ID::LFO_freq, [this] (float value, bool force) { lfo.setFrequency(value); });
+    paramManager.registerParameterCallback(Param::ID::LFO_mult, [this] (float value, bool force) { volume.setEffect(Param::ID::LFO_mult, value, lfo); });
+    paramManager.registerParameterCallback(Param::ID::FinalVol, [this] (float value, bool force) { volume.setValue(value); });
 }
 
-SynthAudioProcessor::~SynthAudioProcessor()
+WavetableSynthAudioProcessor::~WavetableSynthAudioProcessor()
 {
 }
 
-void SynthAudioProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*/)
+void WavetableSynthAudioProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*/)
 {
     paramManager.updateParameters(true);
     synth.setCurrentPlaybackSampleRate(sampleRate);
 }
 
-void SynthAudioProcessor::releaseResources()
+void WavetableSynthAudioProcessor::releaseResources()
 {
 }
 
-void SynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void WavetableSynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
     paramManager.updateParameters();
 
     buffer.clear();
     synth.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
+
+    for (int sample = 0; sample < buffer.getNumSamples(); sample++) {
+        for (int channel = 0; channel < buffer.getNumChannels(); channel++) {
+            buffer.setSample(channel, sample, buffer.getSample(channel, sample));
+            lfo.advancePhase();
+        }
+    }
 }
 
-void SynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
+void WavetableSynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     paramManager.getStateInformation(destData);
 }
 
-void SynthAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
+void WavetableSynthAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     paramManager.setStateInformation(data, sizeInBytes);
 }
 
-bool SynthAudioProcessor::acceptsMidi() const
+bool WavetableSynthAudioProcessor::acceptsMidi() const
 {
     return true;
 }
 
 //==============================================================================
-const juce::String SynthAudioProcessor::getName() const { return JucePlugin_Name; }
-bool SynthAudioProcessor::producesMidi() const { return false; }
-bool SynthAudioProcessor::isMidiEffect() const { return false; }
-double SynthAudioProcessor::getTailLengthSeconds() const { return 0.0; }
-int SynthAudioProcessor::getNumPrograms() { return 1; }
-int SynthAudioProcessor::getCurrentProgram() { return 0; }
-void SynthAudioProcessor::setCurrentProgram(int) { }
-const juce::String SynthAudioProcessor::getProgramName(int) { return {}; }
-void SynthAudioProcessor::changeProgramName(int, const juce::String&) { }
-bool SynthAudioProcessor::hasEditor() const { return true; }
-juce::AudioProcessorEditor* SynthAudioProcessor::createEditor() { return new WavetableSynthAudioProcessorEditor(*this); }
+const juce::String WavetableSynthAudioProcessor::getName() const { return JucePlugin_Name; }
+bool WavetableSynthAudioProcessor::producesMidi() const { return false; }
+bool WavetableSynthAudioProcessor::isMidiEffect() const { return false; }
+double WavetableSynthAudioProcessor::getTailLengthSeconds() const { return 0.0; }
+int WavetableSynthAudioProcessor::getNumPrograms() { return 1; }
+int WavetableSynthAudioProcessor::getCurrentProgram() { return 0; }
+void WavetableSynthAudioProcessor::setCurrentProgram(int) { }
+const juce::String WavetableSynthAudioProcessor::getProgramName(int) { return {}; }
+void WavetableSynthAudioProcessor::changeProgramName(int, const juce::String&) { }
+bool WavetableSynthAudioProcessor::hasEditor() const { return true; }
+juce::AudioProcessorEditor* WavetableSynthAudioProcessor::createEditor() { return new WavetableSynthAudioProcessorEditor(*this); }
 //==============================================================================
 
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new SynthAudioProcessor();
+    return new WavetableSynthAudioProcessor();
 }

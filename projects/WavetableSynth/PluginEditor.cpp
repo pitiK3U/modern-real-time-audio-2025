@@ -1,29 +1,34 @@
 #include "PluginEditor.h"
+#include "PluginProcessor.h"
 
-WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(SynthAudioProcessor& p) :
+WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(WavetableSynthAudioProcessor& p) :
     juce::AudioProcessorEditor(p), audioProcessor(p),
     oscParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::OscillatorSawVol, Param::ID::OscillatorTriVol, Param::ID::OscillatorSinVol, Param::ID::OscillatorVol, Param::ID::OutputVol }),
     vcaEnvParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCA_AttTime, Param::ID::VCA_DecayTime, Param::ID::VCA_Sustain, Param::ID::VCA_RelTime }),
     vcfEnvParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_AttTime, Param::ID::VCF_DecayTime, Param::ID::VCF_Sustain, Param::ID::VCF_RelTime }),
     lfoParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_LFOFreq, Param::ID::VCF_LFOType }),
     filterParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_Cutoff, Param::ID::VCF_Reso, Param::ID::VCF_Type, Param::ID::VCF_EnvAmount, Param::ID::VCF_LFOAmount }),
+    testLfoEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::FinalVol, Param::ID::LFO_freq, Param::ID::LFO_mult }),
     oscLabel("", "Oscillators"),
     vcaEnvLabel("", "Amplitude Envelope"),
     vcfEnvLabel("", "Filter Envelope"),
     lfoLabel("", "Filter LFO"),
-    filterLabel("", "Filter")
+    filterLabel("", "Filter"),
+    finalLfoLabel("", "Volume LFO")
 {
     addAndMakeVisible(oscParamEditor);
     addAndMakeVisible(vcaEnvParamEditor);
     addAndMakeVisible(vcfEnvParamEditor);
     addAndMakeVisible(lfoParamEditor);
     addAndMakeVisible(filterParamEditor);
+    addAndMakeVisible(testLfoEditor);
 
     setupLabel(oscLabel);
     setupLabel(vcaEnvLabel);
     setupLabel(vcfEnvLabel);
     setupLabel(lfoLabel);
     setupLabel(filterLabel);
+    setupLabel(finalLfoLabel);
 
     setSize(NUM_SECTIONS * SECTION_WIDTH + (NUM_SECTIONS - 1) * SECTION_SPACER_WIDTH, LABEL_HEIGHT + PARAM_HEIGHT * MAX_PARAM_COUNT);
 }
@@ -71,6 +76,12 @@ void WavetableSynthAudioProcessorEditor::resized()
         auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
         lfoLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
         lfoParamEditor.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
+    }
+
+    {
+        auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
+        finalLfoLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
+        testLfoEditor.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
     }
 }
 

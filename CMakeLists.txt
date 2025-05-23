@@ -333,17 +333,17 @@ add_plugin(amp_model
         ${amp_model_source})
 
 # mono synth project
-set(wave-synth ${CMAKE_CURRENT_SOURCE_DIR}/projects/WavetableSynth)
+set(wave_synth ${CMAKE_CURRENT_SOURCE_DIR}/projects/WavetableSynth)
 
-add_plugin(wave-synth
+add_plugin(wave_synth
     VERSION 0.1.0
     PLUGIN_NAME "Wavetable Synth"
     PROD_NAME WavetableSynth
     PROD_CODE Wsth
     SYNTH TRUE
     SOURCES
-        ${wave-synth}/PluginEditor.cpp
-        ${wave-synth}/PluginProcessor.cpp
+        ${wave_synth}/PluginEditor.cpp
+        ${wave_synth}/PluginProcessor.cpp
         ${dsp_source}/Synth.cpp
         ${dsp_source}/Oscillator.cpp
         ${dsp_source}/EnvelopeGenerator.cpp
@@ -353,4 +353,4 @@ add_plugin(wave-synth
     INCLUDE_DIRS
         ${gui_source}
         ${dsp_source}
-        ${wave-synth})
+        ${wave_synth})
