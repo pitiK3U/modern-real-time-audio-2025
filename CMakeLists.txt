@@ -350,6 +350,7 @@ add_plugin(wave_synth
         ${dsp_source}/StateVariableFilter.cpp
         ${dsp_source}/LFO.cpp
         ${gui_source}/HistoryPlotComponent.cpp
+        ${dsp_source}/ParameterHistoryBuffer.h
     INCLUDE_DIRS
         ${gui_source}
         ${dsp_source}

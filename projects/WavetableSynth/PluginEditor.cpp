@@ -14,7 +14,9 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     vcfEnvLabel("", "Filter Envelope"),
     lfoLabel("", "Filter LFO"),
     filterLabel("", "Filter"),
-    finalLfoLabel("", "Volume LFO")
+    finalLfoLabel("", "Volume LFO"),
+    lfo1Label("", "LFO 1"),
+    lfoHistoryPlot(32768)
 {
     addAndMakeVisible(oscParamEditor);
     addAndMakeVisible(vcaEnvParamEditor);
@@ -23,12 +25,17 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     addAndMakeVisible(filterParamEditor);
     addAndMakeVisible(testLfoEditor);
 
+    addAndMakeVisible (lfoHistoryPlot);
+
     setupLabel(oscLabel);
     setupLabel(vcaEnvLabel);
     setupLabel(vcfEnvLabel);
     setupLabel(lfoLabel);
     setupLabel(filterLabel);
     setupLabel(finalLfoLabel);
+    setupLabel(lfo1Label);
+
+    startTimerHz ((int) REFRESH_RATE);
 
     setSize(NUM_SECTIONS * SECTION_WIDTH + (NUM_SECTIONS - 1) * SECTION_SPACER_WIDTH, LABEL_HEIGHT + PARAM_HEIGHT * MAX_PARAM_COUNT);
 }
@@ -83,6 +90,25 @@ void WavetableSynthAudioProcessorEditor::resized()
         finalLfoLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
         testLfoEditor.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
     }
+
+    {
+        auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
+        lfo1Label.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
+        lfoHistoryPlot.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, HISTORY_PLOT_HEIGHT));
+    }
+}
+
+void WavetableSynthAudioProcessorEditor::timerCallback()
+{
+    // 1) pull the most recent LFO block from your processor
+    std::vector<float> block;
+    audioProcessor.getLastLfoValues (block);
+
+    DBG(block.size());
+
+    // 2) feed each sample into the history plot
+    for (auto v : block)
+        lfoHistoryPlot.addValue (v);
 }
 
 void WavetableSynthAudioProcessorEditor::setupLabel(juce::Label& label)

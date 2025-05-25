@@ -82,7 +82,7 @@ void HistoryPlotComponent::paint (juce::Graphics& g)
     // first point
     {
         float v = buffer[startIndex];
-        float y = h * 0.5f - v * (h * 0.5f);
+        float y = h * 0.5f - 0.9f * v * (h * 0.5f);
         waveform.startNewSubPath (0.0f, y);
     }
 
@@ -92,9 +92,9 @@ void HistoryPlotComponent::paint (juce::Graphics& g)
         int idx = (startIndex + i) % bufferSize;
         float x = i * dx;
         float v = buffer[idx];
-        float y = h * 0.5f - v * (h * 0.5f);
+        float y = h * 0.5f - 0.9f * v * (h * 0.5f);
         waveform.lineTo (x, y);
     }
 
-    g.strokePath (waveform, juce::PathStrokeType (2.0f));
+    g.strokePath (waveform, juce::PathStrokeType (3.0f));
 }

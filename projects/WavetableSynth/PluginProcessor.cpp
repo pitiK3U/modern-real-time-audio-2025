@@ -138,7 +138,7 @@ static const std::vector<mrta::ParameterInfo> paramVector
 
 WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager(*this, ProjectInfo::projectName, paramVector),
-    lfo(DSP::LFO(44100.f, 0.5f, DSP::Waveform::Sine))
+    lfo(DSP::LFO(44100.f, 0.5f, DSP::Waveform::Sine)) // TODO initialize with default values from header file
 {
     synth.addSound(new DSP::SynthSound());
     for (size_t i = 0; i < NUM_VOICES; ++i)
@@ -198,9 +198,17 @@ void WavetableSynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     for (int sample = 0; sample < buffer.getNumSamples(); sample++) {
         for (int channel = 0; channel < buffer.getNumChannels(); channel++) {
             buffer.setSample(channel, sample, buffer.getSample(channel, sample));
-            lfo.advancePhase();
         }
+
+        // Advance LFO for each sample
+        lfo.advancePhase();
+        lfoHistory.pushSample(lfo.getValue());
     }
+}
+
+void WavetableSynthAudioProcessor::getLastLfoValues (std::vector<float>& outValues)
+{
+    lfoHistory.getHistory (outValues);
 }
 
 void WavetableSynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

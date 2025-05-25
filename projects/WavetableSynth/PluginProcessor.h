@@ -5,6 +5,7 @@
 #include "Synth.h"
 #include "LFO.h"
 #include "juce_core/juce_core.h"
+#include "ParameterHistoryBuffer.h"
 
 namespace Param
 {
@@ -138,6 +139,9 @@ public:
 
     mrta::ParameterManager& getParamManager() { return paramManager; }
 
+    /** Called by the editor to grab & clear the LFO history. */
+    void getLastLfoValues (std::vector<float>& outValues);
+
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
@@ -163,6 +167,7 @@ private:
     DSP::LFO lfo;
     DSP::Parameter<float> volume;
 
+    DSP::ParameterHistoryBuffer<float> lfoHistory { 32768 };  // remember up to 2^15 samples
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableSynthAudioProcessor)
 };
