@@ -32,6 +32,7 @@ private:
     mrta::GenericParameterEditor lfoParamEditor;
     mrta::GenericParameterEditor filterParamEditor;
     mrta::GenericParameterEditor testLfoEditor;
+    mrta::GenericParameterEditor lfo1ParamEditor;
     HistoryPlotComponent lfoHistoryPlot;
 
     juce::Label oscLabel;

@@ -133,7 +133,11 @@ static const std::vector<mrta::ParameterInfo> paramVector
 
     { Param::ID::FinalVol, Param::Name::FinalVol, Param::Units::dB, 0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
     { Param::ID::LFO_freq, Param::Name::LFO_freq, Param::Units::Hz, 0.5f, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
-    { Param::ID::LFO_mult, Param::Name::LFO_mult, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw }
+    { Param::ID::LFO_mult, Param::Name::LFO_mult, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
+
+    {Param::ID::LFO1_Freq, Param::Name::LFO1_Freq, Param::Units::Hz, 0.5f, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
+    {Param::ID::LFO1_Offset, Param::Name::LFO1_Offset, "", 0.f, Param::Ranges::LFOOffsetMin, Param::Ranges::LFOOffsetMax, Param::Ranges::LFOOffsetInc, Param::Ranges::LFOOffsetSkw },
+    {Param::ID::LFO1_Type, Param::Name::LFO1_Type, Param::Ranges::LFO1Type, 0}
 };
 
 WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
@@ -168,9 +172,13 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::VCF_EnvAmount, [this] (float value, bool force) { setEnvAmountVCF(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::VCF_LFOAmount, [this] (float value, bool force) { setLFOAmountVCF(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::OutputVol, [this] (float value, bool force) { setOutputVol(voices, value, force); });
-    paramManager.registerParameterCallback(Param::ID::LFO_freq, [this] (float value, bool force) { lfo.setFrequency(value); });
+    // paramManager.registerParameterCallback(Param::ID::LFO_freq, [this] (float value, bool force) { lfo.setFrequency(value); });
     paramManager.registerParameterCallback(Param::ID::LFO_mult, [this] (float value, bool force) { volume.setEffect(Param::ID::LFO_mult, value, lfo); });
     paramManager.registerParameterCallback(Param::ID::FinalVol, [this] (float value, bool force) { volume.setValue(value); });
+
+    paramManager.registerParameterCallback(Param::ID::LFO1_Freq, [this] (float value, bool force)  {lfo.setFrequency(value);});
+    paramManager.registerParameterCallback(Param::ID::LFO1_Offset, [this] (float value, bool force) { lfo.setOffset(value); });
+    paramManager.registerParameterCallback(Param::ID::LFO1_Type, [this] (float value, bool force) { lfo.setWaveform(static_cast<DSP::Waveform>(std::round(value))); });
 }
 
 WavetableSynthAudioProcessor::~WavetableSynthAudioProcessor()

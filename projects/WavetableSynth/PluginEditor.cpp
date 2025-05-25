@@ -9,6 +9,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     lfoParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_LFOFreq, Param::ID::VCF_LFOType }),
     filterParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_Cutoff, Param::ID::VCF_Reso, Param::ID::VCF_Type, Param::ID::VCF_EnvAmount, Param::ID::VCF_LFOAmount }),
     testLfoEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::FinalVol, Param::ID::LFO_freq, Param::ID::LFO_mult }),
+    lfo1ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_Freq, Param::ID::LFO1_Type, Param::ID::LFO1_Offset }),
     oscLabel("", "Oscillators"),
     vcaEnvLabel("", "Amplitude Envelope"),
     vcfEnvLabel("", "Filter Envelope"),
@@ -24,6 +25,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     addAndMakeVisible(lfoParamEditor);
     addAndMakeVisible(filterParamEditor);
     addAndMakeVisible(testLfoEditor);
+    addAndMakeVisible(lfo1ParamEditor);
 
     addAndMakeVisible (lfoHistoryPlot);
 
@@ -94,7 +96,8 @@ void WavetableSynthAudioProcessorEditor::resized()
     {
         auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
         lfo1Label.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
-        lfoHistoryPlot.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, HISTORY_PLOT_HEIGHT));
+        lfoHistoryPlot.setBounds(secBounds.removeFromTop(HISTORY_PLOT_HEIGHT));
+        lfo1ParamEditor.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
     }
 }
 

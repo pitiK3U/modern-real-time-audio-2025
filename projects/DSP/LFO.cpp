@@ -24,16 +24,36 @@ void LFO::updatePhaseIncrement()
     phaseIncrement = frequency / sampleRate;
 }
 
-float LFO::computeWaveform(float p) const
+float LFO::computeWaveform (float p) const
 {
+    // 1) apply horizontal (phase) offset
+    float phase = p + offset;
+
+    // wrap into [0…1)
+    phase -= std::floor (phase);
+
+    float value = 0.0f;
     switch (waveform)
     {
-        case Waveform::Sine:     return amplitude * std::sin(2.0f * juce::MathConstants<float>::pi * p) + offset;
-        case Waveform::Square:   return amplitude * (p < 0.5f ? 1.0f : -1.0f) + offset;
-        case Waveform::Triangle: return amplitude * (4.0f * std::abs(p - 0.5f) - 1.0f) + offset;
-        case Waveform::Sawtooth: return amplitude * (2.0f * (p - 0.5f)) + offset;
+        case Waveform::Sine:
+            value = std::sin (2.0f * juce::MathConstants<float>::pi * phase);
+            break;
+
+        case Waveform::Square:
+            value = (phase < 0.5f ?  1.0f : -1.0f);
+            break;
+
+        case Waveform::Triangle:
+            value = 4.0f * std::abs (phase - 0.5f) - 1.0f;
+            break;
+
+        case Waveform::Sawtooth:
+            value = 2.0f * (phase - 0.5f);
+            break;
     }
-    return offset;
+
+    // 2) apply amplitude only (no vertical offset here)
+    return amplitude * value;
 }
 
 float LFO::getValue(bool advance)
@@ -54,6 +74,17 @@ void LFO::advancePhase()
 // Set a new frequency for the oscillator in Hz
 void LFO::setFrequency(float freqHz) {
     frequency = freqHz;
-};
+    updatePhaseIncrement();
+}
+
+void LFO::setOffset(float newOffset) {
+    offset = newOffset;
+    updatePhaseIncrement();
+}
+
+void LFO::setWaveform(Waveform newWaveform) {
+    waveform = newWaveform;
+    updatePhaseIncrement();
+}
 
 }

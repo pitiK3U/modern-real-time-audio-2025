@@ -40,6 +40,10 @@ namespace Param
         static const juce::String FinalVol { "final_vol" };
         static const juce::String LFO_freq { "lfo_freq" };
         static const juce::String LFO_mult { "lfo_amount" };
+
+        static const juce::String LFO1_Freq { "lfo1_freq" };
+        static const juce::String LFO1_Type { "lfo1_type" };
+        static const juce::String LFO1_Offset { "lfo1_offset" };
     }
 
     namespace Name
@@ -73,6 +77,10 @@ namespace Param
         static const juce::String FinalVol { "Final Vol." };
         static const juce::String LFO_freq {"LFO freq" };
         static const juce::String LFO_mult {"LFO volume multiplier" };
+
+        static const juce::String LFO1_Freq { "LFO 1 Freq." };
+        static const juce::String LFO1_Type { "LFO 1 Type" };
+        static const juce::String LFO1_Offset { "LFO 1 Offset" };
     }
 
     namespace Ranges
@@ -97,6 +105,11 @@ namespace Param
         static constexpr float LFOFreqInc { 0.1f };
         static constexpr float LFOFreqSkw { 0.25f };
 
+        static constexpr float LFOOffsetMin { -1.f };
+        static constexpr float LFOOffsetMax { 1.f };
+        static constexpr float LFOOffsetInc { 0.001f };
+        static constexpr float LFOOffsetSkw { 1.f };
+
         static constexpr float FilterFreqMin { 20.0f };
         static constexpr float FilterFreqMax { 20000.f };
         static constexpr float FilterFreqInc { 1.f };
@@ -114,6 +127,7 @@ namespace Param
 
         static const juce::StringArray LFOType { "Sin", "Tri" };
         static const juce::StringArray FilterType { "Low Pass", "Band Pass", "High Pass" };
+        static const juce::StringArray LFO1Type { "Sine", "Square", "Triangle", "Sawtooth" };
     }
 
     namespace Units

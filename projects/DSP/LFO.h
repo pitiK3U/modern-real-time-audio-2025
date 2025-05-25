@@ -31,6 +31,12 @@ namespace DSP
             // Set a new frequency for the oscillator in Hz
             void setFrequency(float freqHz);
 
+            // Set a new offset for the waveform
+            void setOffset(float newOffset);
+
+            // Set waveform type
+            void setWaveform(Waveform newWaveform);
+            
             //---- Disable default ctor, copy and move semantics -----
 
             // No default ctor
