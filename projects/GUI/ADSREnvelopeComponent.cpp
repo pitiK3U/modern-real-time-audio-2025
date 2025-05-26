@@ -4,9 +4,9 @@ ADSREnvelopeComponent::ADSREnvelopeComponent()
 : startTime (juce::Time::getMillisecondCounterHiRes())
 {
     setupSlider (attackSlider,  0.0, 2000.0, 100.0);
-    setupSlider (decaySlider,   0.0, 2000.0, 100.0);
-    setupSlider (sustainSlider, 0.0,    1.0,   1.0);
-    setupSlider (releaseSlider, 0.0, 2000.0, 100.0);
+    setupSlider (decaySlider,   0.0, 2000.0, 300.0);
+    setupSlider (sustainSlider, 0.0,    1.0,   0.6);
+    setupSlider (releaseSlider, 0.0, 2000.0, 700.0);
 
     startTimerHz (60);  // repaint + update at 60 Hz
 }
@@ -47,93 +47,104 @@ void ADSREnvelopeComponent::setupSlider (juce::Slider& s, double min, double max
 
 void ADSREnvelopeComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::black);
+    g.fillAll(juce::Colours::black);
 
-    // top half drawing area
     auto area = getLocalBounds()
-        .removeFromTop (getHeight() / 2)
-        .toFloat()
-        .reduced (10.0f);
+                    .removeFromTop(getHeight() / 2)
+                    .toFloat()
+                    .reduced(10.0f);
 
-    // read your four ADSR values
-    float a = (float) attackSlider .getValue();
-    float d = (float) decaySlider  .getValue();
-    float s = (float) sustainSlider.getValue();
-    float r = (float) releaseSlider.getValue();
+    float a = (float)attackSlider.getValue();
+    float d = (float)decaySlider.getValue();
+    float s = (float)sustainSlider.getValue();
+    float r = (float)releaseSlider.getValue();
 
-    // map “time since start” → x-position
-    auto mapX = [&](float timeFromStart)
-    {
-        return area.getX() + (timeFromStart / MAX_LENGTH) * area.getWidth();
-    };
+    drawBackground(g, area);
+    drawEnvelope(g, area, a, d, s, r);
+    drawPlayhead(g, area, a, d, s, r);
+    drawHandles(g);
+}
 
-    // cumulative x’s and y’s
-    float x0 = area.getX(), y0 = area.getBottom();
-    float x1 = mapX (a), y1 = area.getY();
-    float x2 = mapX (a + d), y2 = juce::jmap (s, 0.0f, 1.0f, area.getBottom(), area.getY());
-    float x3 = mapX (a + d + r), y3 = area.getBottom();
+void ADSREnvelopeComponent::drawBackground(juce::Graphics& g, juce::Rectangle<float> area)
+{
+    g.setColour(juce::Colours::darkgrey);
+    g.fillRect(area);
+    g.setColour(juce::Colours::white);
+    g.drawRect(area, 1.5f);
+}
 
-    // build the outline
+void ADSREnvelopeComponent::drawEnvelope(juce::Graphics& g,
+                                          juce::Rectangle<float> area,
+                                          float a, float d, float s, float r)
+{
+    auto mapX = [&](float t) { return area.getX() + (t / MAX_LENGTH) * area.getWidth(); };
+
+    float x0 = area.getX();
+    float y0 = area.getBottom();
+    float x1 = mapX(a);
+    float y1 = area.getY();
+    float x2 = mapX(a + d);
+    float y2 = juce::jmap(s, 0.0f, 1.0f, area.getBottom(), area.getY());
+    float x3 = mapX(a + d + r);
+    float y3 = area.getBottom();
+
     path.clear();
-    path.startNewSubPath (x0, y0);
+    path.startNewSubPath(x0, y0);
     path.lineTo(x1, y1);
     path.lineTo(x2, y2);
     path.lineTo(x3, y3);
 
-    // build & fill the under-curve area
-    juce::Path filledPath = path;
-    filledPath.lineTo(x3, area.getBottom()); // bottom right
-    filledPath.lineTo(x0, area.getBottom()); // bottom left
-    filledPath.closeSubPath();
+    juce::Path fillPath(path);
+    fillPath.lineTo(x3, area.getBottom());
+    fillPath.lineTo(x0, area.getBottom());
+    fillPath.closeSubPath();
 
-    g.setColour(juce::Colours::lightgreen.withAlpha (0.3f));
-    g.fillPath(filledPath);
+    g.setColour(juce::Colours::lightgreen.withAlpha(0.3f));
+    g.fillPath(fillPath);
 
-    // stroke on top
-    g.setColour (juce::Colours::lightgreen);
-    g.strokePath (path, juce::PathStrokeType (3.0f));
+    g.setColour(juce::Colours::lightgreen);
+    g.strokePath(path, juce::PathStrokeType(3.0f));
 
-    // --- draw play-head indicator ---
-    {
-        float t = currentPhaseTime;
-        float total = a + d + r;
-
-        if (t >= 0 && t <= total)
-        {
-            // compute envelope value at time t
-            float value = 0.0f;
-            if (t < a && a > 0) value = t / a;
-            else if (t < a + d && d > 0) value = 1.0f - ((t - a) / d) * (1.0f - s);
-            else if (t < a + d + r && r > 0) value = s * (1.0f - ((t - a - d) / r));
-            else value = 0.0f;
-
-            float xPhase = mapX (t);
-            float yPhase = juce::jmap (value, 0.0f, 1.0f, area.getBottom(), area.getY());
-
-            // vertical line
-            g.setColour (juce::Colours::white.withAlpha (0.2f));
-            g.drawLine (xPhase, area.getBottom(), xPhase, yPhase, 1.0f);
-
-            // phase dot
-            g.setColour (juce::Colours::white);
-            float pr = handleRadius * 0.75f;
-            g.fillEllipse (xPhase - pr, yPhase - pr, pr * 2.0f, pr * 2.0f);
-        }
-    }
-
-    // handles (attack, decay/sustain, release)
     points.clear();
-    points.add({x0, y0});  // start point (cannot be moved)
-    points.add ({ x1, y1 });
-    points.add ({ x2, y2 });
-    points.add ({ x3, y3 });
+    points.add({x0, y0});
+    points.add({x1, y1});
+    points.add({x2, y2});
+    points.add({x3, y3});
+}
 
-    g.setColour (juce::Colours::white);
+void ADSREnvelopeComponent::drawPlayhead(juce::Graphics& g,
+                                         juce::Rectangle<float> area,
+                                         float a, float d, float s, float r)
+{
+    float t = currentPhaseTime;
+    float total = a + d + r;
+    if (t < 0 || t > total)
+        return;
+
+    float value = 0;
+    if (t < a && a > 0)                value = t / a;
+    else if (t < a + d && d > 0)       value = 1.0f - ((t - a) / d) * (1.0f - s);
+    else if (t < a + d + r && r > 0)   value = s * (1.0f - ((t - a - d) / r));
+
+    auto x = area.getX() + (t / MAX_LENGTH) * area.getWidth();
+    auto y = juce::jmap(value, 0.0f, 1.0f, area.getBottom(), area.getY());
+
+    g.setColour(juce::Colours::white.withAlpha(0.2f));
+    g.drawLine(x, area.getBottom(), x, y, 1.0f);
+
+    g.setColour(juce::Colours::white);
+    float pr = handleRadius * 0.75f;
+    g.fillEllipse(x - pr, y - pr, pr * 2, pr * 2);
+}
+
+void ADSREnvelopeComponent::drawHandles(juce::Graphics& g)
+{
+    g.setColour(juce::Colours::white);
     for (auto& pt : points)
-        g.fillEllipse (pt.x - handleRadius,
-                       pt.y - handleRadius,
-                       handleRadius * 2.0f,
-                       handleRadius * 2.0f);
+        g.fillEllipse(pt.x - handleRadius,
+                      pt.y - handleRadius,
+                      handleRadius * 2,
+                      handleRadius * 2);
 }
 
 void ADSREnvelopeComponent::resized()
