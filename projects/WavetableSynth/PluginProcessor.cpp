@@ -216,7 +216,12 @@ void WavetableSynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
 
     for (int sample = 0; sample < buffer.getNumSamples(); sample++) {
         for (int channel = 0; channel < buffer.getNumChannels(); channel++) {
+<<<<<<< HEAD
             buffer.setSample(channel, sample, buffer.getSample(channel, sample));
+=======
+            buffer.setSample(channel, sample, volume.getCurrentValue() * buffer.getSample(channel, sample));
+            lfo.advance();
+>>>>>>> a545c6a ([paramter]: Cleaner implementation)
         }
 
         // Advance LFO for each sample

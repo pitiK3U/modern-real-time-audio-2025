@@ -1,8 +1,9 @@
 #pragma once
 
-#include "LFO.h"
 #include "juce_audio_basics/juce_audio_basics.h"
 #include "juce_core/juce_core.h"
+#include "DSP.h"
+#include <functional>
 #include <unordered_map>
 #include <utility>
 
@@ -21,12 +22,8 @@ template <typename FloatType> class Parameter {
   }
 
   void setEffect(juce::String paramId, FloatType paramMult,
-                 LFO &reference) {
-    // effects.insert_or_assign(paramId, std::make_pair(paramMult, reference));
-    // auto pair = std::make_pair(paramMult, reference);
-    auto [iterator, inserted] = effects.try_emplace(paramId, paramMult, reference);
-    if (!inserted) { iterator->second.first = paramMult; }
-
+                 DSP<FloatType> &reference) {
+    effects.insert_or_assign(paramId, std::make_pair(paramMult, std::ref(reference)));
   }
 
   FloatType getCurrentValue() {
@@ -35,7 +32,7 @@ template <typename FloatType> class Parameter {
     auto finalValue = rampedValue;
     for (auto [key, val] : effects) {
       auto [val_mult, assoc_val] = val;
-      finalValue += finalValue * val_mult * assoc_val.getCurrentValue();
+      finalValue += finalValue * val_mult * assoc_val.get().getCurrentValue();
     }
 
     return finalValue;
@@ -43,9 +40,9 @@ template <typename FloatType> class Parameter {
 
 private:
   juce::SmoothedValue<FloatType> smoothedValue;
-  double sampleRate;
+  double sampleRate { 48000.f };
 
-  std::unordered_map<juce::String, std::pair<FloatType, LFO&>>
+  std::unordered_map<juce::String, std::pair<FloatType, std::reference_wrapper<DSP<FloatType>>>>
       effects;
 };
 }
