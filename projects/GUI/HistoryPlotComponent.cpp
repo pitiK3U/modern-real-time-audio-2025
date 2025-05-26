@@ -59,6 +59,7 @@ void HistoryPlotComponent::setBufferSize (int newSize)
 
 void HistoryPlotComponent::paint (juce::Graphics& g)
 {
+    // TODO: fill area under the curve with a lighter color
     auto w = getWidth();
     auto h = getHeight();
 

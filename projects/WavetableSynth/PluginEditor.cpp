@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "ADSREnvelopeComponent.h"
 #include "PluginProcessor.h"
 
 WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(WavetableSynthAudioProcessor& p) :
@@ -21,6 +22,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     lfo2Label("", "LFO 2"),
     lfo1HistoryPlot(32768),
     lfo2HistoryPlot(32768),
+    adsrComponent(),
     vts (p.getParamManager().getAPVTS())
 {
     addAndMakeVisible(oscParamEditor);
@@ -34,6 +36,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
 
     addAndMakeVisible (lfo1HistoryPlot);
     addAndMakeVisible(lfo2HistoryPlot);
+    addAndMakeVisible (adsrComponent);
 
     setupLabel(oscLabel);
     setupLabel(vcaEnvLabel);
@@ -66,6 +69,11 @@ void WavetableSynthAudioProcessorEditor::paint(juce::Graphics& g)
 void WavetableSynthAudioProcessorEditor::resized()
 {
     auto bounds { getLocalBounds() };
+
+    {
+        auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
+        adsrComponent.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
+    }
 
     {
         auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };

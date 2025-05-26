@@ -3,6 +3,7 @@
 #include "PluginProcessor.h"
 #include "mrta_utils/Source/GUI/GenericParameterEditor.h"
 #include "HistoryPlotComponent.h"
+#include "ADSREnvelopeComponent.h"
 
 class WavetableSynthAudioProcessorEditor
 : public juce::AudioProcessorEditor
@@ -16,7 +17,7 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
 
-    static constexpr int NUM_SECTIONS { 8 };
+    static constexpr int NUM_SECTIONS { 9 };
     static constexpr int SECTION_WIDTH { 250 };
     static constexpr int SECTION_SPACER_WIDTH { 20 };
     static constexpr int LABEL_HEIGHT { 50 };
@@ -37,6 +38,7 @@ private:
     mrta::GenericParameterEditor lfo2ParamEditor;
     HistoryPlotComponent lfo1HistoryPlot;
     HistoryPlotComponent lfo2HistoryPlot;
+    ADSREnvelopeComponent adsrComponent;
 
     juce::AudioProcessorValueTreeState& vts;
 
