@@ -17,6 +17,8 @@ public:
     void mouseDown  (const juce::MouseEvent& e) override;
     void mouseDrag  (const juce::MouseEvent& e) override;
     void mouseUp    (const juce::MouseEvent& e) override;
+    void mouseMove  (const juce::MouseEvent& e) override;
+    void mouseExit  (const juce::MouseEvent& e) override;
 
 private:
 
@@ -47,6 +49,7 @@ private:
 
     double startTime;
     float currentPhaseTime {0};
+    bool isMouseOverEnvelopeArea = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ADSREnvelopeComponent)
 };

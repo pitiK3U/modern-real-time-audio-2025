@@ -62,7 +62,8 @@ void ADSREnvelopeComponent::paint (juce::Graphics& g)
     drawBackground(g, area);
     drawEnvelope(g, area, a, d, s, r);
     drawPlayhead(g, area, a, d, s, r);
-    drawHandles(g);
+    if (isMouseOverEnvelopeArea)
+        drawHandles(g);
 }
 
 void ADSREnvelopeComponent::drawBackground(juce::Graphics& g, juce::Rectangle<float> area)
@@ -297,6 +298,32 @@ void ADSREnvelopeComponent::mouseDrag (const juce::MouseEvent& e)
 void ADSREnvelopeComponent::mouseUp (const juce::MouseEvent&)
 {
     draggingPoint = -1;
+}
+
+void ADSREnvelopeComponent::mouseMove (const juce::MouseEvent& e)
+{
+    // build exactly the same rect you use to paint the envelope:
+    auto envelopeArea = getLocalBounds()
+        .removeFromTop (getHeight() / 2)
+        .toFloat()
+        .reduced (10.0f);
+
+    bool nowOver = envelopeArea.contains (e.position);
+    if (nowOver != isMouseOverEnvelopeArea)
+    {
+        isMouseOverEnvelopeArea = nowOver;
+        repaint();
+    }
+}
+
+void ADSREnvelopeComponent::mouseExit (const juce::MouseEvent&)
+{
+    // guarantee handles disappear if the mouse leaves the whole component
+    if (isMouseOverEnvelopeArea)
+    {
+        isMouseOverEnvelopeArea = false;
+        repaint();
+    }
 }
 
 float ADSREnvelopeComponent::getYForX (float xQuery) const
