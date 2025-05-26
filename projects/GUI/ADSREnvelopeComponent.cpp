@@ -137,23 +137,19 @@ void ADSREnvelopeComponent::drawPlayhead(juce::Graphics& g, juce::Rectangle<floa
     if (t < 0 || t > total)
         return;
 
-    float value = 0;
-    if (t < a && a > 0)
-        value = t / a;
-    else if (t < a + d && d > 0)
-        value = 1.0f - ((t - a) / d) * (1.0f - s);
-    else if (t < a + d + r && r > 0)
-        value = s * (1.0f - ((t - a - d) / r));
+    float x = area.getX() + (t / MAX_LENGTH) * area.getWidth();
 
-    auto x = area.getX() + (t / MAX_LENGTH) * area.getWidth();
-    auto y = juce::jmap(value, 0.0f, 1.0f, area.getBottom(), area.getY());
+    // sample the Bézier at that x
+    float y = getYForX (x);
 
-    g.setColour(juce::Colours::white.withAlpha(0.2f));
+    // draw vertical guide
+    g.setColour(juce::Colours::white.withAlpha (0.2f));
     g.drawLine(x, area.getBottom(), x, y, 1.0f);
 
-    g.setColour(juce::Colours::white);
+    // draw the playhead dot
+    g.setColour (juce::Colours::white);
     float pr = handleRadius * 0.75f;
-    g.fillEllipse(x - pr, y - pr, pr * 2, pr * 2);
+    g.fillEllipse (x - pr, y - pr, pr * 2.0f, pr * 2.0f);
 }
 
 void ADSREnvelopeComponent::drawHandles(juce::Graphics& g)
@@ -301,4 +297,53 @@ void ADSREnvelopeComponent::mouseDrag (const juce::MouseEvent& e)
 void ADSREnvelopeComponent::mouseUp (const juce::MouseEvent&)
 {
     draggingPoint = -1;
+}
+
+float ADSREnvelopeComponent::getYForX (float xQuery) const
+{
+    // each segment i goes from points[i] to points[i+1] with controlPoints[i]
+    for (int i = 0; i < controlPoints.size(); ++i)
+    {
+        auto p0 = points.getReference(i);
+        auto p1 = points.getReference(i+1);
+        auto cp = controlPoints.getReference(i);
+
+        // only try if xQuery is between the end-points of this segment
+        if (xQuery < juce::jmin(p0.x, p1.x) || xQuery > juce::jmax(p0.x, p1.x))
+            continue;
+
+        // quadratic coefficients for B_x(t) = xQuery
+        float A = p0.x - 2.0f * cp.x + p1.x;
+        float B = 2.0f * (cp.x - p0.x);
+        float C = p0.x - xQuery;
+
+        float t = -1.0f;
+        if (std::abs(A) < 1e-6f)  // degenerate → linear
+        {
+            t = -C / B;
+        }
+        else
+        {
+            float disc = B * B - 4.0f * A * C;
+            if (disc < 0.0f) 
+                continue;  // no real t
+            float sqrtD = std::sqrt(disc);
+            float t1 = (-B + sqrtD) / (2.0f * A);
+            float t2 = (-B - sqrtD) / (2.0f * A);
+            if (t1 >= 0.0f && t1 <= 1.0f)      t = t1;
+            else if (t2 >= 0.0f && t2 <= 1.0f) t = t2;
+        }
+
+        if (t >= 0.0f && t <= 1.0f)
+        {
+            // Bézier in y
+            float u = 1.0f - t;
+            return u*u*p0.y
+                 + 2.0f*u*t*cp.y
+                 +     t*t*p1.y;
+        }
+    }
+
+    // fallback: if xQuery is outside all segments, clamp to baseline
+    return points.getFirst().y;
 }

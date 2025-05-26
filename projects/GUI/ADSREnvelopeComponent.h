@@ -33,10 +33,12 @@ private:
                       float a, float d, float s, float r);
     void drawHandles(juce::Graphics& g);
 
+    float getYForX (float xQuery) const;
+
     juce::Slider attackSlider, decaySlider, sustainSlider, releaseSlider;
 
     juce::Path path;
-    
+
     juce::Array<juce::Point<float>> points;
     juce::Array<juce::Point<float>> controlPoints;  
     juce::Array<juce::Point<float>> controlPointOffsets;
