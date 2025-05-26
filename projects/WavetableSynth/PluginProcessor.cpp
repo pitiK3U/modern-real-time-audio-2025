@@ -195,7 +195,7 @@ void WavetableSynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
 
     for (int sample = 0; sample < buffer.getNumSamples(); sample++) {
         for (int channel = 0; channel < buffer.getNumChannels(); channel++) {
-            buffer.setSample(channel, sample, buffer.getSample(channel, sample));
+            buffer.setSample(channel, sample, volume.getCurrentValue() * buffer.getSample(channel, sample));
             lfo.advance();
         }
     }
