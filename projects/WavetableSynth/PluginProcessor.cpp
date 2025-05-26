@@ -137,7 +137,8 @@ static const std::vector<mrta::ParameterInfo> paramVector
 
     {Param::ID::LFO1_Freq, Param::Name::LFO1_Freq, Param::Units::Hz, 0.5f, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
     {Param::ID::LFO1_Offset, Param::Name::LFO1_Offset, "", 0.f, Param::Ranges::LFOOffsetMin, Param::Ranges::LFOOffsetMax, Param::Ranges::LFOOffsetInc, Param::Ranges::LFOOffsetSkw },
-    {Param::ID::LFO1_Type, Param::Name::LFO1_Type, Param::Ranges::LFO1Type, 0}
+    {Param::ID::LFO1_Type, Param::Name::LFO1_Type, Param::Ranges::LFO1Type, 0},
+    { Param::ID::HistoryPlotBufferSize, Param::Name::HistoryPlotBufferSize, Param::Units::Ms, 32768.f, Param::Ranges::HistoryPlotBufferSizeMin, Param::Ranges::HistoryPlotBufferSizeMax, Param::Ranges::HistoryPlotBufferSizeInc, Param::Ranges::HistoryPlotBufferSizeSkw }
 };
 
 WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :

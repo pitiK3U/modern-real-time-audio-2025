@@ -44,6 +44,8 @@ namespace Param
         static const juce::String LFO1_Freq { "lfo1_freq" };
         static const juce::String LFO1_Type { "lfo1_type" };
         static const juce::String LFO1_Offset { "lfo1_offset" };
+
+        static const juce::String HistoryPlotBufferSize { "history_plot_buffer_size" };
     }
 
     namespace Name
@@ -81,6 +83,8 @@ namespace Param
         static const juce::String LFO1_Freq { "LFO 1 Freq." };
         static const juce::String LFO1_Type { "LFO 1 Type" };
         static const juce::String LFO1_Offset { "LFO 1 Offset" };
+
+        static const juce::String HistoryPlotBufferSize { "History Plot Buffer Size" };
     }
 
     namespace Ranges
@@ -124,6 +128,11 @@ namespace Param
         static constexpr float AmountMax { 1.f };
         static constexpr float AmountInc { 0.001f };
         static constexpr float AmountSkw { 1.f };
+
+        static constexpr int HistoryPlotBufferSizeMin { 512 };
+        static constexpr int HistoryPlotBufferSizeMax { 32768 };
+        static constexpr int HistoryPlotBufferSizeInc { 512 };
+        static constexpr int HistoryPlotBufferSizeSkw { 1 };
 
         static const juce::StringArray LFOType { "Sin", "Tri" };
         static const juce::StringArray FilterType { "Low Pass", "Band Pass", "High Pass" };

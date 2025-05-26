@@ -2,11 +2,12 @@
 
 #include "PluginProcessor.h"
 #include "mrta_utils/Source/GUI/GenericParameterEditor.h"
-#include "HistoryPlotComponent.h" 
+#include "HistoryPlotComponent.h"
 
 class WavetableSynthAudioProcessorEditor
 : public juce::AudioProcessorEditor
 , private juce::Timer
+, private juce::AudioProcessorValueTreeState::Listener
 {
 public:
     WavetableSynthAudioProcessorEditor(WavetableSynthAudioProcessor&);
@@ -35,6 +36,8 @@ private:
     mrta::GenericParameterEditor lfo1ParamEditor;
     HistoryPlotComponent lfoHistoryPlot;
 
+    juce::AudioProcessorValueTreeState& vts;
+
     juce::Label oscLabel;
     juce::Label vcaEnvLabel;
     juce::Label vcfEnvLabel;
@@ -45,6 +48,18 @@ private:
 
     void setupLabel(juce::Label& label);
     void timerCallback() override;
+
+    // Listener callback
+    void parameterChanged (const juce::String& paramID, float newValue) override
+    {
+        if (paramID == Param::ID::HistoryPlotBufferSize) {
+            // This is still the audio thread!, so queue onto the message thread (otherwise it will crash):
+            juce::MessageManager::callAsync ([this, newValue]()
+            {
+                lfoHistoryPlot.setBufferSize ((int) newValue);
+            });
+        }
+    }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableSynthAudioProcessorEditor)
 };

@@ -9,7 +9,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     lfoParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_LFOFreq, Param::ID::VCF_LFOType }),
     filterParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_Cutoff, Param::ID::VCF_Reso, Param::ID::VCF_Type, Param::ID::VCF_EnvAmount, Param::ID::VCF_LFOAmount }),
     testLfoEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::FinalVol, Param::ID::LFO_freq, Param::ID::LFO_mult }),
-    lfo1ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_Freq, Param::ID::LFO1_Type, Param::ID::LFO1_Offset }),
+    lfo1ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_Freq, Param::ID::LFO1_Type, Param::ID::LFO1_Offset, Param::ID::HistoryPlotBufferSize }),
     oscLabel("", "Oscillators"),
     vcaEnvLabel("", "Amplitude Envelope"),
     vcfEnvLabel("", "Filter Envelope"),
@@ -17,7 +17,8 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     filterLabel("", "Filter"),
     finalLfoLabel("", "Volume LFO"),
     lfo1Label("", "LFO 1"),
-    lfoHistoryPlot(32768)
+    lfoHistoryPlot(32768),
+    vts (p.getParamManager().getAPVTS())
 {
     addAndMakeVisible(oscParamEditor);
     addAndMakeVisible(vcaEnvParamEditor);
@@ -37,6 +38,8 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     setupLabel(finalLfoLabel);
     setupLabel(lfo1Label);
 
+    vts.addParameterListener (Param::ID::HistoryPlotBufferSize, this);
+
     startTimerHz ((int) REFRESH_RATE);
 
     setSize(NUM_SECTIONS * SECTION_WIDTH + (NUM_SECTIONS - 1) * SECTION_SPACER_WIDTH, LABEL_HEIGHT + PARAM_HEIGHT * MAX_PARAM_COUNT);
@@ -44,6 +47,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
 
 WavetableSynthAudioProcessorEditor::~WavetableSynthAudioProcessorEditor()
 {
+    vts.removeParameterListener (Param::ID::HistoryPlotBufferSize, this);
 }
 
 void WavetableSynthAudioProcessorEditor::paint(juce::Graphics& g)
