@@ -1,14 +1,39 @@
 #include "ADSREnvelopeComponent.h"
 
 ADSREnvelopeComponent::ADSREnvelopeComponent()
+: startTime (juce::Time::getMillisecondCounterHiRes())
 {
     setupSlider (attackSlider,  0.0, 2000.0, 100.0);
     setupSlider (decaySlider,   0.0, 2000.0, 100.0);
     setupSlider (sustainSlider, 0.0,    1.0,   1.0);
     setupSlider (releaseSlider, 0.0, 2000.0, 100.0);
+
+    startTimerHz (60);  // repaint + update at 60 Hz
 }
 
 ADSREnvelopeComponent::~ADSREnvelopeComponent() {}
+
+void ADSREnvelopeComponent::timerCallback()
+{
+    // read up-to-date times
+    float a = (float) attackSlider.getValue();
+    float d = (float) decaySlider.getValue();
+    float r = (float) releaseSlider.getValue();
+    float total = a + d + r;
+
+    double now = juce::Time::getMillisecondCounterHiRes();
+    double elapsed = now - startTime;
+
+    // loop when we reach the end
+    if (total <= 0.0f || elapsed > total)
+    {
+        startTime = now;
+        elapsed = 0.0;
+    }
+
+    currentPhaseTime = (float) elapsed;
+    repaint();
+}
 
 void ADSREnvelopeComponent::setupSlider (juce::Slider& s, double min, double max, double def)
 {
@@ -67,6 +92,34 @@ void ADSREnvelopeComponent::paint (juce::Graphics& g)
     // stroke on top
     g.setColour (juce::Colours::lightgreen);
     g.strokePath (path, juce::PathStrokeType (3.0f));
+
+    // --- draw play-head indicator ---
+    {
+        float t = currentPhaseTime;
+        float total = a + d + r;
+
+        if (t >= 0 && t <= total)
+        {
+            // compute envelope value at time t
+            float value = 0.0f;
+            if (t < a && a > 0) value = t / a;
+            else if (t < a + d && d > 0) value = 1.0f - ((t - a) / d) * (1.0f - s);
+            else if (t < a + d + r && r > 0) value = s * (1.0f - ((t - a - d) / r));
+            else value = 0.0f;
+
+            float xPhase = mapX (t);
+            float yPhase = juce::jmap (value, 0.0f, 1.0f, area.getBottom(), area.getY());
+
+            // vertical line
+            g.setColour (juce::Colours::white.withAlpha (0.2f));
+            g.drawLine (xPhase, area.getBottom(), xPhase, yPhase, 1.0f);
+
+            // phase dot
+            g.setColour (juce::Colours::white);
+            float pr = handleRadius * 0.75f;
+            g.fillEllipse (xPhase - pr, yPhase - pr, pr * 2.0f, pr * 2.0f);
+        }
+    }
 
     // handles (attack, decay/sustain, release)
     points.clear();
