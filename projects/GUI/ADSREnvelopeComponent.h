@@ -36,8 +36,11 @@ private:
     juce::Slider attackSlider, decaySlider, sustainSlider, releaseSlider;
 
     juce::Path path;
-    juce::Array<juce::Point<float>> points;
     
+    juce::Array<juce::Point<float>> points;
+    juce::Array<juce::Point<float>> controlPoints;  
+    juce::Array<juce::Point<float>> controlPointOffsets;
+
     int draggingPoint { -1 };
 
     double startTime;

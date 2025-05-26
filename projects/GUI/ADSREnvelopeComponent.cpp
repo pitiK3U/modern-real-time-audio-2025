@@ -50,9 +50,9 @@ void ADSREnvelopeComponent::paint (juce::Graphics& g)
     g.fillAll(juce::Colours::black);
 
     auto area = getLocalBounds()
-                    .removeFromTop(getHeight() / 2)
-                    .toFloat()
-                    .reduced(10.0f);
+        .removeFromTop(getHeight() / 2)
+        .toFloat()
+        .reduced(10.0f);
 
     float a = (float)attackSlider.getValue();
     float d = (float)decaySlider.getValue();
@@ -73,48 +73,64 @@ void ADSREnvelopeComponent::drawBackground(juce::Graphics& g, juce::Rectangle<fl
     g.drawRect(area, 1.5f);
 }
 
-void ADSREnvelopeComponent::drawEnvelope(juce::Graphics& g,
-                                          juce::Rectangle<float> area,
-                                          float a, float d, float s, float r)
+void ADSREnvelopeComponent::drawEnvelope(juce::Graphics& g, juce::Rectangle<float> area, float a, float d, float s, float r)
 {
-    auto mapX = [&](float t) { return area.getX() + (t / MAX_LENGTH) * area.getWidth(); };
+    auto mapX = [&](float t)
+    {
+        return area.getX() + (t / MAX_LENGTH) * area.getWidth();
+    };
 
-    float x0 = area.getX();
-    float y0 = area.getBottom();
-    float x1 = mapX(a);
-    float y1 = area.getY();
-    float x2 = mapX(a + d);
-    float y2 = juce::jmap(s, 0.0f, 1.0f, area.getBottom(), area.getY());
-    float x3 = mapX(a + d + r);
-    float y3 = area.getBottom();
+    // 1) compute the 4 on-curve points
+    float x0 = area.getX(), y0 = area.getBottom();
+    float x1 = mapX (a), y1 = area.getY();
+    float x2 = mapX (a + d), y2 = juce::jmap (s, 0.0f, 1.0f, area.getBottom(), area.getY());
+    float x3 = mapX (a + d + r), y3 = area.getBottom();
 
+    // 2) stash them into points[]
+    points.clear();
+    points.add ({ x0, y0 });
+    points.add ({ x1, y1 });
+    points.add ({ x2, y2 });
+    points.add ({ x3, y3 });
+
+    // 3) ensure we have 3 offsets (init to zero → handles at midpoints)
+    if (controlPointOffsets.size() != 3)
+    {
+        controlPointOffsets.clear();
+        controlPointOffsets.add ({ 0, 0 });
+        controlPointOffsets.add ({ 0, 0 });
+        controlPointOffsets.add ({ 0, 0 });
+    }
+
+    // 4) build absolute control-points = midpoint + offset
+    controlPoints.clear();
+    for (int i = 0; i < 3; ++i)
+    {
+        auto mid = (points[i] + points[i+1]) * 0.5f;
+        controlPoints.add (mid + controlPointOffsets[i]);
+    }
+
+    // 5) stroke the quadratic path
     path.clear();
-    path.startNewSubPath(x0, y0);
-    path.lineTo(x1, y1);
-    path.lineTo(x2, y2);
-    path.lineTo(x3, y3);
+    path.startNewSubPath(points[0]);
+    path.quadraticTo(controlPoints[0], points[1]);
+    path.quadraticTo(controlPoints[1], points[2]);
+    path.quadraticTo(controlPoints[2], points[3]);
 
-    juce::Path fillPath(path);
-    fillPath.lineTo(x3, area.getBottom());
-    fillPath.lineTo(x0, area.getBottom());
+    // 6) fill under it
+    juce::Path fillPath (path);
+    fillPath.lineTo (x3, area.getBottom());
+    fillPath.lineTo (x0, area.getBottom());
     fillPath.closeSubPath();
 
-    g.setColour(juce::Colours::lightgreen.withAlpha(0.3f));
+    g.setColour(juce::Colours::lightgreen.withAlpha (0.3f));
     g.fillPath(fillPath);
 
     g.setColour(juce::Colours::lightgreen);
-    g.strokePath(path, juce::PathStrokeType(3.0f));
-
-    points.clear();
-    points.add({x0, y0});
-    points.add({x1, y1});
-    points.add({x2, y2});
-    points.add({x3, y3});
+    g.strokePath(path, juce::PathStrokeType (3.0f));
 }
 
-void ADSREnvelopeComponent::drawPlayhead(juce::Graphics& g,
-                                         juce::Rectangle<float> area,
-                                         float a, float d, float s, float r)
+void ADSREnvelopeComponent::drawPlayhead(juce::Graphics& g, juce::Rectangle<float> area, float a, float d, float s, float r)
 {
     float t = currentPhaseTime;
     float total = a + d + r;
@@ -122,9 +138,12 @@ void ADSREnvelopeComponent::drawPlayhead(juce::Graphics& g,
         return;
 
     float value = 0;
-    if (t < a && a > 0)                value = t / a;
-    else if (t < a + d && d > 0)       value = 1.0f - ((t - a) / d) * (1.0f - s);
-    else if (t < a + d + r && r > 0)   value = s * (1.0f - ((t - a - d) / r));
+    if (t < a && a > 0)
+        value = t / a;
+    else if (t < a + d && d > 0)
+        value = 1.0f - ((t - a) / d) * (1.0f - s);
+    else if (t < a + d + r && r > 0)
+        value = s * (1.0f - ((t - a - d) / r));
 
     auto x = area.getX() + (t / MAX_LENGTH) * area.getWidth();
     auto y = juce::jmap(value, 0.0f, 1.0f, area.getBottom(), area.getY());
@@ -139,12 +158,15 @@ void ADSREnvelopeComponent::drawPlayhead(juce::Graphics& g,
 
 void ADSREnvelopeComponent::drawHandles(juce::Graphics& g)
 {
-    g.setColour(juce::Colours::white);
+    g.setColour (juce::Colours::white);
+
+    // on-curve handles
     for (auto& pt : points)
-        g.fillEllipse(pt.x - handleRadius,
-                      pt.y - handleRadius,
-                      handleRadius * 2,
-                      handleRadius * 2);
+        g.fillEllipse (pt.x - handleRadius, pt.y - handleRadius, handleRadius * 2, handleRadius * 2);
+
+    // off-curve handles (draw as rings)
+    for (auto& cp : controlPoints)
+        g.drawEllipse (cp.x - handleRadius, cp.y - handleRadius, handleRadius * 2, handleRadius * 2, 2.0f);
 }
 
 void ADSREnvelopeComponent::resized()
@@ -159,9 +181,21 @@ void ADSREnvelopeComponent::resized()
 
 void ADSREnvelopeComponent::mouseDown (const juce::MouseEvent& e)
 {
+    // endpoints (0–3)
     for (int i = 0; i < points.size(); ++i)
-        if (points[i].getDistanceFrom (e.position) < handleRadius * 1.5f) // User can grab the handle bit further away then the radius
+        if (points[i].getDistanceFrom (e.position) < handleRadius * 1.5f)
+        {
             draggingPoint = i;
+            return;
+        }
+
+    // control handles (4–6)
+    for (int i = 0; i < controlPoints.size(); ++i)
+        if (controlPoints[i].getDistanceFrom (e.position) < handleRadius * 1.5f)
+        {
+            draggingPoint = 4 + i;
+            return;
+        }
 }
 
 void ADSREnvelopeComponent::mouseDrag (const juce::MouseEvent& e)
@@ -169,57 +203,99 @@ void ADSREnvelopeComponent::mouseDrag (const juce::MouseEvent& e)
     if (draggingPoint < 0)
         return;
 
-    // same drawing area
+    // clamp mouse into envelope rect
     auto area = getLocalBounds()
-        .removeFromTop (getHeight() / 2)
+        .removeFromTop (getHeight()/2)
         .toFloat()
         .reduced (10.0f);
 
-    auto pos = e.position;
-    pos.x = juce::jlimit (area.getX(), area.getRight(),  pos.x);
-    pos.y = juce::jlimit (area.getY(), area.getBottom(), pos.y);
+    juce::Point<float> pos = e.position;
+    pos.x = juce::jlimit(area.getX(), area.getRight(), pos.x);
+    pos.y = juce::jlimit(area.getY(), area.getBottom(), pos.y);
 
-    // invert mapX
+    // helpers
     auto mapXToTime = [&](float x)
     {
-        float norm = (x - area.getX()) / area.getWidth();
-        return norm * MAX_LENGTH;
+        return ((x - area.getX()) / area.getWidth()) * MAX_LENGTH;
+    };
+    auto mapTimeToX = [&](float t)
+    {
+        return area.getX() + (t / MAX_LENGTH) * area.getWidth();
     };
 
-    // current values
-    float a = (float) attackSlider .getValue();
-    float d = (float) decaySlider  .getValue();
+    // current ADSR
+    float a = (float) attackSlider.getValue();
+    float d = (float) decaySlider.getValue();
+    float s = (float) sustainSlider.getValue();
+    float r = (float) releaseSlider.getValue();
 
-    // decide which slider to update
-    if (draggingPoint == 1) // Dragging point 0 gets ignored, as it is the start point
+    // endpoint drags (1–3)
+    if (draggingPoint >= 1 && draggingPoint <= 3)
     {
-        // moving the attack handle
-        float newA = mapXToTime (pos.x);
-        attackSlider.setValue (newA, juce::dontSendNotification);
-    }
-    else if (draggingPoint == 2)
-    {
-        // moving the decay/sustain handle
-        float total = mapXToTime (pos.x);
-        float newD  = total - a; // decay = (attack+decay) – attack
-        newD = juce::jlimit (0.0f, MAX_LENGTH - a, newD);
-        decaySlider.setValue (newD, juce::dontSendNotification);
+        float newA = a, newD = d, newS = s, newR = r;
 
-        // vertical still controls sustain
-        float normY = (area.getBottom() - pos.y) / area.getHeight();
-        float newS  = juce::jlimit (0.0f, 1.0f, normY);
+        if (draggingPoint == 1)
+        {
+            newA = juce::jlimit (0.0f, MAX_LENGTH - d - r, mapXToTime (pos.x));
+        }
+        else if (draggingPoint == 2)
+        {
+            float total = mapXToTime (pos.x);
+            newD = juce::jlimit (0.0f, MAX_LENGTH - a - r, total - newA);
+            newS = juce::jlimit (0.0f, 1.0f, (area.getBottom() - pos.y) / area.getHeight());
+        }
+        else // release
+        {
+            float total = mapXToTime (pos.x);
+            newR = juce::jlimit (0.0f, MAX_LENGTH - newA - newD, total - newA - newD);
+        }
+
+        // compute old vs new pixel positions
+        auto oldP = points.getReference (draggingPoint);
+        juce::Point<float> newP;
+
+        if(draggingPoint == 1)
+            newP = { mapTimeToX (newA), area.getY() };
+        else if (draggingPoint == 2)
+            newP = { mapTimeToX (newA + newD), juce::jmap (newS, 0.0f, 1.0f, area.getBottom(), area.getY()) };
+        else
+            newP = { mapTimeToX (newA + newD + newR), area.getBottom() };
+
+        auto delta = newP - oldP;
+
+        // push new slider values
+        attackSlider .setValue (newA, juce::dontSendNotification);
+        decaySlider  .setValue (newD, juce::dontSendNotification);
         sustainSlider.setValue (newS, juce::dontSendNotification);
-    }
-    else if (draggingPoint == 3)
-    {
-        // moving the release handle
-        float total = mapXToTime (pos.x);
-        float newR  = total - (a + d); // release = (attack+decay+release) – (attack+decay)
-        newR = juce::jlimit (0.0f, MAX_LENGTH - a - d, newR);
         releaseSlider.setValue (newR, juce::dontSendNotification);
+
+        repaint();
+        return;
     }
 
-    repaint();
+    // control-point drags (4–6)
+    if (draggingPoint >= 4 && draggingPoint <= 6)
+    {
+        int idx = draggingPoint - 4;
+
+        // grab the two neighbouring on-curve points
+        auto p0 = points.getReference(idx);
+        auto p1 = points.getReference(idx + 1);
+
+        // clamp mouse X to lie between those two Xs
+        float minX = juce::jmin(p0.x, p1.x);
+        float maxX = juce::jmax(p0.x, p1.x);
+        pos.x = juce::jlimit(minX, maxX, pos.x);
+
+        // recompute midpoint
+        auto mid = (p0 + p1) * 0.5f;
+
+        // store the offset from midpoint (Y is free)
+        controlPointOffsets.set(idx, { pos.x - mid.x,
+                                    pos.y - mid.y });
+
+        repaint();
+    }
 }
 
 void ADSREnvelopeComponent::mouseUp (const juce::MouseEvent&)
