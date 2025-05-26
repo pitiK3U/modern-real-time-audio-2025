@@ -128,7 +128,14 @@ void ADSREnvelopeComponent::drawEnvelope(juce::Graphics& g, juce::Rectangle<floa
     g.fillPath(fillPath);
 
     g.setColour(juce::Colours::lightgreen);
-    g.strokePath(path, juce::PathStrokeType (3.0f));
+    g.strokePath(
+        path,
+        juce::PathStrokeType (
+            3.0f, 
+            juce::PathStrokeType::JointStyle::curved, 
+            juce::PathStrokeType::EndCapStyle::rounded
+        )
+    );
 }
 
 void ADSREnvelopeComponent::drawPlayhead(juce::Graphics& g, juce::Rectangle<float> area, float a, float d, float s, float r)
