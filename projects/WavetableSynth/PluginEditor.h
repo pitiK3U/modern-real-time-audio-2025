@@ -16,7 +16,7 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
 
-    static constexpr int NUM_SECTIONS { 7 };
+    static constexpr int NUM_SECTIONS { 8 };
     static constexpr int SECTION_WIDTH { 250 };
     static constexpr int SECTION_SPACER_WIDTH { 20 };
     static constexpr int LABEL_HEIGHT { 50 };
@@ -34,7 +34,9 @@ private:
     mrta::GenericParameterEditor filterParamEditor;
     mrta::GenericParameterEditor testLfoEditor;
     mrta::GenericParameterEditor lfo1ParamEditor;
-    HistoryPlotComponent lfoHistoryPlot;
+    mrta::GenericParameterEditor lfo2ParamEditor;
+    HistoryPlotComponent lfo1HistoryPlot;
+    HistoryPlotComponent lfo2HistoryPlot;
 
     juce::AudioProcessorValueTreeState& vts;
 
@@ -45,6 +47,7 @@ private:
     juce::Label filterLabel;
     juce::Label finalLfoLabel;
     juce::Label lfo1Label;
+    juce::Label lfo2Label;
 
     void setupLabel(juce::Label& label);
     void timerCallback() override;
@@ -56,7 +59,8 @@ private:
             // This is still the audio thread!, so queue onto the message thread (otherwise it will crash):
             juce::MessageManager::callAsync ([this, newValue]()
             {
-                lfoHistoryPlot.setBufferSize ((int) newValue);
+                lfo1HistoryPlot.setBufferSize ((int) newValue);
+                lfo2HistoryPlot.setBufferSize ((int) newValue);
             });
         }
     }

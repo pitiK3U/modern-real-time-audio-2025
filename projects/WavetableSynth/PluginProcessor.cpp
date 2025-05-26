@@ -1,5 +1,4 @@
 #include "PluginProcessor.h"
-#include "LFO.h"
 #include "PluginEditor.h"
 
 void setOscSawVol(std::vector<DSP::SynthVoice*> voices, float dB, bool skipRamp)
@@ -138,12 +137,19 @@ static const std::vector<mrta::ParameterInfo> paramVector
     {Param::ID::LFO1_Freq, Param::Name::LFO1_Freq, Param::Units::Hz, 0.5f, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
     {Param::ID::LFO1_Offset, Param::Name::LFO1_Offset, "", 0.f, Param::Ranges::LFOOffsetMin, Param::Ranges::LFOOffsetMax, Param::Ranges::LFOOffsetInc, Param::Ranges::LFOOffsetSkw },
     {Param::ID::LFO1_Type, Param::Name::LFO1_Type, Param::Ranges::LFO1Type, 0},
+
+    {Param::ID::LFO2_Freq, Param::Name::LFO2_Freq, Param::Units::Hz, 0.5f, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
+    {Param::ID::LFO2_Offset, Param::Name::LFO2_Offset, "", 0.f, Param::Ranges::LFOOffsetMin, Param::Ranges::LFOOffsetMax, Param::Ranges::LFOOffsetInc, Param::Ranges::LFOOffsetSkw },
+    {Param::ID::LFO2_Type, Param::Name::LFO2_Type, Param::Ranges::LFO1Type, 0},
+
+
     { Param::ID::HistoryPlotBufferSize, Param::Name::HistoryPlotBufferSize, Param::Units::Ms, 32768.f, Param::Ranges::HistoryPlotBufferSizeMin, Param::Ranges::HistoryPlotBufferSizeMax, Param::Ranges::HistoryPlotBufferSizeInc, Param::Ranges::HistoryPlotBufferSizeSkw }
 };
 
 WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager(*this, ProjectInfo::projectName, paramVector),
-    lfo(DSP::LFO(44100.f, 0.5f, DSP::Waveform::Sine)) // TODO initialize with default values from header file
+    lfo1(DSP::LFO(44100.f, 0.5f, DSP::Waveform::Sine)), // TODO initialize with default values from header file
+    lfo2(DSP::LFO(44100.f, 0.5f, DSP::Waveform::Sine)) // TODO initialize with default values from header file
 {
     synth.addSound(new DSP::SynthSound());
     for (size_t i = 0; i < NUM_VOICES; ++i)
@@ -174,12 +180,16 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::VCF_LFOAmount, [this] (float value, bool force) { setLFOAmountVCF(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::OutputVol, [this] (float value, bool force) { setOutputVol(voices, value, force); });
     // paramManager.registerParameterCallback(Param::ID::LFO_freq, [this] (float value, bool force) { lfo.setFrequency(value); });
-    paramManager.registerParameterCallback(Param::ID::LFO_mult, [this] (float value, bool force) { volume.setEffect(Param::ID::LFO_mult, value, lfo); });
+    paramManager.registerParameterCallback(Param::ID::LFO_mult, [this] (float value, bool force) { volume.setEffect(Param::ID::LFO_mult, value, lfo1); });
     paramManager.registerParameterCallback(Param::ID::FinalVol, [this] (float value, bool force) { volume.setValue(value); });
 
-    paramManager.registerParameterCallback(Param::ID::LFO1_Freq, [this] (float value, bool force)  {lfo.setFrequency(value);});
-    paramManager.registerParameterCallback(Param::ID::LFO1_Offset, [this] (float value, bool force) { lfo.setOffset(value); });
-    paramManager.registerParameterCallback(Param::ID::LFO1_Type, [this] (float value, bool force) { lfo.setWaveform(static_cast<DSP::Waveform>(std::round(value))); });
+    paramManager.registerParameterCallback(Param::ID::LFO1_Freq, [this] (float value, bool force)  {lfo1.setFrequency(value);});
+    paramManager.registerParameterCallback(Param::ID::LFO1_Offset, [this] (float value, bool force) { lfo1.setOffset(value); });
+    paramManager.registerParameterCallback(Param::ID::LFO1_Type, [this] (float value, bool force) { lfo1.setWaveform(static_cast<DSP::Waveform>(std::round(value))); });
+
+    paramManager.registerParameterCallback(Param::ID::LFO2_Freq, [this] (float value, bool force)  {lfo2.setFrequency(value);});
+    paramManager.registerParameterCallback(Param::ID::LFO2_Offset, [this] (float value, bool force) { lfo2.setOffset(value); });
+    paramManager.registerParameterCallback(Param::ID::LFO2_Type, [this] (float value, bool force) { lfo2.setWaveform(static_cast<DSP::Waveform>(std::round(value))); });
 }
 
 WavetableSynthAudioProcessor::~WavetableSynthAudioProcessor()
@@ -210,14 +220,22 @@ void WavetableSynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
         }
 
         // Advance LFO for each sample
-        lfo.advancePhase();
-        lfoHistory.pushSample(lfo.getValue());
+        lfo1.advancePhase();
+        lfo1History.pushSample(lfo1.getValue());
+
+        lfo2.advancePhase();
+        lfo2History.pushSample(lfo2.getValue());
     }
 }
 
-void WavetableSynthAudioProcessor::getLastLfoValues (std::vector<float>& outValues)
+void WavetableSynthAudioProcessor::getLastLfo1Values (std::vector<float>& outValues)
 {
-    lfoHistory.getHistory (outValues);
+    lfo1History.getHistory (outValues);
+}
+
+void WavetableSynthAudioProcessor::getLastLfo2Values (std::vector<float>& outValues)
+{
+    lfo2History.getHistory (outValues);
 }
 
 void WavetableSynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

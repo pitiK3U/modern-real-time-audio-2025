@@ -10,6 +10,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     filterParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_Cutoff, Param::ID::VCF_Reso, Param::ID::VCF_Type, Param::ID::VCF_EnvAmount, Param::ID::VCF_LFOAmount }),
     testLfoEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::FinalVol, Param::ID::LFO_freq, Param::ID::LFO_mult }),
     lfo1ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_Freq, Param::ID::LFO1_Type, Param::ID::LFO1_Offset, Param::ID::HistoryPlotBufferSize }),
+    lfo2ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO2_Freq, Param::ID::LFO2_Type, Param::ID::LFO2_Offset }),
     oscLabel("", "Oscillators"),
     vcaEnvLabel("", "Amplitude Envelope"),
     vcfEnvLabel("", "Filter Envelope"),
@@ -17,7 +18,9 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     filterLabel("", "Filter"),
     finalLfoLabel("", "Volume LFO"),
     lfo1Label("", "LFO 1"),
-    lfoHistoryPlot(32768),
+    lfo2Label("", "LFO 2"),
+    lfo1HistoryPlot(32768),
+    lfo2HistoryPlot(32768),
     vts (p.getParamManager().getAPVTS())
 {
     addAndMakeVisible(oscParamEditor);
@@ -27,8 +30,10 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     addAndMakeVisible(filterParamEditor);
     addAndMakeVisible(testLfoEditor);
     addAndMakeVisible(lfo1ParamEditor);
+    addAndMakeVisible(lfo2ParamEditor);
 
-    addAndMakeVisible (lfoHistoryPlot);
+    addAndMakeVisible (lfo1HistoryPlot);
+    addAndMakeVisible(lfo2HistoryPlot);
 
     setupLabel(oscLabel);
     setupLabel(vcaEnvLabel);
@@ -37,6 +42,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     setupLabel(filterLabel);
     setupLabel(finalLfoLabel);
     setupLabel(lfo1Label);
+    setupLabel(lfo2Label);
 
     vts.addParameterListener (Param::ID::HistoryPlotBufferSize, this);
 
@@ -100,22 +106,31 @@ void WavetableSynthAudioProcessorEditor::resized()
     {
         auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
         lfo1Label.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
-        lfoHistoryPlot.setBounds(secBounds.removeFromTop(HISTORY_PLOT_HEIGHT));
+        lfo1HistoryPlot.setBounds(secBounds.removeFromTop(HISTORY_PLOT_HEIGHT));
         lfo1ParamEditor.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
+    }
+
+    {
+        auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
+        lfo2Label.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
+        lfo2HistoryPlot.setBounds(secBounds.removeFromTop(HISTORY_PLOT_HEIGHT));
+        lfo2ParamEditor.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
     }
 }
 
 void WavetableSynthAudioProcessorEditor::timerCallback()
 {
     // 1) pull the most recent LFO block from your processor
-    std::vector<float> block;
-    audioProcessor.getLastLfoValues (block);
-
-    DBG(block.size());
+    std::vector<float> block1;
+    std::vector<float> block2;
+    audioProcessor.getLastLfo1Values (block1);
+    audioProcessor.getLastLfo2Values (block2);
 
     // 2) feed each sample into the history plot
-    for (auto v : block)
-        lfoHistoryPlot.addValue (v);
+    for (auto v : block1)
+        lfo1HistoryPlot.addValue (v);
+    for (auto v : block2)
+        lfo2HistoryPlot.addValue (v);
 }
 
 void WavetableSynthAudioProcessorEditor::setupLabel(juce::Label& label)
