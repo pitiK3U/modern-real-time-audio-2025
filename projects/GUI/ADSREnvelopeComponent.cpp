@@ -1,12 +1,14 @@
 #include "ADSREnvelopeComponent.h"
+#include "juce_core/juce_core.h"
+#include <cassert>
 
 ADSREnvelopeComponent::ADSREnvelopeComponent()
 : startTime (juce::Time::getMillisecondCounterHiRes())
 {
-    setupSlider (attackSlider,  0.0, 2000.0, 100.0);
-    setupSlider (decaySlider,   0.0, 2000.0, 300.0);
-    setupSlider (sustainSlider, 0.0,    1.0,   0.6);
-    setupSlider (releaseSlider, 0.0, 2000.0, 700.0);
+    setupSlider (attackSlider,  0.0f, 2000.0f, 100.0f);
+    setupSlider (decaySlider,   0.0f, 2000.0f, 300.0f);
+    setupSlider (sustainSlider, 0.0f,    1.0f,   0.6f);
+    setupSlider (releaseSlider, 0.0f, 2000.0f, 700.0f);
 
     startTimerHz (60);  // repaint + update at 60 Hz
 }
@@ -35,14 +37,17 @@ void ADSREnvelopeComponent::timerCallback()
     repaint();
 }
 
-void ADSREnvelopeComponent::setupSlider (juce::Slider& s, double min, double max, double def)
+void ADSREnvelopeComponent::setupSlider (juce::Slider& s, float min, float max, float def)
 {
     s.setSliderStyle (juce::Slider::RotaryVerticalDrag);
     s.setRange (min, max);
     s.setValue (def);
     s.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
     addAndMakeVisible (s);
-    s.onValueChange = [this] { repaint(); };
+    s.onValueChange = [this, &s] {
+        DBG(s.getValue());
+        repaint();
+    };
 }
 
 void ADSREnvelopeComponent::paint (juce::Graphics& g)
@@ -268,10 +273,10 @@ void ADSREnvelopeComponent::mouseDrag (const juce::MouseEvent& e)
         auto delta = newP - oldP;
 
         // push new slider values
-        attackSlider .setValue (newA, juce::dontSendNotification);
-        decaySlider  .setValue (newD, juce::dontSendNotification);
-        sustainSlider.setValue (newS, juce::dontSendNotification);
-        releaseSlider.setValue (newR, juce::dontSendNotification);
+        attackSlider.setValue(newA, juce::dontSendNotification);
+        decaySlider.setValue(newD, juce::dontSendNotification);
+        sustainSlider.setValue(newS, juce::dontSendNotification);
+        releaseSlider.setValue(newR, juce::dontSendNotification);
 
         repaint();
         return;
@@ -333,51 +338,66 @@ void ADSREnvelopeComponent::mouseExit (const juce::MouseEvent&)
     }
 }
 
-float ADSREnvelopeComponent::getYForX (float xQuery) const
+float ADSREnvelopeComponent::getYForX (float xQueryF) const
 {
-    // each segment i goes from points[i] to points[i+1] with controlPoints[i]
+    // bump into double right away
+    double xQuery = xQueryF;
+    constexpr double eps = 1e-12;
+
+    // iterate each Bézier segment
     for (int i = 0; i < controlPoints.size(); ++i)
     {
-        auto p0 = points.getReference(i);
-        auto p1 = points.getReference(i+1);
-        auto cp = controlPoints.getReference(i);
+        auto p0f = points.getReference(i);
+        auto p1f = points.getReference(i + 1);
+        auto cpf = controlPoints.getReference(i);
 
-        // only try if xQuery is between the end-points of this segment
-        if (xQuery < juce::jmin(p0.x, p1.x) || xQuery > juce::jmax(p0.x, p1.x))
+        // cast endpoints/control to double
+        double x0 = p0f.x,  y0 = p0f.y;
+        double x1 = p1f.x,  y1 = p1f.y;
+        double cx =  cpf.x, cy =  cpf.y;
+
+        // quick‐reject with a tiny margin
+        double minX = std::min(x0, x1) - eps;
+        double maxX = std::max(x0, x1) + eps;
+        if (xQuery < minX || xQuery > maxX)
             continue;
 
-        // quadratic coefficients for B_x(t) = xQuery
-        float A = p0.x - 2.0f * cp.x + p1.x;
-        float B = 2.0f * (cp.x - p0.x);
-        float C = p0.x - xQuery;
+        // quadratic A·t² + B·t + C = 0 for Bₓ(t) == xQuery
+        double A = x0 - 2.0*cx + x1;
+        double B = 2.0*(cx - x0);
+        double C = x0 - xQuery;
 
-        float t = -1.0f;
-        if (std::abs(A) < 1e-6f)  // degenerate → linear
+        double t = -1.0;
+
+        if (std::abs(A) < eps)
         {
+            // effectively linear
+            if (std::abs(B) < eps)
+                continue;
             t = -C / B;
         }
         else
         {
-            float disc = B * B - 4.0f * A * C;
-            if (disc < 0.0f) 
-                continue;  // no real t
-            float sqrtD = std::sqrt(disc);
-            float t1 = (-B + sqrtD) / (2.0f * A);
-            float t2 = (-B - sqrtD) / (2.0f * A);
-            if (t1 >= 0.0f && t1 <= 1.0f)      t = t1;
-            else if (t2 >= 0.0f && t2 <= 1.0f) t = t2;
+            double disc = B*B - 4.0*A*C;
+            if (disc < 0.0)
+                continue;
+            double s = std::sqrt(disc);
+            double t1 = (-B + s) / (2.0*A);
+            double t2 = (-B - s) / (2.0*A);
+            if      (t1 >= 0.0 && t1 <= 1.0) t = t1;
+            else if (t2 >= 0.0 && t2 <= 1.0) t = t2;
+            else                             continue;
         }
 
-        if (t >= 0.0f && t <= 1.0f)
+        if (t >= 0.0 && t <= 1.0)
         {
-            // Bézier in y
-            float u = 1.0f - t;
-            return u*u*p0.y
-                 + 2.0f*u*t*cp.y
-                 +     t*t*p1.y;
+            double u = 1.0 - t;
+            double y = u*u*y0 + 2.0*u*t*cy + t*t*y1;
+            return (float)y;
         }
     }
 
-    // fallback: if xQuery is outside all segments, clamp to baseline
+    // clamp to endpoints if nothing matched
     return points.getFirst().y;
 }
+

@@ -25,7 +25,7 @@ private:
     static constexpr float MAX_LENGTH { 4000.0f }; // in milliseconds - how many ms corresponds to the full width
     static constexpr float handleRadius{6.0f};
 
-    void setupSlider (juce::Slider& slider, double min, double max, double def);
+    void setupSlider (juce::Slider& slider, float min, float max, float def);
     void timerCallback() override;
 
     void drawBackground(juce::Graphics& g, juce::Rectangle<float> area);
