@@ -4,7 +4,7 @@
 
 WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(WavetableSynthAudioProcessor& p) :
     juce::AudioProcessorEditor(p), audioProcessor(p),
-    oscParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::OscillatorSawVol, Param::ID::OscillatorTriVol, Param::ID::OscillatorSinVol, Param::ID::OscillatorVol, Param::ID::OutputVol }),
+    oscParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::WavetablePosition, Param::ID::WavetableVol, Param::ID::OutputVol }),
     vcaEnvParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCA_AttTime, Param::ID::VCA_DecayTime, Param::ID::VCA_Sustain, Param::ID::VCA_RelTime }),
     vcfEnvParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_AttTime, Param::ID::VCF_DecayTime, Param::ID::VCF_Sustain, Param::ID::VCF_RelTime }),
     lfoParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_LFOFreq, Param::ID::VCF_LFOType }),
@@ -12,7 +12,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     testLfoEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::FinalVol, Param::ID::LFO_freq, Param::ID::LFO_mult }),
     lfo1ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_Freq, Param::ID::LFO1_Type, Param::ID::LFO1_Offset, Param::ID::HistoryPlotBufferSize }),
     lfo2ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO2_Freq, Param::ID::LFO2_Type, Param::ID::LFO2_Offset }),
-    oscLabel("", "Oscillators"),
+    oscLabel("", "Wavetable"),
     vcaEnvLabel("", "Amplitude Envelope"),
     vcfEnvLabel("", "Filter Envelope"),
     lfoLabel("", "Filter LFO"),

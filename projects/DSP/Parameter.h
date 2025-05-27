@@ -17,8 +17,8 @@ template <typename FloatType> class Parameter {
 
   void prepare(double SampleRate) { smoothedValue.reset(SampleRate); }
 
-  void setValue(FloatType targetValue) {
-    smoothedValue.setTargetValue(targetValue);
+  void setValue(FloatType targetValue, bool force = false) {
+    smoothedValue.setValue(targetValue, force);
   }
 
   void setEffect(juce::String paramId, FloatType paramMult,
@@ -36,6 +36,12 @@ template <typename FloatType> class Parameter {
     }
 
     return finalValue;
+  }
+
+  FloatType getNext() {
+    smoothedValue.getNextValue();
+    
+    return getCurrentValue();
   }
 
 private:

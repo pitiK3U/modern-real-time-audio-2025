@@ -2,7 +2,7 @@
 
 #include <JuceHeader.h>
 #include "Parameter.h"
-#include "Synth.h"
+#include "WavetableSynth.h"
 #include "LFO.h"
 #include "juce_core/juce_core.h"
 #include "ParameterHistoryBuffer.h"
@@ -11,10 +11,8 @@ namespace Param
 {
     namespace ID
     {
-        static const juce::String OscillatorSawVol { "oscillator_saw_vol" };
-        static const juce::String OscillatorTriVol { "oscillator_tri_vol" };
-        static const juce::String OscillatorSinVol { "oscillator_sin_vol" };
-        static const juce::String OscillatorVol { "oscillator_volume" };
+        static const juce::String WavetablePosition { "wavetable_position" };
+        static const juce::String WavetableVol { "wavetable_volume" };
         
         static const juce::String OutputVol { "output_vol" };
 
@@ -54,10 +52,8 @@ namespace Param
 
     namespace Name
     {
-        static const juce::String OscillatorSawVol { "Osc. Saw Vol." };
-        static const juce::String OscillatorTriVol { "Osc. Tri Vol." };
-        static const juce::String OscillatorSinVol { "Osc. Sin Vol." };
-        static const juce::String OscillatorVol { "Osc. Vol." };
+        static const juce::String WavetablePos { "Wavetable Pos." };
+        static const juce::String WavetableVol { "Wave. Vol." };
         static const juce::String OutputVol { "Output Vol." };
 
         static const juce::String VCA_AttTime { "VCA Attack Time" };
@@ -193,7 +189,7 @@ public:
 
 private:
     mrta::ParameterManager paramManager;
-    std::vector<DSP::SynthVoice*> voices;
+    std::vector<DSP::WavetableSynthVoice *> voices;
     juce::Synthesiser synth;
 
     DSP::LFO lfo1;

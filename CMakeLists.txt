@@ -344,7 +344,7 @@ add_plugin(wave_synth
     SOURCES
         ${wave_synth}/PluginEditor.cpp
         ${wave_synth}/PluginProcessor.cpp
-        ${dsp_source}/Synth.cpp
+        ${dsp_source}/WavetableSynth.cpp
         ${dsp_source}/Oscillator.cpp
         ${dsp_source}/EnvelopeGenerator.cpp
         ${dsp_source}/StateVariableFilter.cpp

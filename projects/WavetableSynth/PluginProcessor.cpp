@@ -1,112 +1,103 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "WavetableSynth.h"
+#include <algorithm>
+#include <vector>
 
-void setOscSawVol(std::vector<DSP::SynthVoice*> voices, float dB, bool skipRamp)
+void setWavetablePosition(std::vector<DSP::WavetableSynthVoice *> voices, float position, bool skipRamp)
 {
-    std::for_each(voices.begin(), voices.end(), [dB, skipRamp] (auto& v) { v->setOscSawVol(dB, skipRamp); });
+    std::for_each(voices.begin(), voices.end(), [position, skipRamp] (auto& v) { v->setWavetablePosition(position, skipRamp);});
 }
 
-void setOscTriVol(std::vector<DSP::SynthVoice*> voices, float dB, bool skipRamp)
+void setWavetableVol(std::vector<DSP::WavetableSynthVoice *> voices, float dB, bool skipRamp)
 {
-    std::for_each(voices.begin(), voices.end(), [dB, skipRamp] (auto& v) { v->setOscTriVol(dB, skipRamp); });
+    std::for_each(voices.begin(), voices.end(), [dB, skipRamp] (auto& v) { v->setWavetableVol(dB, skipRamp); });
 }
 
-void setOscSinVol(std::vector<DSP::SynthVoice*> voices, float dB, bool skipRamp)
-{
-    std::for_each(voices.begin(), voices.end(), [dB, skipRamp] (auto& v) { v->setOscSinVol(dB, skipRamp); });
-}
-
-void setOscVol(std::vector<DSP::SynthVoice*> voices, float dB, bool skipRamp)
-{
-    std::for_each(voices.begin(), voices.end(), [dB, skipRamp] (auto& v) { v->setOscVol(dB, skipRamp); });
-}
-
-void setAttTimeVCA(std::vector<DSP::SynthVoice*> voices, float ms)
+void setAttTimeVCA(std::vector<DSP::WavetableSynthVoice*> voices, float ms)
 {
     std::for_each(voices.begin(), voices.end(), [ms] (auto& v) { v->setAttTimeVCA(ms); });
 }
 
-void setDecayTimeVCA(std::vector<DSP::SynthVoice*> voices, float ms)
+void setDecayTimeVCA(std::vector<DSP::WavetableSynthVoice*> voices, float ms)
 {
     std::for_each(voices.begin(), voices.end(), [ms] (auto& v) { v->setDecayTimeVCA(ms); });
 }
 
-void setSustainVCA(std::vector<DSP::SynthVoice*> voices, float norm)
+void setSustainVCA(std::vector<DSP::WavetableSynthVoice*> voices, float norm)
 {
     std::for_each(voices.begin(), voices.end(), [norm] (auto& v) { v->setSustainVCA(norm); });
 }
 
-void setRelTimeVCA(std::vector<DSP::SynthVoice*> voices, float ms)
+void setRelTimeVCA(std::vector<DSP::WavetableSynthVoice*> voices, float ms)
 {
     std::for_each(voices.begin(), voices.end(), [ms] (auto& v) { v->setRelTimeVCA(ms); });
 }
 
-void setAttTimeVCF(std::vector<DSP::SynthVoice*> voices, float ms)
+void setAttTimeVCF(std::vector<DSP::WavetableSynthVoice*> voices, float ms)
 {
     std::for_each(voices.begin(), voices.end(), [ms] (auto& v) { v->setAttTimeVCF(ms); });
 }
 
-void setDecayTimeVCF(std::vector<DSP::SynthVoice*> voices, float ms)
+void setDecayTimeVCF(std::vector<DSP::WavetableSynthVoice*> voices, float ms)
 {
     std::for_each(voices.begin(), voices.end(), [ms] (auto& v) { v->setDecayTimeVCF(ms); });
 }
 
-void setSustainVCF(std::vector<DSP::SynthVoice*> voices, float norm)
+void setSustainVCF(std::vector<DSP::WavetableSynthVoice*> voices, float norm)
 {
     std::for_each(voices.begin(), voices.end(), [norm] (auto& v) { v->setSustainVCF(norm); });
 }
 
-void setRelTimeVCF(std::vector<DSP::SynthVoice*> voices, float ms)
+void setRelTimeVCF(std::vector<DSP::WavetableSynthVoice*> voices, float ms)
 {
     std::for_each(voices.begin(), voices.end(), [ms] (auto& v) { v->setRelTimeVCF(ms); });
 }
 
-void setLFOFreqVCF(std::vector<DSP::SynthVoice*> voices, float Hz)
+void setLFOFreqVCF(std::vector<DSP::WavetableSynthVoice*> voices, float Hz)
 {
     std::for_each(voices.begin(), voices.end(), [Hz] (auto& v) { v->setLFOFreqVCF(Hz); });
 }
 
-void setLFOTypeVCF(std::vector<DSP::SynthVoice*> voices, DSP::SynthVoice::LFOType type)
+void setLFOTypeVCF(std::vector<DSP::WavetableSynthVoice*> voices, DSP::WavetableSynthVoice::LFOType type)
 {
     std::for_each(voices.begin(), voices.end(), [type] (auto& v) { v->setLFOTypeVCF(type); });
 }
 
-void setEnvAmountVCF(std::vector<DSP::SynthVoice*> voices, float bipolar, bool skipRamp)
+void setEnvAmountVCF(std::vector<DSP::WavetableSynthVoice*> voices, float bipolar, bool skipRamp)
 {
     std::for_each(voices.begin(), voices.end(), [bipolar, skipRamp] (auto& v) { v->setEnvAmountVCF(bipolar, skipRamp); });
 }
 
-void setLFOAmountVCF(std::vector<DSP::SynthVoice*> voices, float bipolar, bool skipRamp)
+void setLFOAmountVCF(std::vector<DSP::WavetableSynthVoice*> voices, float bipolar, bool skipRamp)
 {
     std::for_each(voices.begin(), voices.end(), [bipolar, skipRamp] (auto& v) { v->setLFOAmountVCF(bipolar, skipRamp); });
 }
 
-void setFilterCutoff(std::vector<DSP::SynthVoice*> voices, float Hz, bool skipRamp)
+void setFilterCutoff(std::vector<DSP::WavetableSynthVoice*> voices, float Hz, bool skipRamp)
 {
     std::for_each(voices.begin(), voices.end(), [Hz, skipRamp] (auto& v) { v->setFilterCutoff(Hz, skipRamp); });
 }
 
-void setFilterReso(std::vector<DSP::SynthVoice*> voices, float Q, bool skipRamp)
+void setFilterReso(std::vector<DSP::WavetableSynthVoice*> voices, float Q, bool skipRamp)
 {
     std::for_each(voices.begin(), voices.end(), [Q, skipRamp] (auto& v) { v->setFilterReso(Q, skipRamp); });
 }
 
-void setFilterType(std::vector<DSP::SynthVoice*> voices, DSP::SynthVoice::FilterType type, bool skipRamp)
+void setFilterType(std::vector<DSP::WavetableSynthVoice*> voices, DSP::WavetableSynthVoice::FilterType type, bool skipRamp)
 {
     std::for_each(voices.begin(), voices.end(), [type, skipRamp] (auto& v) { v->setFilterType(type, skipRamp); });
 }
 
-void setOutputVol(std::vector<DSP::SynthVoice*> voices, float dB, bool skipRamp)
+void setOutputVol(std::vector<DSP::WavetableSynthVoice*> voices, float dB, bool skipRamp)
 {
     std::for_each(voices.begin(), voices.end(), [dB, skipRamp] (auto& v) { v->setOutputVol(dB, skipRamp); });
 }
 
 static const std::vector<mrta::ParameterInfo> paramVector
 {
-    { Param::ID::OscillatorSawVol, Param::Name::OscillatorSawVol, Param::Units::dB, -12.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
-    { Param::ID::OscillatorTriVol, Param::Name::OscillatorTriVol, Param::Units::dB, -12.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
-    { Param::ID::OscillatorSinVol, Param::Name::OscillatorSinVol, Param::Units::dB, -12.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
-    { Param::ID::OscillatorVol,    Param::Name::OscillatorVol,    Param::Units::dB,   0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
+    { Param::ID::WavetablePosition, Param::Name::WavetablePos, "", 0, 0, 3, 1, 1.f },
+    { Param::ID::WavetableVol,    Param::Name::WavetableVol,    Param::Units::dB,   0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
 
     { Param::ID::VCA_AttTime,   Param::Name::VCA_AttTime,   Param::Units::Ms,  50.0f, Param::Ranges::EnvTimeMin,    Param::Ranges::EnvTimeMax,    Param::Ranges::EnvTimeInc,    Param::Ranges::EnvTimeSkw },
     { Param::ID::VCA_DecayTime, Param::Name::VCA_DecayTime, Param::Units::Ms,  10.0f, Param::Ranges::EnvTimeMin,    Param::Ranges::EnvTimeMax,    Param::Ranges::EnvTimeInc,    Param::Ranges::EnvTimeSkw },
@@ -154,15 +145,13 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     synth.addSound(new DSP::SynthSound());
     for (size_t i = 0; i < NUM_VOICES; ++i)
     {
-        voices.emplace_back(new DSP::SynthVoice());
+        voices.emplace_back(new DSP::WavetableSynthVoice());
         synth.addVoice(voices.back());
     }
     synth.setNoteStealingEnabled(false);
 
-    paramManager.registerParameterCallback(Param::ID::OscillatorSawVol, [this] (float value, bool force) { setOscSawVol(voices, value, force); });
-    paramManager.registerParameterCallback(Param::ID::OscillatorTriVol, [this] (float value, bool force) { setOscTriVol(voices, value, force); });
-    paramManager.registerParameterCallback(Param::ID::OscillatorSinVol, [this] (float value, bool force) { setOscSinVol(voices, value, force); });
-    paramManager.registerParameterCallback(Param::ID::OscillatorVol, [this] (float value, bool force) { setOscVol(voices, value, force); });
+    paramManager.registerParameterCallback(Param::ID::WavetablePosition, [this] (float value, bool force) { setWavetablePosition(voices, value, force); });
+    paramManager.registerParameterCallback(Param::ID::WavetableVol, [this] (float value, bool force) { setWavetableVol(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::VCA_AttTime, [this] (float value, bool force) { setAttTimeVCA(voices, value); });
     paramManager.registerParameterCallback(Param::ID::VCA_DecayTime, [this] (float value, bool force) { setDecayTimeVCA(voices, value); });
     paramManager.registerParameterCallback(Param::ID::VCA_Sustain, [this] (float value, bool force) { setSustainVCA(voices, value); });
@@ -172,16 +161,16 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::VCF_Sustain, [this] (float value, bool force) { setSustainVCF(voices, value); });
     paramManager.registerParameterCallback(Param::ID::VCF_RelTime, [this] (float value, bool force) { setRelTimeVCF(voices, value); });
     paramManager.registerParameterCallback(Param::ID::VCF_LFOFreq, [this] (float value, bool force) { setLFOFreqVCF(voices, value); });
-    paramManager.registerParameterCallback(Param::ID::VCF_LFOType, [this] (float value, bool force) { setLFOTypeVCF(voices, static_cast<DSP::SynthVoice::LFOType>(std::round(value))); });
+    paramManager.registerParameterCallback(Param::ID::VCF_LFOType, [this] (float value, bool force) { setLFOTypeVCF(voices, static_cast<DSP::WavetableSynthVoice::LFOType>(std::round(value))); });
     paramManager.registerParameterCallback(Param::ID::VCF_Cutoff, [this] (float value, bool force) { setFilterCutoff(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::VCF_Reso, [this] (float value, bool force) { setFilterReso(voices, value, force); });
-    paramManager.registerParameterCallback(Param::ID::VCF_Type, [this] (float value, bool force) { setFilterType(voices, static_cast<DSP::SynthVoice::FilterType>(std::round(value)), force); });
+    paramManager.registerParameterCallback(Param::ID::VCF_Type, [this] (float value, bool force) { setFilterType(voices, static_cast<DSP::WavetableSynthVoice::FilterType>(std::round(value)), force); });
     paramManager.registerParameterCallback(Param::ID::VCF_EnvAmount, [this] (float value, bool force) { setEnvAmountVCF(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::VCF_LFOAmount, [this] (float value, bool force) { setLFOAmountVCF(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::OutputVol, [this] (float value, bool force) { setOutputVol(voices, value, force); });
     // paramManager.registerParameterCallback(Param::ID::LFO_freq, [this] (float value, bool force) { lfo.setFrequency(value); });
-    paramManager.registerParameterCallback(Param::ID::LFO_mult, [this] (float value, bool force) { volume.setEffect(Param::ID::LFO_mult, value, lfo1); });
-    paramManager.registerParameterCallback(Param::ID::FinalVol, [this] (float value, bool force) { volume.setValue(value); });
+    // paramManager.registerParameterCallback(Param::ID::LFO_mult, [this] (float value, bool force) { volume.setEffect(Param::ID::LFO_mult, value, lfo1); });
+    // paramManager.registerParameterCallback(Param::ID::FinalVol, [this] (float value, bool force) { volume.setValue(value); });
 
     paramManager.registerParameterCallback(Param::ID::LFO1_Freq, [this] (float value, bool force)  {lfo1.setFrequency(value);});
     paramManager.registerParameterCallback(Param::ID::LFO1_Offset, [this] (float value, bool force) { lfo1.setOffset(value); });
@@ -216,12 +205,7 @@ void WavetableSynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
 
     for (int sample = 0; sample < buffer.getNumSamples(); sample++) {
         for (int channel = 0; channel < buffer.getNumChannels(); channel++) {
-<<<<<<< HEAD
             buffer.setSample(channel, sample, buffer.getSample(channel, sample));
-=======
-            buffer.setSample(channel, sample, volume.getCurrentValue() * buffer.getSample(channel, sample));
-            lfo.advance();
->>>>>>> a545c6a ([paramter]: Cleaner implementation)
         }
 
         // Advance LFO for each sample
