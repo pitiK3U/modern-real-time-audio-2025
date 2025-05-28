@@ -147,3 +147,14 @@ void WavetableSynthAudioProcessorEditor::setupLabel(juce::Label& label)
     label.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(label);
 }
+
+void WavetableSynthAudioProcessorEditor::parameterChanged (const juce::String& paramID, float newValue) {
+    if (paramID == Param::ID::HistoryPlotBufferSize) {
+        // This is still the audio thread!, so queue onto the message thread (otherwise it will crash):
+        juce::MessageManager::callAsync ([this, newValue]()
+        {
+            lfo1HistoryPlot.setBufferSize ((int) newValue);
+            lfo2HistoryPlot.setBufferSize ((int) newValue);
+        });
+    }
+}
