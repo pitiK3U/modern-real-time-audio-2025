@@ -92,8 +92,10 @@ public:
 
     static constexpr float FreqModRange { 10000.f };
 
-    static constexpr size_t SampleSize { 512 };
+    static constexpr size_t SampleSize { 2048 };
     static constexpr double DefaultSampleRate { 1.0 };
+
+    static constexpr float DefaultFreq { 1.f };
 
 private:
     void fillWavetable(double SampleRate = DefaultSampleRate);
@@ -121,8 +123,8 @@ private:
     */
 
     Parameter<float> wavetableIndex { Parameter<float>(0) };
-    size_t wavetablePhase { 0 };
-    size_t wavetableInc { 0 };
+    float wavetablePhase { 0 };
+    float wavetableInc { 0 };
 
     Parameter<float> wavetableVolRamp;
     Ramp<float> outputVolRamp;

@@ -1,4 +1,5 @@
 #include "Oscillator.h"
+#include "juce_core/juce_core.h"
 #include <algorithm>
 #include <cmath>
 #include "WavetableSynth.h"
@@ -27,28 +28,19 @@ WavetableSynthVoice::WavetableSynthVoice()
 void WavetableSynthVoice::fillWavetable(double SampleRate)
 {
     // FIXME: correctly fill the buffers and check phaseInc and phase
-    const int wavetableCount = 3;
+    const int wavetableCount = 4;
     wavetables.resize(wavetableCount);
-    Oscillator sin = Oscillator();
-    Oscillator tri = Oscillator();
-    Oscillator saw = Oscillator();
-
-    sin.setType(Oscillator::Sin);
-    tri.setType(Oscillator::TriAA);
-    saw.setType(Oscillator::SawAA);
-
-    sin.setFrequency(SampleSize);
-    tri.setFrequency(SampleSize);
-    saw.setFrequency(SampleSize);
-
-    sin.prepare(SampleRate);
-    tri.prepare(sampleRate);
-    saw.prepare(sampleRate);
 
     for (int sample = 0; sample < SampleSize; sample++) {
-        wavetables[0][sample] = sin.process();
-        wavetables[1][sample] = tri.process();
-        wavetables[2][sample] = saw.process();
+        auto phase = static_cast<float>(sample) / static_cast<float>(SampleSize);
+        // Sine waveform
+        wavetables[0][sample] = std::sin(juce::MathConstants<float>::twoPi * phase);
+        // Triangle waveform
+        wavetables[1][sample] = 4.f * std::fabs(phase - std::floor(phase + 1.f / 2.f)) - 1;
+        // Sawtooth waveform
+        wavetables[2][sample] = 2.f * phase - 1;
+        // Square waveform
+        wavetables[3][sample] = std::copysign(1.f, wavetables[0][sample]);
     }
 }
 
@@ -178,7 +170,9 @@ void WavetableSynthVoice::startNote(int midiNoteNumber, float newVelocity, juce:
     // sawOsc.setFrequency(convertMidiNoteToFreq(midiNoteNumber));
 
     const auto freq = convertMidiNoteToFreq(midiNoteNumber);
-    wavetableInc = freq * SampleSize / sampleRate;
+    wavetableInc = static_cast<float>(
+        static_cast<double>(freq) / static_cast<double>(DefaultFreq) * static_cast<double>(SampleSize) / sampleRate
+    );
 
     vcaEnvGen.start();
     vcfEnvGen.start();
@@ -253,7 +247,7 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         const float fractionalIndex = std::modf(wavetableIndex.getNext(), &integralIndexfloat);
         const auto integralIndex = static_cast<size_t>(integralIndexfloat);
 
-        wavetablePhase = ( wavetablePhase + wavetableInc ) % SampleSize;
+        wavetablePhase = std::fmod( wavetablePhase + wavetableInc, SampleSize);
 
         const auto wavetableVol { wavetableVolRamp.getNext() };
 
@@ -282,7 +276,8 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         }
         lfoPhaseState = std::fmod(lfoPhaseState + lfoPhaseInc, static_cast<float>(2 * M_PI));
 
-        const auto wavetableLerped = naive_lerp(wavetables[integralIndex][wavetablePhase], wavetables[(integralIndex + 1) % wavetables.size()][wavetablePhase], fractionalIndex);
+        const auto wavetablePhaseInteger = static_cast<size_t>(wavetablePhase);
+        const auto wavetableLerped = naive_lerp(wavetables[integralIndex][wavetablePhaseInteger], wavetables[(integralIndex + 1) % wavetables.size()][wavetablePhaseInteger], fractionalIndex);
         const auto wavetableOut { wavetableLerped * wavetableVol * vcaEnv * velocity };
 
         const auto freqMod { std::clamp(vcfEnv * vcfEnvAmout + vcfLFOAmount * lfo, -1.f, 1.f) };
