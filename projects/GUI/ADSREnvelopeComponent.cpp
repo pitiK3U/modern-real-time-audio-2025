@@ -44,8 +44,7 @@ void ADSREnvelopeComponent::setupSlider (juce::Slider& s, float min, float max, 
     s.setValue (def);
     s.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
     addAndMakeVisible (s);
-    s.onValueChange = [this, &s] {
-        DBG(s.getValue());
+    s.onValueChange = [this] {
         repaint();
     };
 }

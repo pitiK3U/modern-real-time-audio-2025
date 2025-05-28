@@ -1,11 +1,13 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "ADSREnvelopeGenerator.h"
 #include "Parameter.h"
 #include "Synth.h"
 #include "LFO.h"
 #include "juce_core/juce_core.h"
 #include "ParameterHistoryBuffer.h"
+#include "ADSREnvelopeGenerator.h"
 
 namespace Param
 {
@@ -198,6 +200,8 @@ private:
 
     DSP::LFO lfo1;
     DSP::LFO lfo2;
+
+    DSP::ADSREnvelopeGenerator envelopeGenerator;
 
     DSP::Parameter<float> volume;
 

@@ -149,7 +149,8 @@ static const std::vector<mrta::ParameterInfo> paramVector
 WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager(*this, ProjectInfo::projectName, paramVector),
     lfo1(DSP::LFO(44100.f, 0.5f, DSP::Waveform::Sine)), // TODO initialize with default values from header file
-    lfo2(DSP::LFO(44100.f, 0.5f, DSP::Waveform::Sine)) // TODO initialize with default values from header file
+    lfo2(DSP::LFO(44100.f, 0.5f, DSP::Waveform::Sine)), // TODO initialize with default values from header file
+    envelopeGenerator(DSP::ADSREnvelopeGenerator(44100)) // TODO initialize with default values from header file
 {
     synth.addSound(new DSP::SynthSound());
     for (size_t i = 0; i < NUM_VOICES; ++i)
@@ -200,6 +201,8 @@ void WavetableSynthAudioProcessor::prepareToPlay(double sampleRate, int /*sample
 {
     paramManager.updateParameters(true);
     synth.setCurrentPlaybackSampleRate(sampleRate);
+
+    envelopeGenerator.prepare(sampleRate);
 }
 
 void WavetableSynthAudioProcessor::releaseResources()
@@ -225,6 +228,9 @@ void WavetableSynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
 
         lfo2.advancePhase();
         lfo2History.pushSample(lfo2.getValue());
+
+        // Get the envelope value for this sample (TODO: just for testing; there should be separate envelope generators for each voice)
+        envelopeGenerator.getValue(true);
     }
 }
 
