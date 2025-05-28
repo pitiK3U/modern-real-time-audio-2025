@@ -87,4 +87,9 @@ void LFO::setWaveform(Waveform newWaveform) {
     updatePhaseIncrement();
 }
 
+void LFO::setSampleRate(float newSampleRate) {
+    sampleRate = newSampleRate;
+    updatePhaseIncrement();
+}
+
 }

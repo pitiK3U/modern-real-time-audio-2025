@@ -124,6 +124,8 @@ namespace Param
         static constexpr float LFOOffsetInc { 0.001f };
         static constexpr float LFOOffsetSkw { 1.f };
 
+        static constexpr float LFODefaultFreq { 0.5f };
+
         static constexpr float FilterFreqMin { 20.0f };
         static constexpr float FilterFreqMax { 20000.f };
         static constexpr float FilterFreqInc { 1.f };
