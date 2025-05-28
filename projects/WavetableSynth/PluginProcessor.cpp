@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "juce_core/system/juce_PlatformDefs.h"
 
 void setOscSawVol(std::vector<DSP::SynthVoice*> voices, float dB, bool skipRamp)
 {
@@ -142,8 +143,12 @@ static const std::vector<mrta::ParameterInfo> paramVector
     {Param::ID::LFO2_Offset, Param::Name::LFO2_Offset, "", 0.f, Param::Ranges::LFOOffsetMin, Param::Ranges::LFOOffsetMax, Param::Ranges::LFOOffsetInc, Param::Ranges::LFOOffsetSkw },
     {Param::ID::LFO2_Type, Param::Name::LFO2_Type, Param::Ranges::LFO1Type, 0},
 
-
-    { Param::ID::HistoryPlotBufferSize, Param::Name::HistoryPlotBufferSize, Param::Units::Ms, 32768.f, Param::Ranges::HistoryPlotBufferSizeMin, Param::Ranges::HistoryPlotBufferSizeMax, Param::Ranges::HistoryPlotBufferSizeInc, Param::Ranges::HistoryPlotBufferSizeSkw }
+    { Param::ID::HistoryPlotBufferSize, Param::Name::HistoryPlotBufferSize, Param::Units::Ms, 32768.f, Param::Ranges::HistoryPlotBufferSizeMin, Param::Ranges::HistoryPlotBufferSizeMax, Param::Ranges::HistoryPlotBufferSizeInc, Param::Ranges::HistoryPlotBufferSizeSkw },
+    
+    {Param::ID::EnvelopeAttackTime, Param::Name::EnvelopeAttackTime, Param::Units::Ms, Param::Ranges::AttackDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
+    {Param::ID::EnvelopeDecayTime, Param::Name::EnvelopeDecayTime, Param::Units::Ms, Param::Ranges::DecayDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
+    {Param::ID::EnvelopeSustain, Param::Name::EnvelopeSustain, "", Param::Ranges::SustainDefault, Param::Ranges::EnvelopeLevelMin, Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelInc, Param::Ranges::EnvelopeLevelSkw },
+    {Param::ID::EnvelopeReleaseTime, Param::Name::EnvelopeReleaseTime, Param::Units::Ms, Param::Ranges::ReleaseDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw }
 };
 
 WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
@@ -191,6 +196,11 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::LFO2_Freq, [this] (float value, bool force)  {lfo2.setFrequency(value);});
     paramManager.registerParameterCallback(Param::ID::LFO2_Offset, [this] (float value, bool force) { lfo2.setOffset(value); });
     paramManager.registerParameterCallback(Param::ID::LFO2_Type, [this] (float value, bool force) { lfo2.setWaveform(static_cast<DSP::Waveform>(std::round(value))); });
+
+    paramManager.registerParameterCallback(Param::ID::EnvelopeAttackTime, [this] (float value, bool force) { envelopeGenerator.setAttackTime(value); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeDecayTime, [this] (float value, bool force) { envelopeGenerator.setDecayTime(value); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeSustain, [this] (float value, bool force) { envelopeGenerator.setSustainLevel(value); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeReleaseTime, [this] (float value, bool force) { envelopeGenerator.setReleaseTime(value); });
 }
 
 WavetableSynthAudioProcessor::~WavetableSynthAudioProcessor()

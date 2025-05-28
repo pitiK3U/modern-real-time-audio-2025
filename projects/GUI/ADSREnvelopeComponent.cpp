@@ -2,13 +2,24 @@
 #include "juce_core/juce_core.h"
 #include <cassert>
 
-ADSREnvelopeComponent::ADSREnvelopeComponent()
+ADSREnvelopeComponent::ADSREnvelopeComponent(
+    juce::AudioProcessorValueTreeState& state,
+    const juce::String& attackID,
+    const juce::String& decayID,
+    const juce::String& sustainID,
+    const juce::String& releaseID
+)
 : startTime (juce::Time::getMillisecondCounterHiRes())
 {
-    setupSlider (attackSlider,  0.0f, 2000.0f, 100.0f);
-    setupSlider (decaySlider,   0.0f, 2000.0f, 300.0f);
-    setupSlider (sustainSlider, 0.0f,    1.0f,   0.6f);
-    setupSlider (releaseSlider, 0.0f, 2000.0f, 700.0f);
+    setupSlider (attackSlider);
+    setupSlider (decaySlider);
+    setupSlider (sustainSlider);
+    setupSlider (releaseSlider);
+
+    attackAttachment  = std::make_unique<Attachment>(state, attackID,  attackSlider);
+    decayAttachment   = std::make_unique<Attachment>(state, decayID,   decaySlider);
+    sustainAttachment = std::make_unique<Attachment>(state, sustainID, sustainSlider);
+    releaseAttachment = std::make_unique<Attachment>(state, releaseID, releaseSlider);
 
     startTimerHz (60);  // repaint + update at 60 Hz
 }
@@ -37,16 +48,11 @@ void ADSREnvelopeComponent::timerCallback()
     repaint();
 }
 
-void ADSREnvelopeComponent::setupSlider (juce::Slider& s, float min, float max, float def)
+void ADSREnvelopeComponent::setupSlider (juce::Slider& s)
 {
     s.setSliderStyle (juce::Slider::RotaryVerticalDrag);
-    s.setRange (min, max);
-    s.setValue (def);
     s.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
     addAndMakeVisible (s);
-    s.onValueChange = [this] {
-        repaint();
-    };
 }
 
 void ADSREnvelopeComponent::paint (juce::Graphics& g)
@@ -272,10 +278,10 @@ void ADSREnvelopeComponent::mouseDrag (const juce::MouseEvent& e)
         auto delta = newP - oldP;
 
         // push new slider values
-        attackSlider.setValue(newA, juce::dontSendNotification);
-        decaySlider.setValue(newD, juce::dontSendNotification);
-        sustainSlider.setValue(newS, juce::dontSendNotification);
-        releaseSlider.setValue(newR, juce::dontSendNotification);
+        attackSlider.setValue(newA);
+        decaySlider.setValue(newD);
+        sustainSlider.setValue(newS);
+        releaseSlider.setValue(newR);
 
         repaint();
         return;

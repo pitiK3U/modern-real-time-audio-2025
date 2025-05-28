@@ -22,7 +22,13 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     lfo2Label("", "LFO 2"),
     lfo1HistoryPlot(32768),
     lfo2HistoryPlot(32768),
-    adsrComponent(),
+    adsrComponent(
+        p.getParamManager().getAPVTS(),
+        Param::ID::EnvelopeAttackTime,
+        Param::ID::EnvelopeDecayTime,
+        Param::ID::EnvelopeSustain,
+        Param::ID::EnvelopeReleaseTime
+    ),
     vts (p.getParamManager().getAPVTS())
 {
     addAndMakeVisible(oscParamEditor);
@@ -128,6 +134,9 @@ void WavetableSynthAudioProcessorEditor::resized()
 
 void WavetableSynthAudioProcessorEditor::timerCallback()
 {
+    
+    audioProcessor.getParamManager().updateParameters();
+
     // 1) pull the most recent LFO block from your processor
     std::vector<float> block1;
     std::vector<float> block2;

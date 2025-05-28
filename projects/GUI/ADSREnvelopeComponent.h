@@ -1,5 +1,6 @@
 #pragma once
 
+#include <juce_audio_processors/juce_audio_processors.h>
 #include "juce_graphics/juce_graphics.h"
 #include <JuceHeader.h>
 
@@ -8,7 +9,15 @@ class ADSREnvelopeComponent
 , private juce::Timer
 {
 public:
-    ADSREnvelopeComponent();
+    using Attachment = juce::AudioProcessorValueTreeState::SliderAttachment;
+    
+    ADSREnvelopeComponent(
+        juce::AudioProcessorValueTreeState& state,
+        const juce::String& attackID,
+        const juce::String& decayID,
+        const juce::String& sustainID,
+        const juce::String& releaseID
+    );
     ~ADSREnvelopeComponent() override;
 
     void paint (juce::Graphics& g) override;
@@ -25,7 +34,7 @@ private:
     static constexpr float MAX_LENGTH { 4000.0f }; // in milliseconds - how many ms corresponds to the full width
     static constexpr float handleRadius{6.0f};
 
-    void setupSlider (juce::Slider& slider, float min, float max, float def);
+    void setupSlider (juce::Slider& slider);
     void timerCallback() override;
 
     void drawBackground(juce::Graphics& g, juce::Rectangle<float> area);
@@ -38,6 +47,11 @@ private:
     float getYForX (float xQuery) const;
 
     juce::Slider attackSlider, decaySlider, sustainSlider, releaseSlider;
+
+    std::unique_ptr<Attachment> attackAttachment;
+    std::unique_ptr<Attachment> decayAttachment;
+    std::unique_ptr<Attachment> sustainAttachment;
+    std::unique_ptr<Attachment> releaseAttachment;
 
     juce::Path path;
 
