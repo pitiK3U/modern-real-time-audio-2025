@@ -29,12 +29,12 @@ void ADSREnvelopeGenerator::prepare(double newSampleRate)
 
 void ADSREnvelopeGenerator::setAttackTime(float attackTimeMs)
 {
-    this->attackTimeMs = std::min(attackTimeMs, 1.0f);
+    this->attackTimeMs = std::max(attackTimeMs, 1.0f);
 }
 
 void ADSREnvelopeGenerator::setDecayTime(float decayTimeMs)
 {
-    this->decayTimeMs = std::min(decayTimeMs, 1.0f);
+    this->decayTimeMs = std::max(decayTimeMs, 1.0f);
 }
 
 void ADSREnvelopeGenerator::setSustainLevel(float sustainLevel)
@@ -44,7 +44,7 @@ void ADSREnvelopeGenerator::setSustainLevel(float sustainLevel)
 
 void ADSREnvelopeGenerator::setReleaseTime(float releaseTimeMs)
 {
-    this->releaseTimeMs = std::min(releaseTimeMs, 1.0f);
+    this->releaseTimeMs = std::max(releaseTimeMs, 1.0f);
 }
 
 void ADSREnvelopeGenerator::setAttackCurveX(float x)
@@ -82,7 +82,7 @@ void ADSREnvelopeGenerator::setReleaseCurveY(float y)
 float ADSREnvelopeGenerator::getValue(bool midiGateState)
 {
     // Advance state timer
-    currentStateTimer += 1.0f / sampleRate;
+    currentStateTimer += 1.0f / sampleRate * 1000.0f; // Convert to milliseconds
 
     // Update the envelope state based on MIDI gate state and current state timer
     updateEnvelopeState(midiGateState);
@@ -90,16 +90,27 @@ float ADSREnvelopeGenerator::getValue(bool midiGateState)
     // Calculate the current envelope value based on the current state
     switch (currentState) {
         case OFF:
-            return getOffCurveValue();
+            currentEnvelopeValue = getOffCurveValue();
+            break;
         case ATTACK:
-            return getAttackCurveValue();
+            currentEnvelopeValue = getAttackCurveValue();
+            break;
         case DECAY:
-            return getDecayCurveValue();
+            currentEnvelopeValue = getDecayCurveValue();
+            break;
         case SUSTAIN:
-            return getSustainCurveValue();
+            currentEnvelopeValue = getSustainCurveValue();
+            break;
         case RELEASE:
-            return getReleaseCurveValue();
+            currentEnvelopeValue = getReleaseCurveValue();
+            break;
     }
+    return currentEnvelopeValue;
+}
+
+bool ADSREnvelopeGenerator::isOff()
+{
+    return currentState == OFF;
 }
 
 // PRIVATE METHODS
@@ -110,6 +121,7 @@ void ADSREnvelopeGenerator::updateEnvelopeState(bool midiGateState)
         case OFF:
             if (midiGateState) {
                 currentState = ATTACK;
+                currentStateTimer = 0.f;
             }
             break;
         case ATTACK:
@@ -207,7 +219,7 @@ float ADSREnvelopeGenerator::getDecayCurveValue()
 
 float ADSREnvelopeGenerator::getSustainCurveValue()
 {
-    return currentEnvelopeValue; // Sustain level is constant
+    return currentEnvelopeValue;
 }
 
 float ADSREnvelopeGenerator::getReleaseCurveValue()

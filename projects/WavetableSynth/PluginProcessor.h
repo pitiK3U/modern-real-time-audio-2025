@@ -180,8 +180,8 @@ namespace Param
         static constexpr float EnvelopeLevelInc { 0.001f };
         static constexpr float EnvelopeLevelSkw { 1.0f };
 
-        static constexpr float AttackDefault { 50.0f };
-        static constexpr float DecayDefault { 150.0f };
+        static constexpr float AttackDefault { 950.0f };
+        static constexpr float DecayDefault { 1150.0f };
         static constexpr float SustainDefault { 0.7f };
         static constexpr float ReleaseDefault { 400.0f };
 
@@ -239,8 +239,6 @@ private:
 
     DSP::LFO lfo1;
     DSP::LFO lfo2;
-
-    DSP::ADSREnvelopeGenerator envelopeGenerator;
 
     DSP::Parameter<float> volume;
 

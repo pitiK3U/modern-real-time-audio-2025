@@ -18,10 +18,10 @@ float convertMidiNoteToFreq(int MidiNote)
 }
 
 WavetableSynthVoice::WavetableSynthVoice()
+:envGen(sampleRate)
 {
     fillWavetable();
 
-    vcaEnvGen.setAnalogStyle(false);
     vcfEnvGen.setAnalogStyle(false);
 }
 
@@ -48,23 +48,6 @@ WavetableSynthVoice::~WavetableSynthVoice()
 {
 }
 
-/* REMOVE: 
-void WavetableSynthVoice::setOscSawVol(float dB, bool skipRamp)
-{
-    sawOscVolRamp.setTarget(std::pow(10.f, 0.05f * dB), skipRamp);
-}
-
-void WavetableSynthVoice::setOscTriVol(float dB, bool skipRamp)
-{
-    triOscVolRamp.setTarget(std::pow(10.f, 0.05f * dB), skipRamp);
-}
-
-void WavetableSynthVoice::setOscSinVol(float dB, bool skipRamp)
-{
-    sinOscVolRamp.setTarget(std::pow(10.f, 0.05f * dB), skipRamp);
-}
-*/
-
 void WavetableSynthVoice::setWavetablePosition(float index, bool skip) {
     wavetableIndex.setValue(std::clamp(index, 0.f, static_cast<float>(wavetables.size() - 1)), skip);
 }
@@ -74,24 +57,54 @@ void WavetableSynthVoice::setWavetableVol(float dB, bool skipRamp)
     wavetableVolRamp.setValue(std::pow(10.f, 0.05f * dB), skipRamp);
 }
 
-void WavetableSynthVoice::setAttTimeVCA(float ms)
+void WavetableSynthVoice::setAttTime(float ms)
 {
-    vcaEnvGen.setAttackTime(ms);
+    envGen.setAttackTime(ms);
 }
 
-void WavetableSynthVoice::setDecayTimeVCA(float ms)
+void WavetableSynthVoice::setDecayTime(float ms)
 {
-    vcaEnvGen.setDecayTime(ms);
+    envGen.setDecayTime(ms);
 }
 
-void WavetableSynthVoice::setSustainVCA(float norm)
+void WavetableSynthVoice::setSustain(float norm)
 {
-    vcaEnvGen.setSustainLevel(std::clamp(norm, 0.f, 1.f));
+    envGen.setSustainLevel(norm);
 }
 
-void WavetableSynthVoice::setRelTimeVCA(float ms)
+void WavetableSynthVoice::setRelTime(float ms)
 {
-    vcaEnvGen.setReleaseTime(ms);
+    envGen.setReleaseTime(ms);
+}
+
+void WavetableSynthVoice::setAttCurveX(float x)
+{
+    envGen.setAttackCurveX(x);
+}
+
+void WavetableSynthVoice::setAttCurveY(float y)
+{
+    envGen.setAttackCurveY(y);
+}
+
+void WavetableSynthVoice::setDecayCurveX(float x)
+{
+    envGen.setDecayCurveX(x);
+}
+
+void WavetableSynthVoice::setDecayCurveY(float y)
+{
+    envGen.setDecayCurveY(y);
+}
+
+void WavetableSynthVoice::setRelCurveX(float x)
+{
+    envGen.setReleaseCurveX(x);
+}
+
+void WavetableSynthVoice::setRelCurveY(float y)
+{
+    envGen.setReleaseCurveY(y);
 }
 
 void WavetableSynthVoice::setAttTimeVCF(float ms)
@@ -165,26 +178,22 @@ bool WavetableSynthVoice::canPlaySound(juce::SynthesiserSound* ptr)
 
 void WavetableSynthVoice::startNote(int midiNoteNumber, float newVelocity, juce::SynthesiserSound*, int currentPitchWheelPosition)
 {
-    // sinOsc.setFrequency(convertMidiNoteToFreq(midiNoteNumber));
-    // triOsc.setFrequency(convertMidiNoteToFreq(midiNoteNumber));
-    // sawOsc.setFrequency(convertMidiNoteToFreq(midiNoteNumber));
-
     const auto freq = convertMidiNoteToFreq(midiNoteNumber);
     wavetableInc = static_cast<float>(
         static_cast<double>(freq) / static_cast<double>(DefaultFreq) * static_cast<double>(SampleSize) / sampleRate
     );
 
-    vcaEnvGen.start();
     vcfEnvGen.start();
 
     velocity = newVelocity;
     voiceStarted = true;
+    gateState = true;
 }
 
 void WavetableSynthVoice::stopNote(float velocity, bool allowTailOff)
 {
-    vcaEnvGen.end();
     vcfEnvGen.end();
+    gateState = false;
 
     if (!allowTailOff)
         clearCurrentNote();
@@ -207,12 +216,9 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
 
         fillWavetable(sampleRate);
 
-        vcaEnvGen.prepare(sampleRate);
+        envGen.prepare(sampleRate);
         vcfEnvGen.prepare(sampleRate);
         filter.prepare(sampleRate);
-        // sinOscVolRamp.prepare(sampleRate);
-        // triOscVolRamp.prepare(sampleRate);
-        // sawOscVolRamp.prepare(sampleRate);
         wavetableVolRamp.prepare(sampleRate);
         outputVolRamp.prepare(sampleRate);
         vcfEnvAmountRamp.prepare(sampleRate);
@@ -228,19 +234,10 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
 
     for (int i = 0; i < numSamples; ++i)
     {
-        // const auto sin { wavetables[] };
-        // const auto tri { triOsc.process() };
-        // const auto saw { sawOsc.process() };
-
-        float vcaEnv { 0.f };
-        vcaEnvGen.process(&vcaEnv, 1);
+        float envValue = envGen.getValue(gateState);
 
         float vcfEnv { 0.f };
         vcfEnvGen.process(&vcfEnv, 1);
-
-        // const auto sinVol { sinOscVolRamp.getNext() };
-        // const auto triVol { triOscVolRamp.getNext() };
-        // const auto sawVol { sawOscVolRamp.getNext() };
 
         // Indices of which of the waveform in wavetable to use wavetables[integralindex]
         float integralIndexfloat = 0.f;
@@ -278,7 +275,7 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
 
         const auto wavetablePhaseInteger = static_cast<size_t>(wavetablePhase);
         const auto wavetableLerped = naive_lerp(wavetables[integralIndex][wavetablePhaseInteger], wavetables[(integralIndex + 1) % wavetables.size()][wavetablePhaseInteger], fractionalIndex);
-        const auto wavetableOut { wavetableLerped * wavetableVol * vcaEnv * velocity };
+        const auto wavetableOut { wavetableLerped * wavetableVol * envValue * velocity };
 
         const auto freqMod { std::clamp(vcfEnv * vcfEnvAmout + vcfLFOAmount * lfo, -1.f, 1.f) };
         const auto freq { std::clamp(FreqModRange * (std::pow(2.f, freqMod) - 1.f) + vcfFreq, MinFreqHz, MaxFreqHz) };
@@ -294,7 +291,7 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
             outputBuffer.addSample(ch, startSample + i, out);
         }
 
-        if (voiceStarted && vcaEnvGen.isOff() && vcfEnvGen.isOff())
+        if (voiceStarted && envGen.isOff() && vcfEnvGen.isOff())
         {
             voiceStarted = false;
             clearCurrentNote();

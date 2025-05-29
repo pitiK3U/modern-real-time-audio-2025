@@ -26,6 +26,8 @@ namespace DSP
             * @param midiGateState  true if the gate is on, false if off
             */
             float getValue(bool midiGateState);
+            
+            bool isOff();
 
             void setAttackTime(float attackTimeMs);
             void setDecayTime(float decayTimeMs);

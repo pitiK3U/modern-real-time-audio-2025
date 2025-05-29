@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include <array>
 
+#include "ADSREnvelopeGenerator.h"
 #include "EnvelopeGenerator.h"
 #include "Parameter.h"
 #include "StateVariableFilter.h"
@@ -54,10 +55,17 @@ public:
     void setWavetablePosition(float index, bool skip);
     void setWavetableVol(float db, bool skip);
 
-    void setAttTimeVCA(float ms);
-    void setDecayTimeVCA(float ms);
-    void setSustainVCA(float norm);
-    void setRelTimeVCA(float ms);
+    void setAttTime(float ms);
+    void setDecayTime(float ms);
+    void setSustain(float norm);
+    void setRelTime(float ms);
+
+    void setAttCurveX(float x);
+    void setAttCurveY(float y);
+    void setDecayCurveX(float x);
+    void setDecayCurveY(float y);
+    void setRelCurveX(float x);
+    void setRelCurveY(float y);
 
     void setAttTimeVCF(float ms);
     void setDecayTimeVCF(float ms);
@@ -107,7 +115,7 @@ private:
 
     std::vector<std::array<float, SampleSize>> wavetables;
 
-    EnvelopeGenerator vcaEnvGen;
+    ADSREnvelopeGenerator envGen;
     EnvelopeGenerator vcfEnvGen;
 
     StateVariableFilter filter;
@@ -139,6 +147,7 @@ private:
     Ramp<float> vcfHPFRamp;
 
     bool voiceStarted { false };
+    bool gateState { false };
 };
 
 }
