@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "juce_graphics/juce_graphics.h"
+#include "juce_gui_basics/juce_gui_basics.h"
 #include <JuceHeader.h>
 
 class ADSREnvelopeComponent
@@ -16,7 +17,13 @@ public:
         const juce::String& attackID,
         const juce::String& decayID,
         const juce::String& sustainID,
-        const juce::String& releaseID
+        const juce::String& releaseID,
+        const juce::String& attackCurveXID,
+        const juce::String& attackCurveYID,
+        const juce::String& decayCurveXID,
+        const juce::String& decayCurveYID,
+        const juce::String& releaseCurveXID,
+        const juce::String& releaseCurveYID
     );
     ~ADSREnvelopeComponent() override;
 
@@ -47,11 +54,10 @@ private:
     float getYForX (float xQuery) const;
 
     juce::Slider attackSlider, decaySlider, sustainSlider, releaseSlider;
+    juce::Slider attackCurveXSlider, attackCurveYSlider, decayCurveYSlider, decayCurveXSlider, releaseCurveXSlider, releaseCurveYSlider;
 
-    std::unique_ptr<Attachment> attackAttachment;
-    std::unique_ptr<Attachment> decayAttachment;
-    std::unique_ptr<Attachment> sustainAttachment;
-    std::unique_ptr<Attachment> releaseAttachment;
+    std::unique_ptr<Attachment> attackAttachment, decayAttachment, sustainAttachment, releaseAttachment;
+    std::unique_ptr<Attachment> attackCurveXAttachment, attackCurveYAttachment, decayCurveXAttachment, decayCurveYAttachment, releaseCurveXAttachment, releaseCurveYAttachment;
 
     juce::Path path;
 

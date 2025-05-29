@@ -32,9 +32,12 @@ namespace DSP
             void setSustainLevel(float sustainLevelLinear);
             void setReleaseTime(float releaseTimeMs);
 
-            void setAttackCurve(float x, float y);
-            void setDecayCurve(float x, float y);
-            void setReleaseCurve(float x, float y);
+            void setAttackCurveX(float x);
+            void setAttackCurveY(float y);
+            void setDecayCurveX(float x);
+            void setDecayCurveY(float y);
+            void setReleaseCurveX(float x);
+            void setReleaseCurveY(float y);
 
         private:
             void updateEnvelopeState(bool midiGateState);

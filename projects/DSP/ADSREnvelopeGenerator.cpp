@@ -47,19 +47,34 @@ void ADSREnvelopeGenerator::setReleaseTime(float releaseTimeMs)
     this->releaseTimeMs = std::min(releaseTimeMs, 1.0f);
 }
 
-void ADSREnvelopeGenerator::setAttackCurve(float x, float y)
+void ADSREnvelopeGenerator::setAttackCurveX(float x)
 {
-    attackCurveCoefficients = { x, y };
+    attackCurveCoefficients.first = x;
 }
 
-void ADSREnvelopeGenerator::setDecayCurve(float x, float y)
+void ADSREnvelopeGenerator::setAttackCurveY(float y)
 {
-    decayCurveCoefficients = { x, y };
+    attackCurveCoefficients.second = y;
 }
 
-void ADSREnvelopeGenerator::setReleaseCurve(float x, float y)
+void ADSREnvelopeGenerator::setDecayCurveX(float x)
 {
-    releaseCurveCoefficients = { x, y };
+    decayCurveCoefficients.first = x;
+}
+
+void ADSREnvelopeGenerator::setDecayCurveY(float y)
+{
+    decayCurveCoefficients.second = y;
+}
+
+void ADSREnvelopeGenerator::setReleaseCurveX(float x)
+{
+    releaseCurveCoefficients.first = x;
+}
+
+void ADSREnvelopeGenerator::setReleaseCurveY(float y)
+{
+    releaseCurveCoefficients.second = y;
 }
 
 // GETTERS

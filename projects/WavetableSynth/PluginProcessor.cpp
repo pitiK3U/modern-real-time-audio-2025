@@ -138,7 +138,14 @@ static const std::vector<mrta::ParameterInfo> paramVector
     {Param::ID::EnvelopeAttackTime, Param::Name::EnvelopeAttackTime, Param::Units::Ms, Param::Ranges::AttackDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
     {Param::ID::EnvelopeDecayTime, Param::Name::EnvelopeDecayTime, Param::Units::Ms, Param::Ranges::DecayDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
     {Param::ID::EnvelopeSustain, Param::Name::EnvelopeSustain, "", Param::Ranges::SustainDefault, Param::Ranges::EnvelopeLevelMin, Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelInc, Param::Ranges::EnvelopeLevelSkw },
-    {Param::ID::EnvelopeReleaseTime, Param::Name::EnvelopeReleaseTime, Param::Units::Ms, Param::Ranges::ReleaseDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw }
+    {Param::ID::EnvelopeReleaseTime, Param::Name::EnvelopeReleaseTime, Param::Units::Ms, Param::Ranges::ReleaseDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
+
+    {Param::ID::EnvelopeAttackCurveX, Param::Name::EnvelopeAttackCurveX, "", 0.0f, -Param::Ranges::ADSRPlotWidth, Param::Ranges::ADSRPlotWidth, 0.01f, 1.0f},
+    {Param::ID::EnvelopeAttackCurveY, Param::Name::EnvelopeAttackCurveY, "", 0.0f, -Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelMax, 0.01f, 1.0f},
+    {Param::ID::EnvelopeDecayCurveX, Param::Name::EnvelopeDecayCurveX, "", 0.0f, -Param::Ranges::ADSRPlotWidth, Param::Ranges::ADSRPlotWidth, 0.01f, 1.0f},
+    {Param::ID::EnvelopeDecayCurveY, Param::Name::EnvelopeDecayCurveY, "", 0.0f, -Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelMax, 0.01f, 1.0f},
+    {Param::ID::EnvelopeReleaseCurveX, Param::Name::EnvelopeReleaseCurveX, "", 0.0f, -Param::Ranges::ADSRPlotWidth, Param::Ranges::ADSRPlotWidth, 0.01f, 1.0f},
+    {Param::ID::EnvelopeReleaseCurveY, Param::Name::EnvelopeReleaseCurveY, "", 0.0f, -Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelMax, 0.01f, 1.0f}
 };
 
 WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
@@ -189,6 +196,13 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::EnvelopeDecayTime, [this] (float value, bool force) { envelopeGenerator.setDecayTime(value); });
     paramManager.registerParameterCallback(Param::ID::EnvelopeSustain, [this] (float value, bool force) { envelopeGenerator.setSustainLevel(value); });
     paramManager.registerParameterCallback(Param::ID::EnvelopeReleaseTime, [this] (float value, bool force) { envelopeGenerator.setReleaseTime(value); });
+
+    paramManager.registerParameterCallback(Param::ID::EnvelopeAttackCurveX, [this] (float value, bool force) { envelopeGenerator.setAttackCurveX(value); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeAttackCurveY, [this] (float value, bool force) { envelopeGenerator.setAttackCurveY(value); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeDecayCurveX, [this] (float value, bool force) { envelopeGenerator.setDecayCurveX(value); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeDecayCurveY, [this] (float value, bool force) { envelopeGenerator.setDecayCurveY(value); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeReleaseCurveX, [this] (float value, bool force) { envelopeGenerator.setReleaseCurveX(value); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeReleaseCurveY, [this] (float value, bool force) { envelopeGenerator.setReleaseCurveY(value); });
 }
 
 WavetableSynthAudioProcessor::~WavetableSynthAudioProcessor()

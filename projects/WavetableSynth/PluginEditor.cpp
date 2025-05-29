@@ -27,7 +27,13 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
         Param::ID::EnvelopeAttackTime,
         Param::ID::EnvelopeDecayTime,
         Param::ID::EnvelopeSustain,
-        Param::ID::EnvelopeReleaseTime
+        Param::ID::EnvelopeReleaseTime,
+        Param::ID::EnvelopeAttackCurveX,
+        Param::ID::EnvelopeAttackCurveY,
+        Param::ID::EnvelopeDecayCurveX,
+        Param::ID::EnvelopeDecayCurveY,
+        Param::ID::EnvelopeReleaseCurveX,
+        Param::ID::EnvelopeReleaseCurveY
     ),
     vts (p.getParamManager().getAPVTS())
 {

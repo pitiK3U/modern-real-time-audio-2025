@@ -7,7 +7,13 @@ ADSREnvelopeComponent::ADSREnvelopeComponent(
     const juce::String& attackID,
     const juce::String& decayID,
     const juce::String& sustainID,
-    const juce::String& releaseID
+    const juce::String& releaseID,
+    const juce::String& attackCurveXID,
+    const juce::String& attackCurveYID,
+    const juce::String& decayCurveXID,
+    const juce::String& decayCurveYID,
+    const juce::String& releaseCurveXID,
+    const juce::String& releaseCurveYID
 )
 : startTime (juce::Time::getMillisecondCounterHiRes())
 {
@@ -16,10 +22,24 @@ ADSREnvelopeComponent::ADSREnvelopeComponent(
     setupSlider (sustainSlider);
     setupSlider (releaseSlider);
 
+    setupSlider(attackCurveXSlider);
+    setupSlider(attackCurveYSlider);
+    setupSlider(decayCurveXSlider);
+    setupSlider(decayCurveYSlider);
+    setupSlider(releaseCurveXSlider);
+    setupSlider(releaseCurveYSlider);
+
     attackAttachment  = std::make_unique<Attachment>(state, attackID,  attackSlider);
     decayAttachment   = std::make_unique<Attachment>(state, decayID,   decaySlider);
     sustainAttachment = std::make_unique<Attachment>(state, sustainID, sustainSlider);
     releaseAttachment = std::make_unique<Attachment>(state, releaseID, releaseSlider);
+
+    attackCurveXAttachment  = std::make_unique<Attachment>(state, attackCurveXID,  attackCurveXSlider);
+    attackCurveYAttachment  = std::make_unique<Attachment>(state, attackCurveYID,  attackCurveYSlider);
+    decayCurveXAttachment   = std::make_unique<Attachment>(state, decayCurveXID,   decayCurveXSlider);
+    decayCurveYAttachment   = std::make_unique<Attachment>(state, decayCurveYID,   decayCurveYSlider);
+    releaseCurveXAttachment = std::make_unique<Attachment>(state, releaseCurveXID, releaseCurveXSlider);
+    releaseCurveYAttachment = std::make_unique<Attachment>(state, releaseCurveYID, releaseCurveYSlider);
 
     startTimerHz (60);  // repaint + update at 60 Hz
 }
@@ -52,7 +72,7 @@ void ADSREnvelopeComponent::setupSlider (juce::Slider& s)
 {
     s.setSliderStyle (juce::Slider::RotaryVerticalDrag);
     s.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
-    addAndMakeVisible (s);
+    addAndMakeVisible (s); // TODO: disable for curve sliders?
 }
 
 void ADSREnvelopeComponent::paint (juce::Graphics& g)
@@ -244,7 +264,7 @@ void ADSREnvelopeComponent::mouseDrag (const juce::MouseEvent& e)
     float r = (float) releaseSlider.getValue();
 
     // endpoint drags (1–3)
-    if (draggingPoint >= 1 && draggingPoint <= 3)
+    if (draggingPoint >= 1 && draggingPoint <= 3) // TODO: When dragging point check if curve handle is not too far away
     {
         float newA = a, newD = d, newS = s, newR = r;
 
@@ -305,8 +325,29 @@ void ADSREnvelopeComponent::mouseDrag (const juce::MouseEvent& e)
         auto mid = (p0 + p1) * 0.5f;
 
         // store the offset from midpoint (Y is free)
-        controlPointOffsets.set(idx, { pos.x - mid.x,
-                                    pos.y - mid.y });
+        auto offset = pos - mid;
+        controlPointOffsets.set(idx, offset);
+
+        // Map pixel offset to actual value in ms or amplitude
+        float timeOffset = (offset.x / area.getWidth()) * MAX_LENGTH; // ms offset
+        float levelOffset = -(offset.y / area.getHeight());           // y grows downwards, invert
+
+        // Store the new values in the curve sliders
+        switch (idx)
+        {
+            case 0:
+                attackCurveXSlider.setValue(timeOffset);
+                attackCurveYSlider.setValue(levelOffset);
+                break;
+            case 1:
+                decayCurveXSlider.setValue(timeOffset);
+                decayCurveYSlider.setValue(levelOffset);
+                break;
+            case 2:
+                releaseCurveXSlider.setValue(timeOffset);
+                releaseCurveYSlider.setValue(levelOffset);
+                break;
+        }
 
         repaint();
     }

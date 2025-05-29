@@ -55,6 +55,13 @@ namespace Param
         static const juce::String EnvelopeDecayTime { "envelope_decay_time" };
         static const juce::String EnvelopeSustain { "envelope_sustain" };
         static const juce::String EnvelopeReleaseTime { "envelope_release_time" };
+
+        static const juce::String EnvelopeAttackCurveX { "envelope_attack_curve_x" };
+        static const juce::String EnvelopeAttackCurveY { "envelope_attack_curve_y" };
+        static const juce::String EnvelopeDecayCurveX { "envelope_decay_curve_x" };
+        static const juce::String EnvelopeDecayCurveY { "envelope_decay_curve_y" };
+        static const juce::String EnvelopeReleaseCurveX { "envelope_release_curve_x" };
+        static const juce::String EnvelopeReleaseCurveY { "envelope_release_curve_y" };
     }
 
     namespace Name
@@ -101,6 +108,13 @@ namespace Param
         static const juce::String EnvelopeDecayTime { "Decay" };
         static const juce::String EnvelopeSustain { "Sustain" };
         static const juce::String EnvelopeReleaseTime { "Release" };
+
+        static const juce::String EnvelopeAttackCurveX { "Attack Curve X" };
+        static const juce::String EnvelopeAttackCurveY { "Attack Curve Y" };
+        static const juce::String EnvelopeDecayCurveX { "Decay Curve X" };
+        static const juce::String EnvelopeDecayCurveY { "Decay Curve Y" };
+        static const juce::String EnvelopeReleaseCurveX { "Release Curve X" };
+        static const juce::String EnvelopeReleaseCurveY { "Release Curve Y" };
     }
 
     namespace Ranges
@@ -170,6 +184,8 @@ namespace Param
         static constexpr float DecayDefault { 150.0f };
         static constexpr float SustainDefault { 0.7f };
         static constexpr float ReleaseDefault { 400.0f };
+
+        static constexpr float ADSRPlotWidth { 4000.f }; // In milliseconds
     }
 
     namespace Units
