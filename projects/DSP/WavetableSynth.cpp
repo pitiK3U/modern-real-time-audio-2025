@@ -179,7 +179,13 @@ float WavetableSynthVoice::getWavetableIncrement(float frequency, float defaultF
 void WavetableSynthVoice::updateUnisonIncrements()
 {
     for (auto unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
-        const auto unisonFrequency = moveFrequencyByCents(frequency, static_cast<float>(unisonVoice) * unisonDetune.getCurrentValue());
+        // to make it like: [0, 1, -1, 2, -2, 3, -3, ...]
+        auto unisonMultiplier = 0;
+        if (unisonVoice > 0) {
+            unisonMultiplier = (static_cast<float>(unisonVoice) - 1) / 2;
+            unisonMultiplier = std::copysign(unisonMultiplier, (static_cast<float>(unisonVoice % 2)) - 1);
+        }
+        const auto unisonFrequency = moveFrequencyByCents(frequency, unisonMultiplier * unisonDetune.getCurrentValue());
         unisonIncrements[unisonVoice] = getWavetableIncrement(unisonFrequency, DefaultFreq, SampleSize, sampleRate);
     }
 }
