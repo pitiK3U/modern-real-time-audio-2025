@@ -23,7 +23,8 @@ public:
         const juce::String& decayCurveXID,
         const juce::String& decayCurveYID,
         const juce::String& releaseCurveXID,
-        const juce::String& releaseCurveYID
+        const juce::String& releaseCurveYID,
+        float maxLength
     );
     ~ADSREnvelopeComponent() override;
 
@@ -37,8 +38,6 @@ public:
     void mouseExit  (const juce::MouseEvent& e) override;
 
 private:
-
-    static constexpr float MAX_LENGTH { 4000.0f }; // in milliseconds - how many ms corresponds to the full width
     static constexpr float handleRadius{6.0f};
 
     void setupSlider (juce::Slider& slider);
@@ -70,6 +69,7 @@ private:
     double startTime;
     float currentPhaseTime {0};
     bool isMouseOverEnvelopeArea = false;
+    float maxLength; // how many ms corresponds to the full width
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ADSREnvelopeComponent)
 };

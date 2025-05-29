@@ -13,9 +13,10 @@ ADSREnvelopeComponent::ADSREnvelopeComponent(
     const juce::String& decayCurveXID,
     const juce::String& decayCurveYID,
     const juce::String& releaseCurveXID,
-    const juce::String& releaseCurveYID
+    const juce::String& releaseCurveYID,
+    float maxLength
 )
-: startTime (juce::Time::getMillisecondCounterHiRes())
+: startTime (juce::Time::getMillisecondCounterHiRes()), maxLength(maxLength)
 {
     setupSlider (attackSlider);
     setupSlider (decaySlider);
@@ -108,7 +109,7 @@ void ADSREnvelopeComponent::drawEnvelope(juce::Graphics& g, juce::Rectangle<floa
 {
     auto mapX = [&](float t)
     {
-        return area.getX() + (t / MAX_LENGTH) * area.getWidth();
+        return area.getX() + (t / maxLength) * area.getWidth();
     };
 
     // 1) compute the 4 on-curve points
@@ -175,7 +176,7 @@ void ADSREnvelopeComponent::drawPlayhead(juce::Graphics& g, juce::Rectangle<floa
     if (t < 0 || t > total)
         return;
 
-    float x = area.getX() + (t / MAX_LENGTH) * area.getWidth();
+    float x = area.getX() + (t / maxLength) * area.getWidth();
 
     // sample the Bézier at that x
     float y = getYForX (x);
@@ -250,11 +251,11 @@ void ADSREnvelopeComponent::mouseDrag (const juce::MouseEvent& e)
     // helpers
     auto mapXToTime = [&](float x)
     {
-        return ((x - area.getX()) / area.getWidth()) * MAX_LENGTH;
+        return ((x - area.getX()) / area.getWidth()) * maxLength;
     };
     auto mapTimeToX = [&](float t)
     {
-        return area.getX() + (t / MAX_LENGTH) * area.getWidth();
+        return area.getX() + (t / maxLength) * area.getWidth();
     };
 
     // current ADSR
@@ -270,18 +271,18 @@ void ADSREnvelopeComponent::mouseDrag (const juce::MouseEvent& e)
 
         if (draggingPoint == 1)
         {
-            newA = juce::jlimit (0.0f, MAX_LENGTH - d - r, mapXToTime (pos.x));
+            newA = juce::jlimit (0.0f, maxLength - d - r, mapXToTime (pos.x));
         }
         else if (draggingPoint == 2)
         {
             float total = mapXToTime (pos.x);
-            newD = juce::jlimit (0.0f, MAX_LENGTH - a - r, total - newA);
+            newD = juce::jlimit (0.0f, maxLength - a - r, total - newA);
             newS = juce::jlimit (0.0f, 1.0f, (area.getBottom() - pos.y) / area.getHeight());
         }
         else // release
         {
             float total = mapXToTime (pos.x);
-            newR = juce::jlimit (0.0f, MAX_LENGTH - newA - newD, total - newA - newD);
+            newR = juce::jlimit (0.0f, maxLength - newA - newD, total - newA - newD);
         }
 
         // compute old vs new pixel positions
@@ -329,7 +330,7 @@ void ADSREnvelopeComponent::mouseDrag (const juce::MouseEvent& e)
         controlPointOffsets.set(idx, offset);
 
         // Map pixel offset to actual value in ms or amplitude
-        float timeOffset = (offset.x / area.getWidth()) * MAX_LENGTH; // ms offset
+        float timeOffset = (offset.x / area.getWidth()) * maxLength; // ms offset
         float levelOffset = -(offset.y / area.getHeight());           // y grows downwards, invert
 
         // Store the new values in the curve sliders

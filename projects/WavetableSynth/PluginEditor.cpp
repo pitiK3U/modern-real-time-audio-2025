@@ -33,7 +33,8 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
         Param::ID::EnvelopeDecayCurveX,
         Param::ID::EnvelopeDecayCurveY,
         Param::ID::EnvelopeReleaseCurveX,
-        Param::ID::EnvelopeReleaseCurveY
+        Param::ID::EnvelopeReleaseCurveY,
+        Param::Ranges::ADSRPlotWidth
     ),
     vts (p.getParamManager().getAPVTS())
 {

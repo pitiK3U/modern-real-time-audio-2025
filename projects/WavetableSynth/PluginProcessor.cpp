@@ -135,10 +135,10 @@ static const std::vector<mrta::ParameterInfo> paramVector
 
     { Param::ID::HistoryPlotBufferSize, Param::Name::HistoryPlotBufferSize, Param::Units::Ms, 32768.f, Param::Ranges::HistoryPlotBufferSizeMin, Param::Ranges::HistoryPlotBufferSizeMax, Param::Ranges::HistoryPlotBufferSizeInc, Param::Ranges::HistoryPlotBufferSizeSkw },
     
-    {Param::ID::EnvelopeAttackTime, Param::Name::EnvelopeAttackTime, Param::Units::Ms, Param::Ranges::AttackDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
-    {Param::ID::EnvelopeDecayTime, Param::Name::EnvelopeDecayTime, Param::Units::Ms, Param::Ranges::DecayDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
+    {Param::ID::EnvelopeAttackTime, Param::Name::EnvelopeAttackTime, Param::Units::Ms, Param::Ranges::AttackDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::ADSRPlotWidth, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
+    {Param::ID::EnvelopeDecayTime, Param::Name::EnvelopeDecayTime, Param::Units::Ms, Param::Ranges::DecayDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::ADSRPlotWidth, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
     {Param::ID::EnvelopeSustain, Param::Name::EnvelopeSustain, "", Param::Ranges::SustainDefault, Param::Ranges::EnvelopeLevelMin, Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelInc, Param::Ranges::EnvelopeLevelSkw },
-    {Param::ID::EnvelopeReleaseTime, Param::Name::EnvelopeReleaseTime, Param::Units::Ms, Param::Ranges::ReleaseDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
+    {Param::ID::EnvelopeReleaseTime, Param::Name::EnvelopeReleaseTime, Param::Units::Ms, Param::Ranges::ReleaseDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::ADSRPlotWidth, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
 
     {Param::ID::EnvelopeAttackCurveX, Param::Name::EnvelopeAttackCurveX, "", 0.0f, -Param::Ranges::ADSRPlotWidth, Param::Ranges::ADSRPlotWidth, 0.01f, 1.0f},
     {Param::ID::EnvelopeAttackCurveY, Param::Name::EnvelopeAttackCurveY, "", 0.0f, -Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelMax, 0.01f, 1.0f},

@@ -171,7 +171,7 @@ namespace Param
         static const juce::StringArray LFO1Type { "Sine", "Square", "Triangle", "Sawtooth" };
 
         static constexpr float EnvelopeTimeMin { 0.0f };
-        static constexpr float EnvelopeTimeMax { 2000.f };
+        static constexpr float EnvelopeTimeMax { 2000.f }; // Is not used - ADSRPlotWidth is used instead
         static constexpr float EnvelopeTimeInc { 0.1f };
         static constexpr float EnvelopeTimeSkw { 0.5f };
 
