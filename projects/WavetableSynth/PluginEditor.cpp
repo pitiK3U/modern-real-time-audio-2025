@@ -22,6 +22,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     lfo2HistoryPlot(32768),
     adsrComponent(
         p.getParamManager().getAPVTS(),
+        p.getEnvelopeStateCollector(),
         Param::ID::EnvelopeAttackTime,
         Param::ID::EnvelopeDecayTime,
         Param::ID::EnvelopeSustain,

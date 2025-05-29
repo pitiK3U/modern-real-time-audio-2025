@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "EnvelopeStateCollector.h"
 #include <JuceHeader.h>
 
 class ADSREnvelopeComponent
@@ -14,6 +15,7 @@ public:
     
     ADSREnvelopeComponent(
         juce::AudioProcessorValueTreeState& state,
+        DSP::EnvelopeStateCollector* envelopeStateCollector,
         const juce::String& attackID,
         const juce::String& decayID,
         const juce::String& sustainID,
@@ -70,6 +72,8 @@ private:
     float currentPhaseTime {0};
     bool isMouseOverEnvelopeArea = false;
     float maxLength; // how many ms corresponds to the full width
+
+    DSP::EnvelopeStateCollector* envelopeStateCollector = nullptr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ADSREnvelopeComponent)
 };

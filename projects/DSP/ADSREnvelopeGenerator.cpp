@@ -286,4 +286,14 @@ float ADSREnvelopeGenerator::solveQuadraticBezierAtX(double xQuery, double x0, d
     return (float)y;
 }
 
+EnvelopeState ADSREnvelopeGenerator::getCurrentState() const
+{
+    return currentState;
+}
+
+float ADSREnvelopeGenerator::getCurrentStateTimer() const
+{
+    return currentStateTimer;
+}
+
 }

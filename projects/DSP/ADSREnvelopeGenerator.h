@@ -4,6 +4,14 @@
 
 namespace DSP
 {
+    enum EnvelopeState
+    {
+        OFF,
+        ATTACK,
+        DECAY,
+        SUSTAIN,
+        RELEASE
+    };
 
     class ADSREnvelopeGenerator
     {
@@ -26,6 +34,9 @@ namespace DSP
             * @param midiGateState  true if the gate is on, false if off
             */
             float getValue(bool midiGateState);
+
+            EnvelopeState getCurrentState() const;
+            float getCurrentStateTimer() const;
             
             bool isOff();
 
@@ -68,15 +79,6 @@ namespace DSP
             std::pair<float, float> attackCurveCoefficients;
             std::pair<float, float> decayCurveCoefficients;
             std::pair<float, float> releaseCurveCoefficients;
-            
-            enum EnvelopeState
-            {
-                OFF,
-                ATTACK,
-                DECAY,
-                SUSTAIN,
-                RELEASE
-            };
 
             EnvelopeState currentState { OFF };
             float currentEnvelopeValue { 0.f }; // current envelope value

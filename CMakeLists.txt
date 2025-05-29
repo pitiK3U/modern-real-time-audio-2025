@@ -353,6 +353,8 @@ add_plugin(wave_synth
         ${dsp_source}/ParameterHistoryBuffer.h
         ${gui_source}/ADSREnvelopeComponent.cpp
         ${dsp_source}/ADSREnvelopeGenerator.cpp
+        ${dsp_source}/EnvelopeStateCollector.h
+        ${gui_source}/WavetablePlotComponent.cpp
     INCLUDE_DIRS
         ${gui_source}
         ${dsp_source}

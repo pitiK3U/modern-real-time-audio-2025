@@ -4,6 +4,7 @@
 
 ADSREnvelopeComponent::ADSREnvelopeComponent(
     juce::AudioProcessorValueTreeState& state,
+    DSP::EnvelopeStateCollector* envelopeStateCollector,
     const juce::String& attackID,
     const juce::String& decayID,
     const juce::String& sustainID,
@@ -16,7 +17,7 @@ ADSREnvelopeComponent::ADSREnvelopeComponent(
     const juce::String& releaseCurveYID,
     float maxLength
 )
-: startTime (juce::Time::getMillisecondCounterHiRes()), maxLength(maxLength)
+: startTime (juce::Time::getMillisecondCounterHiRes()), maxLength(maxLength), envelopeStateCollector(envelopeStateCollector)
 {
     setupSlider (attackSlider);
     setupSlider (decaySlider);
@@ -169,27 +170,65 @@ void ADSREnvelopeComponent::drawEnvelope(juce::Graphics& g, juce::Rectangle<floa
     );
 }
 
-void ADSREnvelopeComponent::drawPlayhead(juce::Graphics& g, juce::Rectangle<float> area, float a, float d, float s, float r)
+void ADSREnvelopeComponent::drawPlayhead(
+    juce::Graphics& g,
+    juce::Rectangle<float> area,
+    float a, float d, float s, float r
+)
 {
-    float t = currentPhaseTime;
-    float total = a + d + r;
-    if (t < 0 || t > total)
+    // make sure collector is valid
+    if (envelopeStateCollector == nullptr)
         return;
 
-    float x = area.getX() + (t / maxLength) * area.getWidth();
+    auto states = envelopeStateCollector->getEnvelopeStateSnapshot();
+    const float totalDuration = a + d + r;
 
-    // sample the Bézier at that x
-    float y = getYForX (x);
+    for (size_t i = 0; i < states.size(); ++i)
+    {
+        const auto& info = states[i];
+        DSP::EnvelopeState state = info.state;
 
-    // draw vertical guide
-    g.setColour(juce::Colours::white.withAlpha (0.2f));
-    g.drawLine(x, area.getBottom(), x, y, 1.0f);
+        if (state == DSP::OFF)
+            continue;
 
-    // draw the playhead dot
-    g.setColour (juce::Colours::white);
-    float pr = handleRadius * 0.75f;
-    g.fillEllipse (x - pr, y - pr, pr * 2.0f, pr * 2.0f);
+        float stateTime = info.timerMs;
+
+        // determine offset time from previous phases
+        float t = 0.0f;
+        switch (state)
+        {
+            case DSP::ATTACK:  t = stateTime;           break;
+            case DSP::DECAY:   t = a + stateTime;       break;
+            case DSP::SUSTAIN: t = a + d;               break; // hold static
+            case DSP::RELEASE: t = a + d + stateTime;   break;
+            default:      continue;
+        }
+
+        if (t < 0.0f || t > totalDuration)
+            continue;
+
+        // compute x and y
+        float xNorm = t / maxLength; // normalized by max ADSR duration
+        float x = area.getX() + xNorm * area.getWidth();
+        float y = getYForX(x); // this should work in your coordinate space
+
+        // distinct color per voice
+        juce::Colour voiceColour = juce::Colour::fromHSV(
+            juce::jmap((float)i, 0.0f, static_cast<float>(states.size() - 1), 0.0f, 1.0f),
+            0.8f, 0.9f, 1.0f
+        );
+
+        // vertical guide line
+        g.setColour(voiceColour.withAlpha(0.4f));
+        g.drawLine(x, area.getBottom(), x, y, 2.0f);
+
+        // playhead dot
+        float pr = handleRadius * 0.8f;
+        g.setColour(voiceColour);
+        g.fillEllipse(x - pr, y - pr, pr * 2.0f, pr * 2.0f);
+    }
 }
+
 
 void ADSREnvelopeComponent::drawHandles(juce::Graphics& g)
 {

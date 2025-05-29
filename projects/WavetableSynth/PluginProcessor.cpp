@@ -182,10 +182,13 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     lfo1(DSP::LFO(44100.f, Param::Ranges::LFODefaultFreq, DSP::Waveform::Sine)),
     lfo2(DSP::LFO(44100.f, Param::Ranges::LFODefaultFreq, DSP::Waveform::Sine))
 {
+    envelopeCollector = std::make_unique<DSP::EnvelopeStateCollector>(NUM_VOICES);
+
     synth.addSound(new DSP::SynthSound());
     for (size_t i = 0; i < NUM_VOICES; ++i)
     {
         voices.emplace_back(new DSP::WavetableSynthVoice());
+        voices.back()->setEnvelopeMonitor(*envelopeCollector, i);
         synth.addVoice(voices.back());
     }
     synth.setNoteStealingEnabled(false);
@@ -271,6 +274,11 @@ void WavetableSynthAudioProcessor::getLastLfo1Values (std::vector<float>& outVal
 void WavetableSynthAudioProcessor::getLastLfo2Values (std::vector<float>& outValues)
 {
     lfo2History.getHistory (outValues);
+}
+
+DSP::EnvelopeStateCollector* WavetableSynthAudioProcessor::getEnvelopeStateCollector() const
+{
+    return envelopeCollector.get();
 }
 
 void WavetableSynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

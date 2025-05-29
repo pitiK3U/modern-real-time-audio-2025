@@ -174,6 +174,11 @@ void WavetableSynthVoice::setOutputVol(float dB, bool skipRamp)
     outputVolRamp.setTarget(std::pow(10.f, 0.05f * dB), skipRamp);
 }
 
+void WavetableSynthVoice::setEnvelopeMonitor(EnvelopeStateCollector& collector, size_t index)
+{
+    envelopeStateCollector = &collector;
+    envelopeVoiceIndex = index;
+}
 
 bool WavetableSynthVoice::canPlaySound(juce::SynthesiserSound* ptr)
 {
@@ -239,6 +244,10 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
     for (int i = 0; i < numSamples; ++i)
     {
         float envValue = envGen.getValue(gateState);
+
+        // Send envelope state to the GUI collector
+        if (envelopeStateCollector != nullptr)
+            envelopeStateCollector->setEnvelopeState(envelopeVoiceIndex, envGen.getCurrentState(), envGen.getCurrentStateTimer());
 
         float vcfEnv { 0.f };
         vcfEnvGen.process(&vcfEnv, 1);

@@ -8,6 +8,7 @@
 #include "Parameter.h"
 #include "StateVariableFilter.h"
 #include "Ramp.h"
+#include "EnvelopeStateCollector.h"
 
 namespace DSP
 {
@@ -78,6 +79,7 @@ public:
     void setFilterType(FilterType type, bool skipRamp);
 
     void setOutputVol(float dB, bool skipRamp);
+    void setEnvelopeMonitor(EnvelopeStateCollector& collector, size_t index);
 
 
     bool canPlaySound(juce::SynthesiserSound* ptr) override;
@@ -137,6 +139,9 @@ private:
 
     bool voiceStarted { false };
     bool gateState { false };
+
+    EnvelopeStateCollector* envelopeStateCollector = nullptr;
+    size_t envelopeVoiceIndex = 0;
 };
 
 }
