@@ -301,10 +301,12 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         for (int unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
             const auto unisonPhaseInteger = static_cast<size_t>(unisonPhases[unisonVoice]);
             const auto unisonLerped = naive_lerp(wavetables[integralIndex][unisonPhaseInteger], wavetables[(integralIndex + 1) % wavetables.size()][unisonPhaseInteger], fractionalIndex);
-            const auto unisonOut { unisonLerped * wavetableVol * vcaEnv * velocity };
+            const auto unisonOut { unisonLerped };
 
             wavetableOut += unisonOut;
         }
+        wavetableOut /= unisonVoices;
+        wavetableOut *= (wavetableVol * vcaEnv * velocity);
 
         const auto freqMod { std::clamp(vcfEnv * vcfEnvAmout + vcfLFOAmount * lfo, -1.f, 1.f) };
         const auto freq { std::clamp(FreqModRange * (std::pow(2.f, freqMod) - 1.f) + vcfFreq, MinFreqHz, MaxFreqHz) };
