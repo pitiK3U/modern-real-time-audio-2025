@@ -9,9 +9,8 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     vcfEnvParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_AttTime, Param::ID::VCF_DecayTime, Param::ID::VCF_Sustain, Param::ID::VCF_RelTime }),
     lfoParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_LFOFreq, Param::ID::VCF_LFOType }),
     filterParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_Cutoff, Param::ID::VCF_Reso, Param::ID::VCF_Type, Param::ID::VCF_EnvAmount, Param::ID::VCF_LFOAmount }),
-    testLfoEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::FinalVol, Param::ID::LFO_freq, Param::ID::LFO_mult }),
-    lfo1ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_Freq, Param::ID::LFO1_Type, Param::ID::LFO1_Offset, Param::ID::HistoryPlotBufferSize }),
-    lfo2ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO2_Freq, Param::ID::LFO2_Type, Param::ID::LFO2_Offset }),
+    lfo1ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_Freq, Param::ID::LFO1_Type, Param::ID::LFO1_Offset, Param::ID::LFO1_mult }),
+    lfo2ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO2_Freq, Param::ID::LFO2_Type, Param::ID::LFO2_Offset, Param::ID::HistoryPlotBufferSize }),
     oscLabel("", "Wavetable"),
     vcaEnvLabel("", "Amplitude Envelope"),
     vcfEnvLabel("", "Filter Envelope"),
@@ -36,7 +35,6 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     addAndMakeVisible(vcfEnvParamEditor);
     addAndMakeVisible(lfoParamEditor);
     addAndMakeVisible(filterParamEditor);
-    addAndMakeVisible(testLfoEditor);
     addAndMakeVisible(lfo1ParamEditor);
     addAndMakeVisible(lfo2ParamEditor);
 
@@ -109,12 +107,6 @@ void WavetableSynthAudioProcessorEditor::resized()
         auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
         lfoLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
         lfoParamEditor.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
-    }
-
-    {
-        auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
-        finalLfoLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
-        testLfoEditor.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
     }
 
     {

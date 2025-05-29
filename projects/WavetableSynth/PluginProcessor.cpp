@@ -94,9 +94,14 @@ void setOutputVol(std::vector<DSP::WavetableSynthVoice*> voices, float dB, bool 
     std::for_each(voices.begin(), voices.end(), [dB, skipRamp] (auto& v) { v->setOutputVol(dB, skipRamp); });
 }
 
+void setLfoMult(std::vector<DSP::WavetableSynthVoice*> voices, juce::String paramId, float value, DSP::DSP<float> &reference)
+{
+    std::for_each(voices.begin(), voices.end(), [paramId, value, &reference] (auto& v) { v->setWavetablePositionEffect(paramId, Param::Ranges::WavetablePositionMax * value, reference); });
+}
+
 static const std::vector<mrta::ParameterInfo> paramVector
 {
-    { Param::ID::WavetablePosition, Param::Name::WavetablePos, "", 0, 0, 3, 1, 1.f },
+    { Param::ID::WavetablePosition, Param::Name::WavetablePos, "", 0, Param::Ranges::WavetablePositionMin, Param::Ranges::WavetablePositionMax, .1f, 1.f },
     { Param::ID::WavetableVol,    Param::Name::WavetableVol,    Param::Units::dB,   0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
 
     { Param::ID::VCA_AttTime,   Param::Name::VCA_AttTime,   Param::Units::Ms,  50.0f, Param::Ranges::EnvTimeMin,    Param::Ranges::EnvTimeMax,    Param::Ranges::EnvTimeInc,    Param::Ranges::EnvTimeSkw },
@@ -122,18 +127,17 @@ static const std::vector<mrta::ParameterInfo> paramVector
     { Param::ID::OutputVol, Param::Name::OutputVol, Param::Units::dB, 0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
 
     { Param::ID::FinalVol, Param::Name::FinalVol, Param::Units::dB, 0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
-    { Param::ID::LFO_freq, Param::Name::LFO_freq, Param::Units::Hz, 0.5f, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
-    { Param::ID::LFO_mult, Param::Name::LFO_mult, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
-
+    
     {Param::ID::LFO1_Freq, Param::Name::LFO1_Freq, Param::Units::Hz, Param::Ranges::LFODefaultFreq, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
     {Param::ID::LFO1_Offset, Param::Name::LFO1_Offset, "", 0.f, Param::Ranges::LFOOffsetMin, Param::Ranges::LFOOffsetMax, Param::Ranges::LFOOffsetInc, Param::Ranges::LFOOffsetSkw },
     {Param::ID::LFO1_Type, Param::Name::LFO1_Type, Param::Ranges::LFO1Type, 0},
+    { Param::ID::LFO1_mult, Param::Name::LFO1_mult, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
 
     {Param::ID::LFO2_Freq, Param::Name::LFO2_Freq, Param::Units::Hz, Param::Ranges::LFODefaultFreq, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
     {Param::ID::LFO2_Offset, Param::Name::LFO2_Offset, "", 0.f, Param::Ranges::LFOOffsetMin, Param::Ranges::LFOOffsetMax, Param::Ranges::LFOOffsetInc, Param::Ranges::LFOOffsetSkw },
     {Param::ID::LFO2_Type, Param::Name::LFO2_Type, Param::Ranges::LFO1Type, 0},
 
-    { Param::ID::HistoryPlotBufferSize, Param::Name::HistoryPlotBufferSize, Param::Units::Ms, 32768.f, Param::Ranges::HistoryPlotBufferSizeMin, Param::Ranges::HistoryPlotBufferSizeMax, Param::Ranges::HistoryPlotBufferSizeInc, Param::Ranges::HistoryPlotBufferSizeSkw },
+    { Param::ID::HistoryPlotBufferSize, Param::Name::HistoryPlotBufferSize, Param::Units::Ms, 512.f, Param::Ranges::HistoryPlotBufferSizeMin, Param::Ranges::HistoryPlotBufferSizeMax, Param::Ranges::HistoryPlotBufferSizeInc, Param::Ranges::HistoryPlotBufferSizeSkw },
     
     {Param::ID::EnvelopeAttackTime, Param::Name::EnvelopeAttackTime, Param::Units::Ms, Param::Ranges::AttackDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
     {Param::ID::EnvelopeDecayTime, Param::Name::EnvelopeDecayTime, Param::Units::Ms, Param::Ranges::DecayDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
@@ -173,13 +177,12 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::VCF_EnvAmount, [this] (float value, bool force) { setEnvAmountVCF(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::VCF_LFOAmount, [this] (float value, bool force) { setLFOAmountVCF(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::OutputVol, [this] (float value, bool force) { setOutputVol(voices, value, force); });
-    // paramManager.registerParameterCallback(Param::ID::LFO_freq, [this] (float value, bool force) { lfo.setFrequency(value); });
-    // paramManager.registerParameterCallback(Param::ID::LFO_mult, [this] (float value, bool force) { volume.setEffect(Param::ID::LFO_mult, value, lfo1); });
-    // paramManager.registerParameterCallback(Param::ID::FinalVol, [this] (float value, bool force) { volume.setValue(value); });
 
     paramManager.registerParameterCallback(Param::ID::LFO1_Freq, [this] (float value, bool force)  {lfo1.setFrequency(value);});
     paramManager.registerParameterCallback(Param::ID::LFO1_Offset, [this] (float value, bool force) { lfo1.setOffset(value); });
     paramManager.registerParameterCallback(Param::ID::LFO1_Type, [this] (float value, bool force) { lfo1.setWaveform(static_cast<DSP::Waveform>(std::round(value))); });
+    paramManager.registerParameterCallback(Param::ID::LFO1_mult, [this] (float value, bool force) { setLfoMult(voices, Param::ID::LFO1_mult, value, lfo1); });
+
 
     paramManager.registerParameterCallback(Param::ID::LFO2_Freq, [this] (float value, bool force)  {lfo2.setFrequency(value);});
     paramManager.registerParameterCallback(Param::ID::LFO2_Offset, [this] (float value, bool force) { lfo2.setOffset(value); });
@@ -218,10 +221,6 @@ void WavetableSynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     synth.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
 
     for (int sample = 0; sample < buffer.getNumSamples(); sample++) {
-        for (int channel = 0; channel < buffer.getNumChannels(); channel++) {
-            buffer.setSample(channel, sample, buffer.getSample(channel, sample));
-        }
-
         // Advance LFO for each sample
         lfo1.advancePhase();
         lfo1History.pushSample(lfo1.getValue());

@@ -38,12 +38,11 @@ namespace Param
         static const juce::String VCF_LFOAmount { "vcf_lfo_amount" };
 
         static const juce::String FinalVol { "final_vol" };
-        static const juce::String LFO_freq { "lfo_freq" };
-        static const juce::String LFO_mult { "lfo_amount" };
-
+        
         static const juce::String LFO1_Freq { "lfo1_freq" };
         static const juce::String LFO1_Type { "lfo1_type" };
         static const juce::String LFO1_Offset { "lfo1_offset" };
+        static const juce::String LFO1_mult { "lfo_amount" };
 
         static const juce::String LFO2_Freq { "lfo2_freq" };
         static const juce::String LFO2_Type { "lfo2_type" };
@@ -84,12 +83,11 @@ namespace Param
         static const juce::String VCF_LFOAmount { "VCF LFO Amount" };
 
         static const juce::String FinalVol { "Final Vol." };
-        static const juce::String LFO_freq {"LFO freq" };
-        static const juce::String LFO_mult {"LFO volume multiplier" };
-
+        
         static const juce::String LFO1_Freq { "LFO 1 Freq." };
         static const juce::String LFO1_Type { "LFO 1 Type" };
         static const juce::String LFO1_Offset { "LFO 1 Offset" };
+        static const juce::String LFO1_mult {"LFO volume multiplier" };
 
         static const juce::String LFO2_Freq { "LFO 2 Freq." };
         static const juce::String LFO2_Type { "LFO 2 Type" };
@@ -105,6 +103,9 @@ namespace Param
 
     namespace Ranges
     {
+        static constexpr float WavetablePositionMin { 0 };
+        static constexpr float WavetablePositionMax { 3 };
+        
         static constexpr float VolMin { -60.f };
         static constexpr float VolMax { 12.f };
         static constexpr float VolInc { 0.1f };

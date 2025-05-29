@@ -1,4 +1,3 @@
-#include "Oscillator.h"
 #include "juce_core/juce_core.h"
 #include <algorithm>
 #include <cmath>
@@ -48,25 +47,13 @@ WavetableSynthVoice::~WavetableSynthVoice()
 {
 }
 
-/* REMOVE: 
-void WavetableSynthVoice::setOscSawVol(float dB, bool skipRamp)
-{
-    sawOscVolRamp.setTarget(std::pow(10.f, 0.05f * dB), skipRamp);
-}
-
-void WavetableSynthVoice::setOscTriVol(float dB, bool skipRamp)
-{
-    triOscVolRamp.setTarget(std::pow(10.f, 0.05f * dB), skipRamp);
-}
-
-void WavetableSynthVoice::setOscSinVol(float dB, bool skipRamp)
-{
-    sinOscVolRamp.setTarget(std::pow(10.f, 0.05f * dB), skipRamp);
-}
-*/
-
 void WavetableSynthVoice::setWavetablePosition(float index, bool skip) {
     wavetableIndex.setValue(std::clamp(index, 0.f, static_cast<float>(wavetables.size() - 1)), skip);
+}
+
+void WavetableSynthVoice::setWavetablePositionEffect(juce::String paramId, float paramMult, DSP<float> &reference)
+{
+    wavetableIndex.setEffect(paramId, paramMult, reference);
 }
 
 void WavetableSynthVoice::setWavetableVol(float dB, bool skipRamp)
@@ -165,10 +152,6 @@ bool WavetableSynthVoice::canPlaySound(juce::SynthesiserSound* ptr)
 
 void WavetableSynthVoice::startNote(int midiNoteNumber, float newVelocity, juce::SynthesiserSound*, int currentPitchWheelPosition)
 {
-    // sinOsc.setFrequency(convertMidiNoteToFreq(midiNoteNumber));
-    // triOsc.setFrequency(convertMidiNoteToFreq(midiNoteNumber));
-    // sawOsc.setFrequency(convertMidiNoteToFreq(midiNoteNumber));
-
     const auto freq = convertMidiNoteToFreq(midiNoteNumber);
     wavetableInc = static_cast<float>(
         static_cast<double>(freq) / static_cast<double>(DefaultFreq) * static_cast<double>(SampleSize) / sampleRate
@@ -210,9 +193,6 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         vcaEnvGen.prepare(sampleRate);
         vcfEnvGen.prepare(sampleRate);
         filter.prepare(sampleRate);
-        // sinOscVolRamp.prepare(sampleRate);
-        // triOscVolRamp.prepare(sampleRate);
-        // sawOscVolRamp.prepare(sampleRate);
         wavetableVolRamp.prepare(sampleRate);
         outputVolRamp.prepare(sampleRate);
         vcfEnvAmountRamp.prepare(sampleRate);
@@ -228,19 +208,11 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
 
     for (int i = 0; i < numSamples; ++i)
     {
-        // const auto sin { wavetables[] };
-        // const auto tri { triOsc.process() };
-        // const auto saw { sawOsc.process() };
-
         float vcaEnv { 0.f };
         vcaEnvGen.process(&vcaEnv, 1);
 
         float vcfEnv { 0.f };
         vcfEnvGen.process(&vcfEnv, 1);
-
-        // const auto sinVol { sinOscVolRamp.getNext() };
-        // const auto triVol { triOscVolRamp.getNext() };
-        // const auto sawVol { sawOscVolRamp.getNext() };
 
         // Indices of which of the waveform in wavetable to use wavetables[integralindex]
         float integralIndexfloat = 0.f;
