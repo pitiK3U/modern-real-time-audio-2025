@@ -18,6 +18,9 @@ namespace Param
         
         static const juce::String OutputVol { "output_vol" };
 
+        static const juce::String UnisonVoices { "unison_voices" };
+        static const juce::String UnisonDetune { "unison_detune" };
+
         static const juce::String VCA_AttTime { "vca_att_time" };
         static const juce::String VCA_DecayTime { "vca_decay_time" };
         static const juce::String VCA_Sustain { "vca_sustain_level" };
@@ -62,6 +65,9 @@ namespace Param
         static const juce::String WavetableVol { "Wave. Vol." };
         static const juce::String OutputVol { "Output Vol." };
 
+        static const juce::String UnisonVoices { "Unison Voices" };
+        static const juce::String UnisonDetune { "Unison Detune" };
+
         static const juce::String VCA_AttTime { "VCA Attack Time" };
         static const juce::String VCA_DecayTime { "VCA Decay Time" };
         static const juce::String VCA_Sustain { "VCA Sustain" };
@@ -105,7 +111,17 @@ namespace Param
     {
         static constexpr float WavetablePositionMin { 0 };
         static constexpr float WavetablePositionMax { 3 };
-        
+
+        static constexpr float UnisonVoicesMin { 1 };
+        static constexpr float UnisonVoicesMax { 16 };
+        static constexpr float UnisonVoicesInc { 1.f };
+        static constexpr float UnisonVoicesSkw { 1.f };
+
+        static constexpr float UnisonDetuneMin { 0.f };
+        static constexpr float UnisonDetuneMax { 100.f };
+        static constexpr float UnisonDetuneInc { 0.01f };
+        static constexpr float UnisonDetuneSkw { 1.f };
+
         static constexpr float VolMin { -60.f };
         static constexpr float VolMax { 12.f };
         static constexpr float VolInc { 0.1f };
@@ -178,6 +194,7 @@ namespace Param
         static const juce::String Hz { "Hz" };
         static const juce::String dB { "dB" };
         static const juce::String Ms { "ms" };
+        static const juce::String Cent { "cent" };
     }
 }
 

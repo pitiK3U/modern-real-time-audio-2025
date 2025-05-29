@@ -1,6 +1,7 @@
 #include "juce_core/juce_core.h"
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include "WavetableSynth.h"
 
 namespace DSP
@@ -16,6 +17,12 @@ float convertMidiNoteToFreq(int MidiNote)
     return 440.f * std::pow(2.f, static_cast<float>(MidiNote - 69) / 12.f);
 }
 
+// https://en.wikipedia.org/wiki/Cent_(music)#Use
+float moveFrequencyByCents(float frequency, float cents)
+{
+    return frequency * std::pow(2, cents / 1200.f);
+}
+
 WavetableSynthVoice::WavetableSynthVoice()
 {
     fillWavetable();
@@ -24,9 +31,8 @@ WavetableSynthVoice::WavetableSynthVoice()
     vcfEnvGen.setAnalogStyle(false);
 }
 
-void WavetableSynthVoice::fillWavetable(double SampleRate)
+void WavetableSynthVoice::fillWavetable()
 {
-    // FIXME: correctly fill the buffers and check phaseInc and phase
     const int wavetableCount = 4;
     wavetables.resize(wavetableCount);
 
@@ -60,6 +66,19 @@ void WavetableSynthVoice::setWavetableVol(float dB, bool skipRamp)
 {
     wavetableVolRamp.setValue(std::pow(10.f, 0.05f * dB), skipRamp);
 }
+
+void WavetableSynthVoice::setUnisonVoices(uint8_t numberOfVoices)
+{
+    unisonVoices = numberOfVoices;
+    unisonPhases.resize(unisonVoices);
+    unisonIncrements.resize(unisonVoices);
+}
+
+void WavetableSynthVoice::setUnisonDetune(float cents, bool skip)
+{
+    unisonDetune.setValue(cents, skip);
+}
+
 
 void WavetableSynthVoice::setAttTimeVCA(float ms)
 {
@@ -150,12 +169,30 @@ bool WavetableSynthVoice::canPlaySound(juce::SynthesiserSound* ptr)
     return true;
 }
 
+float WavetableSynthVoice::getWavetableIncrement(float frequency, float defaultFrequency, size_t sampleSize, double sampleRate)
+{
+    return static_cast<float>(
+        static_cast<double>(frequency) / static_cast<double>(DefaultFreq) * static_cast<double>(SampleSize) / sampleRate
+    );
+}
+
+void WavetableSynthVoice::updateUnisonIncrements()
+{
+    for (auto unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
+        const auto unisonFrequency = moveFrequencyByCents(frequency, static_cast<float>(unisonVoice) * unisonDetune.getCurrentValue());
+        unisonIncrements[unisonVoice] = getWavetableIncrement(unisonFrequency, DefaultFreq, SampleSize, sampleRate);
+    }
+}
+
 void WavetableSynthVoice::startNote(int midiNoteNumber, float newVelocity, juce::SynthesiserSound*, int currentPitchWheelPosition)
 {
-    const auto freq = convertMidiNoteToFreq(midiNoteNumber);
-    wavetableInc = static_cast<float>(
-        static_cast<double>(freq) / static_cast<double>(DefaultFreq) * static_cast<double>(SampleSize) / sampleRate
-    );
+    frequency = convertMidiNoteToFreq(midiNoteNumber);
+
+    updateUnisonIncrements();
+
+    for (auto unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
+        unisonPhases[unisonVoice] = 0.f;
+    }
 
     vcaEnvGen.start();
     vcfEnvGen.start();
@@ -188,13 +225,15 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
     {
         sampleRate = newSampleRate;
 
-        fillWavetable(sampleRate);
+        // REMOVE: not sure if save to remove
+        //  fillWavetable();
 
         vcaEnvGen.prepare(sampleRate);
         vcfEnvGen.prepare(sampleRate);
         filter.prepare(sampleRate);
         wavetableVolRamp.prepare(sampleRate);
         outputVolRamp.prepare(sampleRate);
+        unisonDetune.prepare(sampleRate);
         vcfEnvAmountRamp.prepare(sampleRate);
         vcfLFOAmountRamp.prepare(sampleRate);
         vcfFreqRamp.prepare(sampleRate);
@@ -208,6 +247,8 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
 
     for (int i = 0; i < numSamples; ++i)
     {
+        unisonDetune.getNext();
+
         float vcaEnv { 0.f };
         vcaEnvGen.process(&vcaEnv, 1);
 
@@ -219,7 +260,9 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         const float fractionalIndex = std::modf(wavetableIndex.getNext(), &integralIndexfloat);
         const auto integralIndex = static_cast<size_t>(integralIndexfloat);
 
-        wavetablePhase = std::fmod( wavetablePhase + wavetableInc, SampleSize);
+        for (auto unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
+            unisonPhases[unisonVoice] = std::fmod( unisonPhases[unisonVoice] + unisonIncrements[unisonVoice], SampleSize);
+        }
 
         const auto wavetableVol { wavetableVolRamp.getNext() };
 
@@ -248,9 +291,14 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         }
         lfoPhaseState = std::fmod(lfoPhaseState + lfoPhaseInc, static_cast<float>(2 * M_PI));
 
-        const auto wavetablePhaseInteger = static_cast<size_t>(wavetablePhase);
-        const auto wavetableLerped = naive_lerp(wavetables[integralIndex][wavetablePhaseInteger], wavetables[(integralIndex + 1) % wavetables.size()][wavetablePhaseInteger], fractionalIndex);
-        const auto wavetableOut { wavetableLerped * wavetableVol * vcaEnv * velocity };
+        float wavetableOut = 0.f;
+        for (int unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
+            const auto unisonPhaseInteger = static_cast<size_t>(unisonPhases[unisonVoice]);
+            const auto unisonLerped = naive_lerp(wavetables[integralIndex][unisonPhaseInteger], wavetables[(integralIndex + 1) % wavetables.size()][unisonPhaseInteger], fractionalIndex);
+            const auto unisonOut { unisonLerped * wavetableVol * vcaEnv * velocity };
+
+            wavetableOut += unisonOut;
+        }
 
         const auto freqMod { std::clamp(vcfEnv * vcfEnvAmout + vcfLFOAmount * lfo, -1.f, 1.f) };
         const auto freq { std::clamp(FreqModRange * (std::pow(2.f, freqMod) - 1.f) + vcfFreq, MinFreqHz, MaxFreqHz) };

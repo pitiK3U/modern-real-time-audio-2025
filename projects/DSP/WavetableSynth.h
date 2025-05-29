@@ -2,11 +2,14 @@
 
 #include <JuceHeader.h>
 #include <array>
+#include <cstddef>
+#include <cstdint>
 
 #include "EnvelopeGenerator.h"
 #include "Parameter.h"
 #include "StateVariableFilter.h"
 #include "Ramp.h"
+#include "juce_core/juce_core.h"
 
 namespace DSP
 {
@@ -48,6 +51,9 @@ public:
     void setWavetablePositionEffect(juce::String paramId, float paramMult, DSP<float> &reference);
 
     void setWavetableVol(float db, bool skip);
+
+    void setUnisonVoices(uint8_t numberOfVoices);
+    void setUnisonDetune(float cents, bool skip);
 
     void setAttTimeVCA(float ms);
     void setDecayTimeVCA(float ms);
@@ -93,7 +99,10 @@ public:
     static constexpr float DefaultFreq { 1.f };
 
 private:
-    void fillWavetable(double SampleRate = DefaultSampleRate);
+    void fillWavetable();
+    void updateUnisonIncrements();
+
+    static float getWavetableIncrement(float frequency, float defaultFrequency, size_t sampleSize, double SampleRate);
 
     double sampleRate { DefaultSampleRate };
 
@@ -114,6 +123,12 @@ private:
     Parameter<float> wavetableIndex { Parameter<float>(0) };
     float wavetablePhase { 0 };
     float wavetableInc { 0 };
+
+    float frequency { 1.f };
+    uint8_t unisonVoices { 1 };
+    Parameter<float> unisonDetune {0.f };
+    std::vector<float> unisonPhases;
+    std::vector<float> unisonIncrements;
 
     Parameter<float> wavetableVolRamp;
     Ramp<float> outputVolRamp;
