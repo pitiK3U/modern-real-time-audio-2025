@@ -78,6 +78,9 @@ void HistoryPlotComponent::paint (juce::Graphics& g)
 
     float dx = static_cast<float>(w) / (numSamples - 1);
 
+    // Calculate how many samples per horizontal pixel (on average)
+    float samplesPerPixel = static_cast<float>(numSamples) / static_cast<float>(w);
+
     // first point
     {
         float v = buffer[startIndex];
@@ -88,15 +91,19 @@ void HistoryPlotComponent::paint (juce::Graphics& g)
     }
 
     // remaining points
-    for (int i = 1; i < numSamples; ++i)
+    for (int pixelX = 1; pixelX < w; ++pixelX)
     {
+        // calculate the index in the buffer for this pixel
+        int i = static_cast<int>(pixelX * samplesPerPixel);
+        if (i >= numSamples)
+            break;
+
         int idx = (startIndex + i) % bufferSize;
-        float x = i * dx;
         float v = buffer[idx];
         float y = h * 0.5f - 0.9f * v * (h * 0.5f);
 
-        waveform.lineTo (x, y);
-        filledArea.lineTo (x, y);
+        waveform.lineTo(static_cast<float>(pixelX), y);
+        filledArea.lineTo(static_cast<float>(pixelX), y);
     }
 
     // close filled area back to the start
