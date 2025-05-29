@@ -17,7 +17,7 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
 
-    static constexpr int NUM_SECTIONS { 9 };
+    static constexpr int NUM_SECTIONS { 8 };
     static constexpr int SECTION_WIDTH { 250 };
     static constexpr int SECTION_SPACER_WIDTH { 20 };
     static constexpr int LABEL_HEIGHT { 50 };
@@ -29,7 +29,6 @@ public:
 private:
     WavetableSynthAudioProcessor& audioProcessor;
     mrta::GenericParameterEditor oscParamEditor;
-    mrta::GenericParameterEditor vcaEnvParamEditor;
     mrta::GenericParameterEditor vcfEnvParamEditor;
     mrta::GenericParameterEditor lfoParamEditor;
     mrta::GenericParameterEditor filterParamEditor;

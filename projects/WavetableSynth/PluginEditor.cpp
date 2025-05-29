@@ -5,7 +5,6 @@
 WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(WavetableSynthAudioProcessor& p) :
     juce::AudioProcessorEditor(p), audioProcessor(p),
     oscParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::WavetablePosition, Param::ID::WavetableVol, Param::ID::OutputVol }),
-    vcaEnvParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCA_AttTime, Param::ID::VCA_DecayTime, Param::ID::VCA_Sustain, Param::ID::VCA_RelTime }),
     vcfEnvParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_AttTime, Param::ID::VCF_DecayTime, Param::ID::VCF_Sustain, Param::ID::VCF_RelTime }),
     lfoParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_LFOFreq, Param::ID::VCF_LFOType }),
     filterParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_Cutoff, Param::ID::VCF_Reso, Param::ID::VCF_Type, Param::ID::VCF_EnvAmount, Param::ID::VCF_LFOAmount }),
@@ -38,7 +37,6 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     vts (p.getParamManager().getAPVTS())
 {
     addAndMakeVisible(oscParamEditor);
-    addAndMakeVisible(vcaEnvParamEditor);
     addAndMakeVisible(vcfEnvParamEditor);
     addAndMakeVisible(lfoParamEditor);
     addAndMakeVisible(filterParamEditor);
@@ -90,12 +88,6 @@ void WavetableSynthAudioProcessorEditor::resized()
         auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
         oscLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
         oscParamEditor.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
-    }
-
-    {
-        auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
-        vcaEnvLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
-        vcaEnvParamEditor.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
     }
 
     {

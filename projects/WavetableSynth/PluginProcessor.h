@@ -18,11 +18,6 @@ namespace Param
         
         static const juce::String OutputVol { "output_vol" };
 
-        static const juce::String VCA_AttTime { "vca_att_time" };
-        static const juce::String VCA_DecayTime { "vca_decay_time" };
-        static const juce::String VCA_Sustain { "vca_sustain_level" };
-        static const juce::String VCA_RelTime { "vca_rel_time" };
-
         static const juce::String VCF_AttTime { "vcf_att_time" };
         static const juce::String VCF_DecayTime { "vcf_decay_time" };
         static const juce::String VCF_Sustain { "vcf_sustain" };
@@ -68,11 +63,6 @@ namespace Param
         static const juce::String WavetablePos { "Wavetable Pos." };
         static const juce::String WavetableVol { "Wave. Vol." };
         static const juce::String OutputVol { "Output Vol." };
-
-        static const juce::String VCA_AttTime { "VCA Attack Time" };
-        static const juce::String VCA_DecayTime { "VCA Decay Time" };
-        static const juce::String VCA_Sustain { "VCA Sustain" };
-        static const juce::String VCA_RelTime { "VCA Release Time" };
 
         static const juce::String VCF_AttTime { "VCF Attack Time" };
         static const juce::String VCF_DecayTime { "VCF Decay Time" };

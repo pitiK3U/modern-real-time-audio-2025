@@ -134,11 +134,6 @@ static const std::vector<mrta::ParameterInfo> paramVector
     { Param::ID::WavetablePosition, Param::Name::WavetablePos, "", 0, Param::Ranges::WavetablePositionMin, Param::Ranges::WavetablePositionMax, .1f, 1.f },
     { Param::ID::WavetableVol,    Param::Name::WavetableVol,    Param::Units::dB,   0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
 
-    { Param::ID::VCA_AttTime,   Param::Name::VCA_AttTime,   Param::Units::Ms,  50.0f, Param::Ranges::EnvTimeMin,    Param::Ranges::EnvTimeMax,    Param::Ranges::EnvTimeInc,    Param::Ranges::EnvTimeSkw },
-    { Param::ID::VCA_DecayTime, Param::Name::VCA_DecayTime, Param::Units::Ms,  10.0f, Param::Ranges::EnvTimeMin,    Param::Ranges::EnvTimeMax,    Param::Ranges::EnvTimeInc,    Param::Ranges::EnvTimeSkw },
-    { Param::ID::VCA_Sustain,   Param::Name::VCA_Sustain,   "",                 0.7f, Param::Ranges::EnvSustainMin, Param::Ranges::EnvSustainMax, Param::Ranges::EnvSustainInc, Param::Ranges::EnvSustainSkw },
-    { Param::ID::VCA_RelTime,   Param::Name::VCA_RelTime,   Param::Units::Ms, 100.0f, Param::Ranges::EnvTimeMin,    Param::Ranges::EnvTimeMax,    Param::Ranges::EnvTimeInc,    Param::Ranges::EnvTimeSkw },
-
     { Param::ID::VCF_AttTime,   Param::Name::VCF_AttTime,   Param::Units::Ms,  10.0f, Param::Ranges::EnvTimeMin,    Param::Ranges::EnvTimeMax,    Param::Ranges::EnvTimeInc,    Param::Ranges::EnvTimeSkw },
     { Param::ID::VCF_DecayTime, Param::Name::VCF_DecayTime, Param::Units::Ms, 100.0f, Param::Ranges::EnvTimeMin,    Param::Ranges::EnvTimeMax,    Param::Ranges::EnvTimeInc,    Param::Ranges::EnvTimeSkw },
     { Param::ID::VCF_Sustain,   Param::Name::VCF_Sustain,   "",                 0.9f, Param::Ranges::EnvSustainMin, Param::Ranges::EnvSustainMax, Param::Ranges::EnvSustainInc, Param::Ranges::EnvSustainSkw },
