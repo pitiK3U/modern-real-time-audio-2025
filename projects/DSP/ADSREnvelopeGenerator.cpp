@@ -105,6 +105,7 @@ float ADSREnvelopeGenerator::getValue(bool midiGateState)
             currentEnvelopeValue = getReleaseCurveValue();
             break;
     }
+
     return currentEnvelopeValue;
 }
 
@@ -214,7 +215,7 @@ float ADSREnvelopeGenerator::getDecayCurveValue()
     float ye = solveQuadraticBezierAtX(x, x0, y0e, xn, yn, xc, yc);
 
     // Scale envelope value
-    return yn + (currentStateStartEnvelopeValue - yn)/(y0e - yn) * ye;
+    return yn + (currentStateStartEnvelopeValue - yn)/(y0e - yn) * (ye-yn);
 }
 
 float ADSREnvelopeGenerator::getSustainCurveValue()
@@ -238,7 +239,7 @@ float ADSREnvelopeGenerator::getReleaseCurveValue()
     float ye = solveQuadraticBezierAtX(x, x0, y0e, xn, yn, xc, yc);
 
     // Scale envelope value
-    return yn + (currentStateStartEnvelopeValue - yn)/(y0e - yn) * ye;
+    return yn + (currentStateStartEnvelopeValue - yn)/(y0e - yn) * (ye-yn);
 }
 
 float ADSREnvelopeGenerator::solveQuadraticBezierAtX(double xQuery, double x0, double y0, double x1, double y1, double cx, double cy)

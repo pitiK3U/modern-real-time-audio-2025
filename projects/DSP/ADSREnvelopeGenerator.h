@@ -82,7 +82,5 @@ namespace DSP
             float currentEnvelopeValue { 0.f }; // current envelope value
             float currentStateTimer { 0.f }; // in ms
             float currentStateStartEnvelopeValue { 0.f }; // value at the start of the current state (used for scaling)
-
-
     };
 }
