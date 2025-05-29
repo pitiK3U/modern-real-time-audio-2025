@@ -1,11 +1,13 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "ADSREnvelopeGenerator.h"
 #include "Parameter.h"
 #include "WavetableSynth.h"
 #include "LFO.h"
 #include "juce_core/juce_core.h"
 #include "ParameterHistoryBuffer.h"
+#include "ADSREnvelopeGenerator.h"
 
 namespace Param
 {
@@ -48,6 +50,11 @@ namespace Param
         static const juce::String LFO2_Offset { "lfo2_offset" };
 
         static const juce::String HistoryPlotBufferSize { "history_plot_buffer_size" };
+
+        static const juce::String EnvelopeAttackTime { "envelope_attack_time" };
+        static const juce::String EnvelopeDecayTime { "envelope_decay_time" };
+        static const juce::String EnvelopeSustain { "envelope_sustain" };
+        static const juce::String EnvelopeReleaseTime { "envelope_release_time" };
     }
 
     namespace Name
@@ -89,6 +96,11 @@ namespace Param
         static const juce::String LFO2_Offset { "LFO 2 Offset" };
 
         static const juce::String HistoryPlotBufferSize { "History Plot Buffer Size" };
+
+        static const juce::String EnvelopeAttackTime { "Attack" };
+        static const juce::String EnvelopeDecayTime { "Decay" };
+        static const juce::String EnvelopeSustain { "Sustain" };
+        static const juce::String EnvelopeReleaseTime { "Release" };
     }
 
     namespace Ranges
@@ -118,6 +130,8 @@ namespace Param
         static constexpr float LFOOffsetInc { 0.001f };
         static constexpr float LFOOffsetSkw { 1.f };
 
+        static constexpr float LFODefaultFreq { 0.5f };
+
         static constexpr float FilterFreqMin { 20.0f };
         static constexpr float FilterFreqMax { 20000.f };
         static constexpr float FilterFreqInc { 1.f };
@@ -141,6 +155,21 @@ namespace Param
         static const juce::StringArray LFOType { "Sin", "Tri" };
         static const juce::StringArray FilterType { "Low Pass", "Band Pass", "High Pass" };
         static const juce::StringArray LFO1Type { "Sine", "Square", "Triangle", "Sawtooth" };
+
+        static constexpr float EnvelopeTimeMin { 0.0f };
+        static constexpr float EnvelopeTimeMax { 2000.f };
+        static constexpr float EnvelopeTimeInc { 0.1f };
+        static constexpr float EnvelopeTimeSkw { 0.5f };
+
+        static constexpr float EnvelopeLevelMin { 0.0f };
+        static constexpr float EnvelopeLevelMax { 1.0f };
+        static constexpr float EnvelopeLevelInc { 0.001f };
+        static constexpr float EnvelopeLevelSkw { 1.0f };
+
+        static constexpr float AttackDefault { 50.0f };
+        static constexpr float DecayDefault { 150.0f };
+        static constexpr float SustainDefault { 0.7f };
+        static constexpr float ReleaseDefault { 400.0f };
     }
 
     namespace Units
@@ -194,6 +223,8 @@ private:
 
     DSP::LFO lfo1;
     DSP::LFO lfo2;
+
+    DSP::ADSREnvelopeGenerator envelopeGenerator;
 
     DSP::Parameter<float> volume;
 

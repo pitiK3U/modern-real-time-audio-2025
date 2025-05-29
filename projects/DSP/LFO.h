@@ -36,6 +36,9 @@ namespace DSP
 
             // Set waveform type
             void setWaveform(Waveform newWaveform);
+
+            // Set sample rate
+            void setSampleRate(float newSampleRate);
             
             //---- Disable default ctor, copy and move semantics -----
 

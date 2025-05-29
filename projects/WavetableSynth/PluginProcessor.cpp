@@ -125,22 +125,27 @@ static const std::vector<mrta::ParameterInfo> paramVector
     { Param::ID::LFO_freq, Param::Name::LFO_freq, Param::Units::Hz, 0.5f, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
     { Param::ID::LFO_mult, Param::Name::LFO_mult, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
 
-    {Param::ID::LFO1_Freq, Param::Name::LFO1_Freq, Param::Units::Hz, 0.5f, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
+    {Param::ID::LFO1_Freq, Param::Name::LFO1_Freq, Param::Units::Hz, Param::Ranges::LFODefaultFreq, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
     {Param::ID::LFO1_Offset, Param::Name::LFO1_Offset, "", 0.f, Param::Ranges::LFOOffsetMin, Param::Ranges::LFOOffsetMax, Param::Ranges::LFOOffsetInc, Param::Ranges::LFOOffsetSkw },
     {Param::ID::LFO1_Type, Param::Name::LFO1_Type, Param::Ranges::LFO1Type, 0},
 
-    {Param::ID::LFO2_Freq, Param::Name::LFO2_Freq, Param::Units::Hz, 0.5f, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
+    {Param::ID::LFO2_Freq, Param::Name::LFO2_Freq, Param::Units::Hz, Param::Ranges::LFODefaultFreq, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
     {Param::ID::LFO2_Offset, Param::Name::LFO2_Offset, "", 0.f, Param::Ranges::LFOOffsetMin, Param::Ranges::LFOOffsetMax, Param::Ranges::LFOOffsetInc, Param::Ranges::LFOOffsetSkw },
     {Param::ID::LFO2_Type, Param::Name::LFO2_Type, Param::Ranges::LFO1Type, 0},
 
-
-    { Param::ID::HistoryPlotBufferSize, Param::Name::HistoryPlotBufferSize, Param::Units::Ms, 32768.f, Param::Ranges::HistoryPlotBufferSizeMin, Param::Ranges::HistoryPlotBufferSizeMax, Param::Ranges::HistoryPlotBufferSizeInc, Param::Ranges::HistoryPlotBufferSizeSkw }
+    { Param::ID::HistoryPlotBufferSize, Param::Name::HistoryPlotBufferSize, Param::Units::Ms, 32768.f, Param::Ranges::HistoryPlotBufferSizeMin, Param::Ranges::HistoryPlotBufferSizeMax, Param::Ranges::HistoryPlotBufferSizeInc, Param::Ranges::HistoryPlotBufferSizeSkw },
+    
+    {Param::ID::EnvelopeAttackTime, Param::Name::EnvelopeAttackTime, Param::Units::Ms, Param::Ranges::AttackDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
+    {Param::ID::EnvelopeDecayTime, Param::Name::EnvelopeDecayTime, Param::Units::Ms, Param::Ranges::DecayDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
+    {Param::ID::EnvelopeSustain, Param::Name::EnvelopeSustain, "", Param::Ranges::SustainDefault, Param::Ranges::EnvelopeLevelMin, Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelInc, Param::Ranges::EnvelopeLevelSkw },
+    {Param::ID::EnvelopeReleaseTime, Param::Name::EnvelopeReleaseTime, Param::Units::Ms, Param::Ranges::ReleaseDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::EnvelopeTimeMax, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw }
 };
 
 WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager(*this, ProjectInfo::projectName, paramVector),
-    lfo1(DSP::LFO(44100.f, 0.5f, DSP::Waveform::Sine)), // TODO initialize with default values from header file
-    lfo2(DSP::LFO(44100.f, 0.5f, DSP::Waveform::Sine)) // TODO initialize with default values from header file
+    lfo1(DSP::LFO(44100.f, Param::Ranges::LFODefaultFreq, DSP::Waveform::Sine)),
+    lfo2(DSP::LFO(44100.f, Param::Ranges::LFODefaultFreq, DSP::Waveform::Sine)),
+    envelopeGenerator(DSP::ADSREnvelopeGenerator(44100))
 {
     synth.addSound(new DSP::SynthSound());
     for (size_t i = 0; i < NUM_VOICES; ++i)
@@ -179,6 +184,11 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::LFO2_Freq, [this] (float value, bool force)  {lfo2.setFrequency(value);});
     paramManager.registerParameterCallback(Param::ID::LFO2_Offset, [this] (float value, bool force) { lfo2.setOffset(value); });
     paramManager.registerParameterCallback(Param::ID::LFO2_Type, [this] (float value, bool force) { lfo2.setWaveform(static_cast<DSP::Waveform>(std::round(value))); });
+
+    paramManager.registerParameterCallback(Param::ID::EnvelopeAttackTime, [this] (float value, bool force) { envelopeGenerator.setAttackTime(value); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeDecayTime, [this] (float value, bool force) { envelopeGenerator.setDecayTime(value); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeSustain, [this] (float value, bool force) { envelopeGenerator.setSustainLevel(value); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeReleaseTime, [this] (float value, bool force) { envelopeGenerator.setReleaseTime(value); });
 }
 
 WavetableSynthAudioProcessor::~WavetableSynthAudioProcessor()
@@ -189,6 +199,10 @@ void WavetableSynthAudioProcessor::prepareToPlay(double sampleRate, int /*sample
 {
     paramManager.updateParameters(true);
     synth.setCurrentPlaybackSampleRate(sampleRate);
+
+    lfo1.setSampleRate(sampleRate);
+    lfo2.setSampleRate(sampleRate);
+    envelopeGenerator.prepare(sampleRate);
 }
 
 void WavetableSynthAudioProcessor::releaseResources()
@@ -214,6 +228,9 @@ void WavetableSynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
 
         lfo2.advancePhase();
         lfo2History.pushSample(lfo2.getValue());
+
+        // Get the envelope value for this sample (TODO: just for testing; there should be separate envelope generators for each voice)
+        envelopeGenerator.getValue(true);
     }
 }
 

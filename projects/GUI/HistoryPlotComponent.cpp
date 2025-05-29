@@ -33,8 +33,7 @@ void HistoryPlotComponent::setBufferSize (int newSize)
     std::vector<float> newBuffer (static_cast<size_t>(newSize), 0.0f);
 
     // Where the oldest valid sample lives in the old buffer
-    int oldStart = bufferFull ? writeIndex
-                              : 0;
+    int oldStart = bufferFull ? writeIndex : 0;
 
     // If we have more samples than newSize, skip the earliest ones
     int skip = oldCount - keepCount;
@@ -59,7 +58,6 @@ void HistoryPlotComponent::setBufferSize (int newSize)
 
 void HistoryPlotComponent::paint (juce::Graphics& g)
 {
-    // TODO: fill area under the curve with a lighter color
     auto w = getWidth();
     auto h = getHeight();
 
@@ -76,7 +74,7 @@ void HistoryPlotComponent::paint (juce::Graphics& g)
 
     // prepare drawing
     juce::Path waveform;
-    g.setColour (juce::Colours::lightgreen);
+    juce::Path filledArea;
 
     float dx = static_cast<float>(w) / (numSamples - 1);
 
@@ -85,6 +83,8 @@ void HistoryPlotComponent::paint (juce::Graphics& g)
         float v = buffer[startIndex];
         float y = h * 0.5f - 0.9f * v * (h * 0.5f);
         waveform.startNewSubPath (0.0f, y);
+        filledArea.startNewSubPath (0.0f, static_cast<float>(h));
+        filledArea.lineTo (0.0f, y);
     }
 
     // remaining points
@@ -94,8 +94,18 @@ void HistoryPlotComponent::paint (juce::Graphics& g)
         float x = i * dx;
         float v = buffer[idx];
         float y = h * 0.5f - 0.9f * v * (h * 0.5f);
+
         waveform.lineTo (x, y);
+        filledArea.lineTo (x, y);
     }
 
+    // close filled area back to the start
+    filledArea.lineTo((numSamples - 1) * dx, static_cast<float>(h));
+    filledArea.closeSubPath();
+
+    g.setColour(juce::Colours::lightgreen.withAlpha (0.3f));
+    g.fillPath (filledArea);
+
+    g.setColour (juce::Colours::lightgreen);
     g.strokePath (waveform, juce::PathStrokeType (3.0f));
 }
