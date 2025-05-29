@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DSP.h"
+
 namespace DSP
 {
     enum class Waveform {
@@ -9,10 +11,18 @@ namespace DSP
         Sawtooth
     };
     
-    class LFO {
+    class LFO : public DSP<float> {
         public:
             LFO(float sampleRate, float frequency, Waveform waveform);
             ~LFO() = default;
+
+            // DSP overrides
+            float getCurrentValue() override {
+                return getValue(false);
+            };
+            void prepare(double newSampleRate) override {
+                prepare(newSampleRate, frequency, waveform);
+            };
 
             void prepare(float sampleRate, float frequency, Waveform waveform);
             

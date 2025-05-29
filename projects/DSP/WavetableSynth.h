@@ -45,14 +45,9 @@ public:
 
 
     // Parameters
-    
-
-    // void setOscSawVol(float dB, bool skipRamp);
-    // void setOscTriVol(float dB, bool skipRamp);
-    // void setOscSinVol(float dB, bool skipRamp);
-    // void setOscVol(float dB, bool skipRamp);
-
     void setWavetablePosition(float index, bool skip);
+    void setWavetablePositionEffect(juce::String paramId, float paramMult, DSP<float> &reference);
+
     void setWavetableVol(float db, bool skip);
 
     void setAttTime(float ms);
@@ -123,12 +118,6 @@ private:
     LFOType lfoType;
     float lfoPhaseState { 0.f };
     float lfoPhaseInc { 0.f };
-
-    /*
-    Ramp<float> sinOscVolRamp;
-    Ramp<float> triOscVolRamp;
-    Ramp<float> sawOscVolRamp;
-    */
 
     Parameter<float> wavetableIndex { Parameter<float>(0) };
     float wavetablePhase { 0 };

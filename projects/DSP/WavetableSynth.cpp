@@ -1,4 +1,3 @@
-#include "Oscillator.h"
 #include "juce_core/juce_core.h"
 #include <algorithm>
 #include <cmath>
@@ -50,6 +49,11 @@ WavetableSynthVoice::~WavetableSynthVoice()
 
 void WavetableSynthVoice::setWavetablePosition(float index, bool skip) {
     wavetableIndex.setValue(std::clamp(index, 0.f, static_cast<float>(wavetables.size() - 1)), skip);
+}
+
+void WavetableSynthVoice::setWavetablePositionEffect(juce::String paramId, float paramMult, DSP<float> &reference)
+{
+    wavetableIndex.setEffect(paramId, paramMult, reference);
 }
 
 void WavetableSynthVoice::setWavetableVol(float dB, bool skipRamp)

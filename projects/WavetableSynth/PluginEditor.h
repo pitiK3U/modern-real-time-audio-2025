@@ -33,7 +33,6 @@ private:
     mrta::GenericParameterEditor vcfEnvParamEditor;
     mrta::GenericParameterEditor lfoParamEditor;
     mrta::GenericParameterEditor filterParamEditor;
-    mrta::GenericParameterEditor testLfoEditor;
     mrta::GenericParameterEditor lfo1ParamEditor;
     mrta::GenericParameterEditor lfo2ParamEditor;
     HistoryPlotComponent lfo1HistoryPlot;

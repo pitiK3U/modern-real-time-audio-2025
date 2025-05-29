@@ -25,6 +25,12 @@ template <typename FloatType> class Parameter {
     }
   }
 
+  /**
+  * \param paramId   Unique identifier of the parameter, to differentiate between different modifiers.
+  * \param paramMult The multiplier for this parameter for the effect \p reference.
+  *                  This value should be `parameterMax * influence`, where `influence` is in $[0,1]$.
+  * \param reference The actual effect, which is used to get the value.
+  */
   void setEffect(juce::String paramId, FloatType paramMult,
                  DSP<FloatType> &reference) {
     effects.insert_or_assign(paramId, std::make_pair(paramMult, std::ref(reference)));
@@ -36,7 +42,7 @@ template <typename FloatType> class Parameter {
     auto finalValue = rampedValue;
     for (auto [key, val] : effects) {
       auto [val_mult, assoc_val] = val;
-      finalValue += finalValue * val_mult * assoc_val.get().getCurrentValue();
+      finalValue += val_mult * assoc_val.get().getCurrentValue();
     }
 
     return finalValue;
