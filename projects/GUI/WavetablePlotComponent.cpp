@@ -9,6 +9,40 @@ WavetablePlotComponent::WavetablePlotComponent()
     setOpaque(true);
 }
 
+BoxCorners BoxCorners::getBoxCorners(
+    juce::Rectangle<float> area,
+    float xOffset,
+    float yOffset,
+    float scaleX,
+    float scaleY,
+    juce::Point<float> anchor,
+    int depthCount)
+{
+    juce::AffineTransform scaleTransform = juce::AffineTransform::scale(scaleX, scaleY, anchor.x, anchor.y);
+
+    juce::Point<float> offset = { xOffset * (depthCount - 1), yOffset * (depthCount - 1) };
+
+    auto apply = [&](juce::Point<float> p, bool applyOffset) -> juce::Point<float> {
+        float x = p.x, y = p.y;
+        scaleTransform.transformPoint(x, y);
+        juce::Point<float> result { x, y };
+        return applyOffset ? result.translated(offset.x, offset.y) : result;
+    };
+
+    return {
+        apply(area.getBottomLeft(), false),
+        apply(area.getBottomRight(), false),
+        apply(area.getTopRight(), false),
+        apply(area.getTopLeft(), false),
+
+        apply(area.getBottomLeft(), true),
+        apply(area.getBottomRight(), true),
+        apply(area.getTopRight(), true),
+        apply(area.getTopLeft(), true)
+    };
+}
+
+
 void WavetablePlotComponent::generateWavetables()
 {
     wavetables.resize(wavetableCount, std::vector<float>(sampleSize));
@@ -49,8 +83,22 @@ void WavetablePlotComponent::paint(juce::Graphics& g)
     const auto plotBounds = fullBounds.removeFromTop(fullBounds.getHeight() / 2.0f).reduced(10.0f);
     drawPlotBackground(g, plotBounds);
 
-    const auto waveformArea = plotBounds.reduced(16.0f);
-    drawWaveforms(g, waveformArea);
+    auto waveformArea = plotBounds.reduced(16.0f);
+    const float xOffset = 20.0f;
+    const float yOffset = -10.0f;
+
+    const float totalXOffset = xOffset * (wavetableCount - 1);
+    const float totalYOffset = std::abs(yOffset) * (wavetableCount - 1);
+
+    const float scaleX = (waveformArea.getWidth() - totalXOffset) / waveformArea.getWidth();
+    const float scaleYFactor = (waveformArea.getHeight() - totalYOffset) / waveformArea.getHeight();
+    const juce::Point<float> anchor = { waveformArea.getX(), waveformArea.getBottom() };
+
+    auto corners = BoxCorners::getBoxCorners(waveformArea, xOffset, yOffset, scaleX, scaleYFactor, anchor, wavetableCount);
+
+    drawBackBoxFaces(g, corners);
+    drawWaveforms(g, waveformArea, scaleX, scaleYFactor, xOffset, yOffset);
+    drawFrontBoxFaces(g, corners);
 }
 
 void WavetablePlotComponent::drawPlotBackground(juce::Graphics& g, juce::Rectangle<float> area)
@@ -62,19 +110,17 @@ void WavetablePlotComponent::drawPlotBackground(juce::Graphics& g, juce::Rectang
     g.drawRect(area, 1.5f);
 }
 
-void WavetablePlotComponent::drawWaveforms(juce::Graphics& g, juce::Rectangle<float> area)
+void WavetablePlotComponent::drawWaveforms(
+    juce::Graphics& g,
+    juce::Rectangle<float> area,
+    float scaleX,
+    float scaleYFactor,
+    float xOffset,
+    float yOffset)
 {
     const float midY = area.getCentreY();
     const float scaleY = area.getHeight() / 2.2f;
     const float stepX = area.getWidth() / static_cast<float>(sampleSize - 1);
-
-    const float xOffset = 20.0f;
-    const float yOffset = -10.0f;
-
-    const float totalXOffset = xOffset * (wavetableCount - 1);
-    const float totalYOffset = std::abs(yOffset) * (wavetableCount - 1);
-    const float scaleX = (area.getWidth() - totalXOffset) / area.getWidth();
-    const float scaleYFactor = (area.getHeight() - totalYOffset) / area.getHeight();
 
     for (int i = wavetableCount - 1; i >= 0; --i)
         drawSingleWaveform(g, i, area, midY, scaleY, stepX, scaleX, scaleYFactor, xOffset, yOffset);
@@ -126,5 +172,42 @@ void WavetablePlotComponent::drawSingleWaveform(
     g.strokePath(path, juce::PathStrokeType(1.5f), transform);
 }
 
+void WavetablePlotComponent::fillFace(
+    juce::Graphics& g,
+    juce::Point<float> a,
+    juce::Point<float> b,
+    juce::Point<float> c,
+    juce::Point<float> d,
+    juce::Colour colour)
+{
+    juce::Path face;
+    face.startNewSubPath(a);
+    face.lineTo(b);
+    face.lineTo(c);
+    face.lineTo(d);
+    face.closeSubPath();
+
+    // Fill with translucent color
+    g.setColour(colour.withAlpha(0.1f));
+    g.fillPath(face);
+
+    // Stroke the edges
+    g.setColour(juce::Colours::white.withAlpha(0.1f));
+    g.strokePath(face, juce::PathStrokeType(1.0f));
+}
+
+void WavetablePlotComponent::drawBackBoxFaces(juce::Graphics& g, const BoxCorners& c)
+{
+    fillFace(g, c.backTopLeft, c.backTopRight, c.backBottomRight, c.backBottomLeft, juce::Colours::white);
+    fillFace(g, c.backTopLeft, c.frontTopLeft, c.frontBottomLeft, c.backBottomLeft, juce::Colours::white);
+    fillFace(g, c.backTopLeft, c.backTopRight, c.frontTopRight, c.frontTopLeft, juce::Colours::white);
+}
+
+void WavetablePlotComponent::drawFrontBoxFaces(juce::Graphics& g, const BoxCorners& c)
+{
+    fillFace(g, c.frontBottomLeft, c.frontBottomRight, c.frontTopRight, c.frontTopLeft, juce::Colours::white);
+    fillFace(g, c.backBottomRight, c.frontBottomRight, c.frontTopRight, c.backTopRight, juce::Colours::white);
+    fillFace(g, c.backBottomLeft, c.backBottomRight, c.frontBottomRight, c.frontBottomLeft, juce::Colours::white);
+}
 
 }

@@ -1,9 +1,33 @@
 #pragma once
 
+#include "juce_dsp/juce_dsp.h"
 #include <JuceHeader.h>
 
 namespace GUI
 {
+
+struct BoxCorners
+{
+    juce::Point<float> frontBottomLeft;
+    juce::Point<float> frontBottomRight;
+    juce::Point<float> frontTopRight;
+    juce::Point<float> frontTopLeft;
+
+    juce::Point<float> backBottomLeft;
+    juce::Point<float> backBottomRight;
+    juce::Point<float> backTopRight;
+    juce::Point<float> backTopLeft;
+
+    BoxCorners static getBoxCorners(
+        juce::Rectangle<float> area,
+        float xOffset,
+        float yOffset,
+        float scaleX,
+        float scaleY,
+        juce::Point<float> anchor,
+        int depthCount
+    );
+};
 
 class WavetablePlotComponent : public juce::Component
 {
@@ -12,12 +36,20 @@ public:
 
     void paint(juce::Graphics& g) override;
     void resized() override;
+    static constexpr int wavetableCount = 4;
 
 private:
     void generateWavetables();
 
     void drawPlotBackground(juce::Graphics& g, juce::Rectangle<float> area);
-    void drawWaveforms(juce::Graphics& g, juce::Rectangle<float> area);
+    void drawWaveforms(
+        juce::Graphics& g,
+        juce::Rectangle<float> area,
+        float scaleX,
+        float scaleYFactor,
+        float xOffset,
+        float yOffset
+);
 
     void drawSingleWaveform(
     juce::Graphics& g,
@@ -32,10 +64,11 @@ private:
     float yOffset
     );
 
-
+    void fillFace(juce::Graphics& g, juce::Point<float> a, juce::Point<float> b, juce::Point<float> c, juce::Point<float> d, juce::Colour colour);
+    void drawBackBoxFaces(juce::Graphics& g, const BoxCorners& c);
+    void drawFrontBoxFaces(juce::Graphics& g, const BoxCorners& c);
 
     static constexpr int sampleSize = 128;
-    static constexpr int wavetableCount = 4;
 
     std::vector<std::vector<float>> wavetables;
     juce::Colour waveformColours[wavetableCount] = {
