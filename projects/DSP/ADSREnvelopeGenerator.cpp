@@ -106,6 +106,9 @@ float ADSREnvelopeGenerator::getValue(bool midiGateState)
             break;
     }
 
+    // Clamp the envelope value to the range [0.0, 1.0]
+    currentEnvelopeValue = std::clamp(currentEnvelopeValue, 0.0f, 1.0f);
+
     return currentEnvelopeValue;
 }
 
