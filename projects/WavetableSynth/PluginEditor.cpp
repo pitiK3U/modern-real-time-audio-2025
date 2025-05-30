@@ -4,7 +4,7 @@
 
 WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(WavetableSynthAudioProcessor& p) :
     juce::AudioProcessorEditor(p), audioProcessor(p),
-    oscParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::WavetablePosition, Param::ID::WavetableVol, Param::ID::OutputVol }),
+    oscParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::WavetablePosition, Param::ID::UnisonVoices, Param::ID::UnisonDetune, Param::ID::WavetableVol, Param::ID::OutputVol }),
     vcfEnvParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_AttTime, Param::ID::VCF_DecayTime, Param::ID::VCF_Sustain, Param::ID::VCF_RelTime }),
     lfoParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_LFOFreq, Param::ID::VCF_LFOType }),
     filterParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_Cutoff, Param::ID::VCF_Reso, Param::ID::VCF_Type, Param::ID::VCF_EnvAmount, Param::ID::VCF_LFOAmount }),

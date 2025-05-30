@@ -1,7 +1,10 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "WavetableSynth.h"
+#include "juce_core/juce_core.h"
 #include <algorithm>
+#include <cstdint>
+#include <sys/types.h>
 #include <vector>
 
 void setWavetablePosition(std::vector<DSP::WavetableSynthVoice *> voices, float position, bool skipRamp)
@@ -12,6 +15,16 @@ void setWavetablePosition(std::vector<DSP::WavetableSynthVoice *> voices, float 
 void setWavetableVol(std::vector<DSP::WavetableSynthVoice *> voices, float dB, bool skipRamp)
 {
     std::for_each(voices.begin(), voices.end(), [dB, skipRamp] (auto& v) { v->setWavetableVol(dB, skipRamp); });
+}
+
+void setUnisonVoices(std::vector<DSP::WavetableSynthVoice *> voices, uint8_t numOfVoices)
+{
+    std::for_each(voices.begin(), voices.end(), [numOfVoices] (auto& v) { v->setUnisonVoices(numOfVoices); });
+}
+
+void setUnisonDetune(std::vector<DSP::WavetableSynthVoice *> voices, float cents, bool force)
+{
+    std::for_each(voices.begin(), voices.end(), [cents, force] (auto& v) { v->setUnisonDetune(cents, force); });
 }
 
 void setAttTime(std::vector<DSP::WavetableSynthVoice*> voices, float ms)
@@ -133,6 +146,8 @@ static const std::vector<mrta::ParameterInfo> paramVector
 {
     { Param::ID::WavetablePosition, Param::Name::WavetablePos, "", 0, Param::Ranges::WavetablePositionMin, Param::Ranges::WavetablePositionMax, .1f, 1.f },
     { Param::ID::WavetableVol,    Param::Name::WavetableVol,    Param::Units::dB,   0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
+    { Param::ID::UnisonVoices, Param::Name::UnisonVoices, "", 1.f, Param::Ranges::UnisonVoicesMin, Param::Ranges::UnisonVoicesMax, Param::Ranges::UnisonVoicesInc, Param::Ranges::UnisonVoicesSkw },
+    { Param::ID::UnisonDetune, Param::Name::UnisonDetune, Param::Units::Cent, 0.f, Param::Ranges::UnisonDetuneMin, Param::Ranges::UnisonDetuneMax, Param::Ranges::UnisonDetuneInc, Param::Ranges::UnisonDetuneSkw },
 
     { Param::ID::VCF_AttTime,   Param::Name::VCF_AttTime,   Param::Units::Ms,  10.0f, Param::Ranges::EnvTimeMin,    Param::Ranges::EnvTimeMax,    Param::Ranges::EnvTimeInc,    Param::Ranges::EnvTimeSkw },
     { Param::ID::VCF_DecayTime, Param::Name::VCF_DecayTime, Param::Units::Ms, 100.0f, Param::Ranges::EnvTimeMin,    Param::Ranges::EnvTimeMax,    Param::Ranges::EnvTimeInc,    Param::Ranges::EnvTimeSkw },
@@ -195,6 +210,9 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
 
     paramManager.registerParameterCallback(Param::ID::WavetablePosition, [this] (float value, bool force) { setWavetablePosition(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::WavetableVol, [this] (float value, bool force) { setWavetableVol(voices, value, force); });
+    paramManager.registerParameterCallback(Param::ID::UnisonVoices, [this] (float value, bool force) { setUnisonVoices(voices, static_cast<uint8_t>(value)); });
+    paramManager.registerParameterCallback(Param::ID::UnisonDetune, [this] (float value, bool force) { setUnisonDetune(voices, value, force); });
+
     paramManager.registerParameterCallback(Param::ID::VCF_AttTime, [this] (float value, bool force) { setAttTimeVCF(voices, value); });
     paramManager.registerParameterCallback(Param::ID::VCF_DecayTime, [this] (float value, bool force) { setDecayTimeVCF(voices, value); });
     paramManager.registerParameterCallback(Param::ID::VCF_Sustain, [this] (float value, bool force) { setSustainVCF(voices, value); });
