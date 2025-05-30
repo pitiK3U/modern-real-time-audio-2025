@@ -83,12 +83,19 @@ private:
 
 struct EnvelopePoint {
     float time;
-    float value;
+    float level;
 
     juce::Point<float> toPixel(const juce::Rectangle<float>& area, float maxLength) const {
         float x = area.getX() + (time / maxLength) * area.getWidth();
-        float y = juce::jmap(value, 0.0f, 1.0f, area.getBottom(), area.getY());
+        float y = juce::jmap(level, 0.0f, 1.0f, area.getBottom(), area.getY());
         return { x, y };
+    }
+
+    static EnvelopePoint fromPixel(const juce::Point<float>& pixel, const juce::Rectangle<float>& area, float maxLength)
+    {
+        float t = ((pixel.x - area.getX()) / area.getWidth()) * maxLength;
+        float l = juce::jlimit(0.0f, 1.0f, (area.getBottom() - pixel.y) / area.getHeight()); // invert Y
+        return { t, l };
     }
 };
 
