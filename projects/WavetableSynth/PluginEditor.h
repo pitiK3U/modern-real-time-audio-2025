@@ -34,9 +34,9 @@ private:
     mrta::GenericParameterEditor filterParamEditor;
     mrta::GenericParameterEditor lfo1ParamEditor;
     mrta::GenericParameterEditor lfo2ParamEditor;
-    HistoryPlotComponent lfo1HistoryPlot;
-    HistoryPlotComponent lfo2HistoryPlot;
-    ADSREnvelopeComponent adsrComponent;
+    GUI::HistoryPlotComponent lfo1HistoryPlot;
+    GUI::HistoryPlotComponent lfo2HistoryPlot;
+    GUI::ADSREnvelopeComponent adsrComponent;
 
     juce::AudioProcessorValueTreeState& vts;
 

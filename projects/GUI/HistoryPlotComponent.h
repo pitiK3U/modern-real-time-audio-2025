@@ -2,6 +2,9 @@
 #include <JuceHeader.h>
 #include <vector>
 
+namespace GUI
+{
+
 /// A component that keeps the last N values you feed it and draws them as a scrolling waveform.
 class HistoryPlotComponent  : public juce::Component
 {
@@ -25,3 +28,5 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HistoryPlotComponent)
 };
+
+}

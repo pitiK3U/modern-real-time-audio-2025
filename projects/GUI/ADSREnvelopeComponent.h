@@ -6,6 +6,9 @@
 #include "EnvelopeStateCollector.h"
 #include <JuceHeader.h>
 
+namespace GUI
+{
+
 class ADSREnvelopeComponent
 : public juce::Component
 , private juce::Timer
@@ -77,3 +80,16 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ADSREnvelopeComponent)
 };
+
+struct EnvelopePoint {
+    float time;
+    float value;
+
+    juce::Point<float> toPixel(const juce::Rectangle<float>& area, float maxLength) const {
+        float x = area.getX() + (time / maxLength) * area.getWidth();
+        float y = juce::jmap(value, 0.0f, 1.0f, area.getBottom(), area.getY());
+        return { x, y };
+    }
+};
+
+}

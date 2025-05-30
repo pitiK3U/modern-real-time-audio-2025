@@ -2,6 +2,9 @@
 #include "juce_core/juce_core.h"
 #include <cassert>
 
+namespace GUI
+{
+
 ADSREnvelopeComponent::ADSREnvelopeComponent(
     juce::AudioProcessorValueTreeState& state,
     DSP::EnvelopeStateCollector* envelopeStateCollector,
@@ -74,7 +77,7 @@ void ADSREnvelopeComponent::setupSlider (juce::Slider& s)
 {
     s.setSliderStyle (juce::Slider::RotaryVerticalDrag);
     s.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
-    addAndMakeVisible (s); // TODO: disable for curve sliders?
+    addAndMakeVisible (s);
 }
 
 void ADSREnvelopeComponent::paint (juce::Graphics& g)
@@ -487,3 +490,4 @@ float ADSREnvelopeComponent::getYForX (float xQueryF) const
     return points.getFirst().y;
 }
 
+}

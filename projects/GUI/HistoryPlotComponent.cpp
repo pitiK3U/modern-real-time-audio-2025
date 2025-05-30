@@ -1,5 +1,8 @@
 #include "HistoryPlotComponent.h"
 
+namespace GUI
+{
+
 HistoryPlotComponent::HistoryPlotComponent (int initialBufferSize)
   : bufferSize (initialBufferSize),
     buffer     (static_cast<size_t> (initialBufferSize), 0.0f)
@@ -115,4 +118,6 @@ void HistoryPlotComponent::paint (juce::Graphics& g)
 
     g.setColour (juce::Colours::lightgreen);
     g.strokePath (waveform, juce::PathStrokeType (3.0f));
+}
+
 }
