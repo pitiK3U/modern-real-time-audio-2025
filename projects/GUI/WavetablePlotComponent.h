@@ -16,6 +16,24 @@ public:
 private:
     void generateWavetables();
 
+    void drawPlotBackground(juce::Graphics& g, juce::Rectangle<float> area);
+    void drawWaveforms(juce::Graphics& g, juce::Rectangle<float> area);
+
+    void drawSingleWaveform(
+    juce::Graphics& g,
+    int index,
+    juce::Rectangle<float> area,
+    float midY,
+    float scaleY,
+    float stepX,
+    float scaleX,
+    float scaleYFactor,
+    float xOffset,
+    float yOffset
+    );
+
+
+
     static constexpr int sampleSize = 128;
     static constexpr int wavetableCount = 4;
 

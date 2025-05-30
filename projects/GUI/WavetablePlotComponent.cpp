@@ -46,69 +46,85 @@ void WavetablePlotComponent::paint(juce::Graphics& g)
     g.fillAll(juce::Colours::black);
 
     auto fullBounds = getLocalBounds().toFloat();
-    auto plotBounds = fullBounds.removeFromTop(fullBounds.getHeight() / 2.0f).reduced(10.0f);
+    const auto plotBounds = fullBounds.removeFromTop(fullBounds.getHeight() / 2.0f).reduced(10.0f);
+    drawPlotBackground(g, plotBounds);
+
+    const auto waveformArea = plotBounds.reduced(16.0f);
+    drawWaveforms(g, waveformArea);
+}
+
+void WavetablePlotComponent::drawPlotBackground(juce::Graphics& g, juce::Rectangle<float> area)
+{
     g.setColour(juce::Colours::darkgrey);
-    g.fillRect(plotBounds);
+    g.fillRect(area);
+
     g.setColour(juce::Colours::white);
-    g.drawRect(plotBounds, 1.5f);
+    g.drawRect(area, 1.5f);
+}
 
-    auto waveformArea = plotBounds.reduced(16.0f);
-
-    const float midY = waveformArea.getCentreY();
-    const float scaleY = waveformArea.getHeight() / 2.2f;
-    const float stepX = waveformArea.getWidth() / static_cast<float>(sampleSize - 1);
+void WavetablePlotComponent::drawWaveforms(juce::Graphics& g, juce::Rectangle<float> area)
+{
+    const float midY = area.getCentreY();
+    const float scaleY = area.getHeight() / 2.2f;
+    const float stepX = area.getWidth() / static_cast<float>(sampleSize - 1);
 
     const float xOffset = 20.0f;
     const float yOffset = -10.0f;
 
     const float totalXOffset = xOffset * (wavetableCount - 1);
     const float totalYOffset = std::abs(yOffset) * (wavetableCount - 1);
-    const float scaleX = (waveformArea.getWidth() - totalXOffset) / waveformArea.getWidth();
-    const float scaleYFactor = (waveformArea.getHeight() - totalYOffset) / waveformArea.getHeight();
+    const float scaleX = (area.getWidth() - totalXOffset) / area.getWidth();
+    const float scaleYFactor = (area.getHeight() - totalYOffset) / area.getHeight();
 
     for (int i = wavetableCount - 1; i >= 0; --i)
-    {
-        const auto& waveform = wavetables[i];
-        juce::Path path;
-
-        // Include wrap-around (5 before, full, 5 after)
-        const int viewLength = sampleSize + 2;
-        const int viewOffset = sampleSize - 1;
-
-        // First point
-        int index0 = (viewOffset + 0) % sampleSize;
-        path.startNewSubPath(waveformArea.getX(), midY - scaleY * waveform[index0]);
-
-        for (int j = 1; j < viewLength; ++j)
-        {
-            int sampleIdx = (viewOffset + j) % sampleSize;
-            float x = waveformArea.getX() + static_cast<float>(j) * stepX;
-            float y = midY - scaleY * waveform[sampleIdx];
-            path.lineTo(x, y);
-        }
-
-        // Fill under the curve
-        juce::Path fillPath(path);
-        float endX = waveformArea.getX() + static_cast<float>(viewLength - 1) * stepX;
-        fillPath.lineTo(endX, waveformArea.getBottom());
-        fillPath.lineTo(waveformArea.getX(), waveformArea.getBottom());
-        fillPath.closeSubPath();
-
-        // Apply scaling and offset
-        juce::AffineTransform transform =
-            juce::AffineTransform::scale(scaleX, scaleYFactor, waveformArea.getX(), waveformArea.getBottom())
-                .followedBy(juce::AffineTransform::translation(i * xOffset, i * yOffset));
-
-        // Filled area (light, translucent)
-        g.setColour(waveformColours[i].withAlpha(0.2f));
-        g.fillPath(fillPath, transform);
-
-        // Stroke
-        g.setColour(waveformColours[i].withAlpha(1.0f));
-        g.strokePath(path, juce::PathStrokeType(1.5f), transform);
-    }
+        drawSingleWaveform(g, i, area, midY, scaleY, stepX, scaleX, scaleYFactor, xOffset, yOffset);
 }
 
+void WavetablePlotComponent::drawSingleWaveform(
+    juce::Graphics& g,
+    int index,
+    juce::Rectangle<float> area,
+    float midY,
+    float scaleY,
+    float stepX,
+    float scaleX,
+    float scaleYFactor,
+    float xOffset,
+    float yOffset)
+{
+    const auto& waveform = wavetables[index];
+    juce::Path path;
+
+    const int viewLength = sampleSize + 2;
+    const int viewOffset = sampleSize - 1;
+
+    int index0 = (viewOffset + 0) % sampleSize;
+    path.startNewSubPath(area.getX(), midY - scaleY * waveform[index0]);
+
+    for (int j = 1; j < viewLength; ++j)
+    {
+        int sampleIdx = (viewOffset + j) % sampleSize;
+        float x = area.getX() + static_cast<float>(j) * stepX;
+        float y = midY - scaleY * waveform[sampleIdx];
+        path.lineTo(x, y);
+    }
+
+    juce::Path fillPath(path);
+    float endX = area.getX() + static_cast<float>(viewLength - 1) * stepX;
+    fillPath.lineTo(endX, area.getBottom());
+    fillPath.lineTo(area.getX(), area.getBottom());
+    fillPath.closeSubPath();
+
+    juce::AffineTransform transform =
+        juce::AffineTransform::scale(scaleX, scaleYFactor, area.getX(), area.getBottom())
+            .followedBy(juce::AffineTransform::translation(index * xOffset, index * yOffset));
+
+    g.setColour(waveformColours[index].withAlpha(0.2f));
+    g.fillPath(fillPath, transform);
+
+    g.setColour(waveformColours[index].withAlpha(1.0f));
+    g.strokePath(path, juce::PathStrokeType(1.5f), transform);
+}
 
 
 }
