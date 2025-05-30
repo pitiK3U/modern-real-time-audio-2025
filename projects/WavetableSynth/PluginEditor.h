@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PluginProcessor.h"
+#include "WavetablePlotComponent.h"
 #include "mrta_utils/Source/GUI/GenericParameterEditor.h"
 #include "HistoryPlotComponent.h"
 #include "ADSREnvelopeComponent.h"
@@ -17,7 +18,7 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
 
-    static constexpr int NUM_SECTIONS { 8 };
+    static constexpr int NUM_SECTIONS { 9 };
     static constexpr int SECTION_WIDTH { 250 };
     static constexpr int SECTION_SPACER_WIDTH { 20 };
     static constexpr int LABEL_HEIGHT { 50 };
@@ -37,6 +38,7 @@ private:
     GUI::HistoryPlotComponent lfo1HistoryPlot;
     GUI::HistoryPlotComponent lfo2HistoryPlot;
     GUI::ADSREnvelopeComponent adsrComponent;
+    GUI::WavetablePlotComponent wavetablePlotComponent;
 
     juce::AudioProcessorValueTreeState& vts;
 
@@ -48,6 +50,8 @@ private:
     juce::Label finalLfoLabel;
     juce::Label lfo1Label;
     juce::Label lfo2Label;
+    juce::Label envelopeLabel;
+    juce::Label wavetableLabel;
 
     void setupLabel(juce::Label& label);
     void timerCallback() override;

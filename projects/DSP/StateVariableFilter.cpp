@@ -59,6 +59,13 @@ void StateVariableFilter::process(float* lpfOut, float* bpfOut, float* hpfOut, c
         // s1 = lp + v1
         state1 = lp + v1;
 
+        if (std::isnan(state0)) {
+            state0 = 0.f;
+        }
+        if (std::isnan(state1)) {
+            state1 = 0.f;
+        }
+
         // write to output vectors
         lpfOut[n] = lp;
         bpfOut[n] = bp;

@@ -18,6 +18,8 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     finalLfoLabel("", "Volume LFO"),
     lfo1Label("", "LFO 1"),
     lfo2Label("", "LFO 2"),
+    envelopeLabel("", "Envelope 1"),
+    wavetableLabel("", "Wavetable"),
     lfo1HistoryPlot(32768),
     lfo2HistoryPlot(32768),
     adsrComponent(
@@ -35,7 +37,8 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
         Param::ID::EnvelopeReleaseCurveY,
         Param::Ranges::ADSRPlotWidth
     ),
-    vts (p.getParamManager().getAPVTS())
+    vts (p.getParamManager().getAPVTS()),
+    wavetablePlotComponent()
 {
     addAndMakeVisible(oscParamEditor);
     addAndMakeVisible(vcfEnvParamEditor);
@@ -47,6 +50,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     addAndMakeVisible (lfo1HistoryPlot);
     addAndMakeVisible(lfo2HistoryPlot);
     addAndMakeVisible (adsrComponent);
+    addAndMakeVisible(wavetablePlotComponent);
 
     setupLabel(oscLabel);
     setupLabel(vcaEnvLabel);
@@ -56,6 +60,8 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     setupLabel(finalLfoLabel);
     setupLabel(lfo1Label);
     setupLabel(lfo2Label);
+    setupLabel(envelopeLabel);
+    setupLabel(wavetableLabel);
 
     vts.addParameterListener (Param::ID::HistoryPlotBufferSize, this);
 
@@ -82,7 +88,14 @@ void WavetableSynthAudioProcessorEditor::resized()
 
     {
         auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
+        envelopeLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
         adsrComponent.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
+    }
+
+    {
+        auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
+        wavetableLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
+        wavetablePlotComponent.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
     }
 
     {
