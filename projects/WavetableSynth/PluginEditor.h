@@ -1,9 +1,13 @@
 #pragma once
 
 #include "PluginProcessor.h"
+#include "juce_core/juce_core.h"
+#include "juce_gui_basics/juce_gui_basics.h"
 #include "mrta_utils/Source/GUI/GenericParameterEditor.h"
 #include "HistoryPlotComponent.h"
 #include "ADSREnvelopeComponent.h"
+#include <functional>
+#include <optional>
 
 class WavetableSynthAudioProcessorEditor
 : public juce::AudioProcessorEditor
@@ -16,6 +20,7 @@ public:
 
     void paint(juce::Graphics&) override;
     void resized() override;
+    void mouseDown(const MouseEvent& mouseEvent) override;
 
     static constexpr int NUM_SECTIONS { 8 };
     static constexpr int SECTION_WIDTH { 250 };
@@ -34,6 +39,7 @@ private:
     mrta::GenericParameterEditor filterParamEditor;
     mrta::GenericParameterEditor lfo1ParamEditor;
     mrta::GenericParameterEditor lfo2ParamEditor;
+    mrta::GenericParameterEditor effectParamEditor;
     GUI::HistoryPlotComponent lfo1HistoryPlot;
     GUI::HistoryPlotComponent lfo2HistoryPlot;
     GUI::ADSREnvelopeComponent adsrComponent;
@@ -48,6 +54,11 @@ private:
     juce::Label finalLfoLabel;
     juce::Label lfo1Label;
     juce::Label lfo2Label;
+
+    juce::TextButton selectButton;
+    bool selectMode { false };
+
+    void toggleSelectMode();
 
     void setupLabel(juce::Label& label);
     void timerCallback() override;

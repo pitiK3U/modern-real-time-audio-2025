@@ -2,8 +2,10 @@
 #include "PluginEditor.h"
 #include "WavetableSynth.h"
 #include "juce_core/juce_core.h"
+#include "juce_core/system/juce_PlatformDefs.h"
 #include <algorithm>
 #include <cstdint>
+#include <functional>
 #include <sys/types.h>
 #include <vector>
 
@@ -141,6 +143,24 @@ void setLfoMult(std::vector<DSP::WavetableSynthVoice*> voices, juce::String para
 {
     std::for_each(voices.begin(), voices.end(), [paramId, value, &reference] (auto& v) { v->setWavetablePositionEffect(paramId, Param::Ranges::WavetablePositionMax * value, reference); });
 }
+namespace Wavetable {
+    using ParameterID = const juce::String&;
+}
+
+template<typename FloatType>
+using effectSetter = std::function<void(Wavetable::ParameterID, float, DSP::DSP<FloatType> &reference)>;
+
+template<typename FloatType>
+effectSetter<FloatType> getParameterCallback(Wavetable::ParameterID settingParameter, std::vector<DSP::WavetableSynthVoice *>& voices)
+{
+    if (Param::ID::WavetablePosition.compare(settingParameter) == 0) {
+        return [voices](auto paramId, auto value, auto & reference) {
+            std::for_each(voices.begin(), voices.end(), [paramId, value, &reference] (auto& v) { v->setWavetablePositionEffect(paramId, Param::Ranges::WavetablePositionMax * value, reference); });
+        };
+    } else {
+        jassertfalse;
+    }
+}
 
 static const std::vector<mrta::ParameterInfo> paramVector
 {
@@ -229,8 +249,6 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::LFO1_Freq, [this] (float value, bool force)  {lfo1.setFrequency(value);});
     paramManager.registerParameterCallback(Param::ID::LFO1_Offset, [this] (float value, bool force) { lfo1.setOffset(value); });
     paramManager.registerParameterCallback(Param::ID::LFO1_Type, [this] (float value, bool force) { lfo1.setWaveform(static_cast<DSP::Waveform>(std::round(value))); });
-    paramManager.registerParameterCallback(Param::ID::LFO1_mult, [this] (float value, bool force) { setLfoMult(voices, Param::ID::LFO1_mult, value, lfo1); });
-
 
     paramManager.registerParameterCallback(Param::ID::LFO2_Freq, [this] (float value, bool force)  {lfo2.setFrequency(value);});
     paramManager.registerParameterCallback(Param::ID::LFO2_Offset, [this] (float value, bool force) { lfo2.setOffset(value); });
@@ -247,6 +265,12 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::EnvelopeDecayCurveY, [this] (float value, bool force) { setDecayCurveY(voices, value); });
     paramManager.registerParameterCallback(Param::ID::EnvelopeReleaseCurveX, [this] (float value, bool force) { setRelCurveX(voices, value); });
     paramManager.registerParameterCallback(Param::ID::EnvelopeReleaseCurveY, [this] (float value, bool force) { setRelCurveY(voices, value); });
+
+    paramManager.registerParameterCallback(Param::ID::LFO1_mult, [this] (float value, bool force) { 
+        if (!selectedParameter.has_value()) return;
+        auto fn = getParameterCallback<float>(selectedParameter.value(), voices); 
+        fn(Param::ID::LFO1_mult, value, lfo1);
+    });
 }
 
 WavetableSynthAudioProcessor::~WavetableSynthAudioProcessor()

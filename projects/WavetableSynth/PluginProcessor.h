@@ -242,6 +242,8 @@ public:
 
     static constexpr size_t NUM_VOICES { 8 };
 
+    std::optional<std::reference_wrapper<const juce::String>> selectedParameter {};
+
 private:
     mrta::ParameterManager paramManager;
     std::vector<DSP::WavetableSynthVoice *> voices;
@@ -256,6 +258,7 @@ private:
     DSP::ParameterHistoryBuffer<float> lfo2History { 32768 };  // remember up to 2^15 samples
 
     std::unique_ptr<DSP::EnvelopeStateCollector> envelopeCollector;
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableSynthAudioProcessor)
 };

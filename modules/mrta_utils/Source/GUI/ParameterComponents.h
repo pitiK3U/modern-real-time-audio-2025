@@ -1,5 +1,6 @@
 #pragma once
 
+#include "juce_core/juce_core.h"
 namespace mrta
 {
 
@@ -8,7 +9,8 @@ class ParameterSlider : public juce::Slider
 public:
     ParameterSlider(const juce::String& paramID, juce::AudioProcessorValueTreeState& apvts) :
         juce::Slider(juce::Slider::RotaryHorizontalVerticalDrag, juce::Slider::TextBoxRight),
-        att(apvts, paramID, *this)
+        att(apvts, paramID, *this),
+        parameterID( paramID )
     {
         juce::AudioParameterFloat* param { dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter(paramID)) };
         if (!param)
@@ -20,6 +22,7 @@ public:
 
     ParameterSlider() = delete;
 
+    juce::String parameterID;
 private:
     juce::AudioProcessorValueTreeState::SliderAttachment att;
 

@@ -1,6 +1,12 @@
 #include "PluginEditor.h"
 #include "ADSREnvelopeComponent.h"
 #include "PluginProcessor.h"
+#include "juce_core/juce_core.h"
+#include "juce_events/juce_events.h"
+#include "juce_graphics/juce_graphics.h"
+#include "juce_gui_basics/juce_gui_basics.h"
+#include "mrta_utils/Source/GUI/ParameterComponents.h"
+#include <optional>
 
 WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(WavetableSynthAudioProcessor& p) :
     juce::AudioProcessorEditor(p), audioProcessor(p),
@@ -8,8 +14,9 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     vcfEnvParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_AttTime, Param::ID::VCF_DecayTime, Param::ID::VCF_Sustain, Param::ID::VCF_RelTime }),
     lfoParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_LFOFreq, Param::ID::VCF_LFOType }),
     filterParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_Cutoff, Param::ID::VCF_Reso, Param::ID::VCF_Type, Param::ID::VCF_EnvAmount, Param::ID::VCF_LFOAmount }),
-    lfo1ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_Freq, Param::ID::LFO1_Type, Param::ID::LFO1_Offset, Param::ID::LFO1_mult }),
+    lfo1ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_Freq, Param::ID::LFO1_Type, Param::ID::LFO1_Offset }),
     lfo2ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO2_Freq, Param::ID::LFO2_Type, Param::ID::LFO2_Offset, Param::ID::HistoryPlotBufferSize }),
+    effectParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_mult }),
     oscLabel("", "Wavetable"),
     vcaEnvLabel("", "Amplitude Envelope"),
     vcfEnvLabel("", "Filter Envelope"),
@@ -35,14 +42,16 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
         Param::ID::EnvelopeReleaseCurveY,
         Param::Ranges::ADSRPlotWidth
     ),
-    vts (p.getParamManager().getAPVTS())
-{
+    vts (p.getParamManager().getAPVTS()),
+    selectButton("Select component")
+    {
     addAndMakeVisible(oscParamEditor);
     addAndMakeVisible(vcfEnvParamEditor);
     addAndMakeVisible(lfoParamEditor);
     addAndMakeVisible(filterParamEditor);
     addAndMakeVisible(lfo1ParamEditor);
     addAndMakeVisible(lfo2ParamEditor);
+    addAndMakeVisible(effectParamEditor);
 
     addAndMakeVisible (lfo1HistoryPlot);
     addAndMakeVisible(lfo2HistoryPlot);
@@ -57,11 +66,16 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     setupLabel(lfo1Label);
     setupLabel(lfo2Label);
 
+    addAndMakeVisible(selectButton);
+    selectButton.onClick = [this] {
+        toggleSelectMode();
+    };
+
     vts.addParameterListener (Param::ID::HistoryPlotBufferSize, this);
 
     startTimerHz ((int) REFRESH_RATE);
 
-    setSize(NUM_SECTIONS * SECTION_WIDTH + (NUM_SECTIONS - 1) * SECTION_SPACER_WIDTH, LABEL_HEIGHT + PARAM_HEIGHT * MAX_PARAM_COUNT);
+    setSize(NUM_SECTIONS * SECTION_WIDTH + (NUM_SECTIONS - 1) * SECTION_SPACER_WIDTH, LABEL_HEIGHT + PARAM_HEIGHT * (MAX_PARAM_COUNT + 1));
 }
 
 WavetableSynthAudioProcessorEditor::~WavetableSynthAudioProcessorEditor()
@@ -79,6 +93,13 @@ void WavetableSynthAudioProcessorEditor::paint(juce::Graphics& g)
 void WavetableSynthAudioProcessorEditor::resized()
 {
     auto bounds { getLocalBounds() };
+
+    {
+        auto bottomBounds { bounds.removeFromBottom(PARAM_HEIGHT) };
+        auto buttonBounds { bottomBounds.removeFromLeft(SECTION_WIDTH) };
+        selectButton.setBounds( buttonBounds );
+        effectParamEditor.setBounds( bottomBounds );
+    }
 
     {
         auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
@@ -158,4 +179,42 @@ void WavetableSynthAudioProcessorEditor::parameterChanged (const juce::String& p
             lfo2HistoryPlot.setBufferSize ((int) newValue);
         });
     }
+}
+
+void WavetableSynthAudioProcessorEditor::mouseDown(const MouseEvent& mouseEvent)
+{
+    if (!selectMode)
+        return;
+
+    toggleSelectMode();
+
+    auto * mouseSelectedComponent = getComponentAt(mouseEvent.getPosition());
+    if (mouseSelectedComponent == nullptr) return;
+    
+    auto * slider = dynamic_cast<mrta::ParameterSlider *>(mouseSelectedComponent);
+    if (slider == nullptr)
+        return;
+
+    audioProcessor.selectedParameter = slider->parameterID;
+}
+
+void WavetableSynthAudioProcessorEditor::toggleSelectMode()
+{
+    selectMode = !selectMode;
+
+    if (selectMode) {
+        setInterceptsMouseClicks(true, false);
+        setMouseCursor(juce::MouseCursor::CrosshairCursor);
+        for (auto child : getChildren()) {
+            child->setInterceptsMouseClicks(false, false);
+        }
+    } else {
+        setInterceptsMouseClicks(true, true);
+        setMouseCursor(juce::MouseCursor::NormalCursor);
+        for (auto child : getChildren()) {
+            child->setInterceptsMouseClicks(true, true);
+        }
+    }
+
+    repaint();
 }
