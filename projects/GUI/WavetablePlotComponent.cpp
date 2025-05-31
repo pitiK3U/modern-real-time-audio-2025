@@ -7,6 +7,7 @@ WavetablePlotComponent::WavetablePlotComponent()
 {
     generateWavetables();
     setOpaque(true);
+    startTimerHz(60);
 }
 
 BoxCorners BoxCorners::getBoxCorners(
@@ -94,10 +95,15 @@ void WavetablePlotComponent::paint(juce::Graphics& g)
     const float scaleYFactor = (waveformArea.getHeight() - totalYOffset) / waveformArea.getHeight();
     const juce::Point<float> anchor = { waveformArea.getX(), waveformArea.getBottom() };
 
+    const float midY = waveformArea.getCentreY();
+    const float scaleY = waveformArea.getHeight() / 2.2f;
+    const float stepX = waveformArea.getWidth() / static_cast<float>(sampleSize - 1);
+
     auto corners = BoxCorners::getBoxCorners(waveformArea, xOffset, yOffset, scaleX, scaleYFactor, anchor, wavetableCount);
 
     drawBackBoxFaces(g, corners);
     drawWaveforms(g, waveformArea, scaleX, scaleYFactor, xOffset, yOffset);
+    drawMorphedWaveform(g, waveformArea, midY, scaleY, stepX);
     drawFrontBoxFaces(g, corners);
 }
 
@@ -208,6 +214,84 @@ void WavetablePlotComponent::drawFrontBoxFaces(juce::Graphics& g, const BoxCorne
     fillFace(g, c.frontBottomLeft, c.frontBottomRight, c.frontTopRight, c.frontTopLeft, juce::Colours::white);
     fillFace(g, c.backBottomRight, c.frontBottomRight, c.frontTopRight, c.backTopRight, juce::Colours::white);
     fillFace(g, c.backBottomLeft, c.backBottomRight, c.frontBottomRight, c.frontBottomLeft, juce::Colours::white);
+}
+
+std::vector<float> WavetablePlotComponent::generateMorphedWaveform(float t)
+{
+    std::vector<float> morphed(sampleSize, 0.0f);
+
+    int maxIndex = wavetableCount - 1;
+    float scaledT = t * static_cast<float>(maxIndex);
+    int indexA = static_cast<int>(std::floor(scaledT));
+    int indexB = std::min(indexA + 1, maxIndex);
+    float localT = scaledT - static_cast<float>(indexA);
+
+    for (int i = 0; i < sampleSize; ++i)
+    {
+        float a = wavetables[indexA][i];
+        float b = wavetables[indexB][i];
+        morphed[i] = naive_lerp(a, b, localT);
+    }
+
+    return morphed;
+}
+
+void WavetablePlotComponent::drawMorphedWaveform(
+    juce::Graphics& g,
+    juce::Rectangle<float> area,
+    float midY,
+    float scaleY,
+    float stepX)
+{
+    auto waveform = generateMorphedWaveform(morphT);
+    juce::Path path;
+
+    path.startNewSubPath(area.getX(), midY - scaleY * waveform[0]);
+    for (int i = 1; i < sampleSize; ++i)
+    {
+        float x = area.getX() + static_cast<float>(i) * stepX;
+        float y = midY - scaleY * waveform[i];
+        path.lineTo(x, y);
+    }
+
+    // Compute transform
+    const float index = morphT * static_cast<float>(wavetableCount - 1);
+    const float xOffset = 20.0f;
+    const float yOffset = -10.0f;
+
+    const float totalXOffset = xOffset * (wavetableCount - 1);
+    const float totalYOffset = std::abs(yOffset) * (wavetableCount - 1);
+
+    const float scaleX = (area.getWidth() - totalXOffset) / area.getWidth();
+    const float scaleYFactor = (area.getHeight() - totalYOffset) / area.getHeight();
+
+    juce::AffineTransform transform =
+        juce::AffineTransform::scale(scaleX, scaleYFactor, area.getX(), area.getBottom())
+            .followedBy(juce::AffineTransform::translation(index * xOffset, index * yOffset));
+
+    g.setColour(juce::Colours::yellow.withAlpha(0.9f));
+    g.strokePath(path, juce::PathStrokeType(2.0f), transform);
+}
+
+
+void WavetablePlotComponent::timerCallback()
+{
+    morphT += 0.005f;
+    if (morphT > 1.0f)
+        morphT = 0.0f;
+
+    repaint();
+}
+
+float WavetablePlotComponent::naive_lerp(float a, float b, float t)
+{
+    // Clamp t to [0, 1] if necessary
+    t = std::clamp(t, 0.0f, 1.0f);
+
+    float gainA = std::cos(t * juce::MathConstants<float>::halfPi);
+    float gainB = std::sin(t * juce::MathConstants<float>::halfPi);
+
+    return a * gainA + b * gainB;
 }
 
 }

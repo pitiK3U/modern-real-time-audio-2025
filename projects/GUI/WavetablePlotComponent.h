@@ -29,7 +29,9 @@ struct BoxCorners
     );
 };
 
-class WavetablePlotComponent : public juce::Component
+class WavetablePlotComponent
+: public juce::Component
+, private juce::Timer
 {
 public:
     WavetablePlotComponent();
@@ -49,7 +51,7 @@ private:
         float scaleYFactor,
         float xOffset,
         float yOffset
-);
+    );
 
     void drawSingleWaveform(
     juce::Graphics& g,
@@ -67,8 +69,14 @@ private:
     void fillFace(juce::Graphics& g, juce::Point<float> a, juce::Point<float> b, juce::Point<float> c, juce::Point<float> d, juce::Colour colour);
     void drawBackBoxFaces(juce::Graphics& g, const BoxCorners& c);
     void drawFrontBoxFaces(juce::Graphics& g, const BoxCorners& c);
+    std::vector<float> generateMorphedWaveform(float t);
+    void drawMorphedWaveform( juce::Graphics& g, juce::Rectangle<float> area, float midY, float scaleY, float stepX);
+    void timerCallback() override;
+    float naive_lerp(float a, float b, float t);
 
     static constexpr int sampleSize = 128;
+
+    float morphT = 0.0f;
 
     std::vector<std::vector<float>> wavetables;
     juce::Colour waveformColours[wavetableCount] = {
