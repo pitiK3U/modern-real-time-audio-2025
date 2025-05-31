@@ -291,14 +291,48 @@ void WavetablePlotComponent::drawMorphedWaveform(
 
     g.setColour(morphColour.withAlpha(0.9f));
     g.strokePath(path, juce::PathStrokeType(3.0f), transform);
+
+    const int headSampleIndex = static_cast<int>(headPhase * (sampleSize - 1));
+    const int tailLength = 25; // number of fading segments behind the head
+    juce::Colour morphBaseColour = morphColour;
+    juce::Colour trailStartColour = juce::Colours::white;
+
+    for (int i = std::max(1, headSampleIndex - tailLength); i <= headSampleIndex; ++i)
+    {
+        float x1 = area.getX() + static_cast<float>(i - 1) * stepX;
+        float y1 = midY - scaleY * waveform[i - 1];
+
+        float x2 = area.getX() + static_cast<float>(i) * stepX;
+        float y2 = midY - scaleY * waveform[i];
+
+        // Compute t: tail (0.0) → head (1.0)
+        float t = static_cast<float>(i - (headSampleIndex - tailLength)) / static_cast<float>(tailLength);
+
+        float alpha = std::pow(t, 2.0f); // transparent at tail, solid at head
+        float thickness = 3.0f + t * 3.0f; // 3.0 at tail → 6.0 at head
+        juce::Colour blendedColour = trailStartColour
+            .interpolatedWith(morphBaseColour, 1.0f - t) // white at head
+            .withAlpha(alpha);
+
+        auto p1 = juce::Point<float>(x1, y1).transformedBy(transform);
+        auto p2 = juce::Point<float>(x2, y2).transformedBy(transform);
+
+        juce::Path segment;
+        segment.startNewSubPath(p1);
+        segment.lineTo(p2);
+
+        g.setColour(blendedColour);
+        g.strokePath(segment, juce::PathStrokeType(thickness, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+    }
 }
-
-
 
 void WavetablePlotComponent::timerCallback()
 {
-    // TODO: later just create a note passing through preview to make it more fun
-    // repaint();
+    headPhase += 0.002f;
+    if (headPhase >= 1.0f)
+        headPhase -= 1.0f;
+
+    repaint();
 }
 
 float WavetablePlotComponent::naive_lerp(float a, float b, float t)

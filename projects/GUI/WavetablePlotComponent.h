@@ -93,6 +93,8 @@ private:
 
     float wavetablePosition = 0.0f;
 
+    float headPhase = 0.0f; // [0, 1]
+
     std::vector<std::vector<float>> wavetables;
     juce::Colour waveformColours[wavetableCount] = {
         juce::Colours::cyan,
