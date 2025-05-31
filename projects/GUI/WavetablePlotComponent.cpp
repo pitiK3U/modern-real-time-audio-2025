@@ -264,12 +264,24 @@ void WavetablePlotComponent::drawMorphedWaveform(
         path.lineTo(x, y);
     }
 
+    // Create a filled version of the path
+    juce::Path fillPath(path);
+    float endX = area.getX() + static_cast<float>(sampleSize - 1) * stepX;
+    fillPath.lineTo(endX, area.getBottom());
+    fillPath.lineTo(area.getX(), area.getBottom());
+    fillPath.closeSubPath();
+
+    // Apply the same transform as the regular waveforms
     juce::AffineTransform transform =
         juce::AffineTransform::scale(scaleX, scaleYFactor, area.getX(), area.getBottom())
             .followedBy(juce::AffineTransform::translation(morphIndex * xOffset, morphIndex * yOffset));
 
+    // Fill and stroke
+    g.setColour(juce::Colours::yellow.withAlpha(0.2f));
+    g.fillPath(fillPath, transform);
+
     g.setColour(juce::Colours::yellow.withAlpha(0.9f));
-    g.strokePath(path, juce::PathStrokeType(2.0f), transform);
+    g.strokePath(path, juce::PathStrokeType(3.0f), transform);
 }
 
 
