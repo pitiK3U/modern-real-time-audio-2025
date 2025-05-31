@@ -70,7 +70,20 @@ private:
     void drawBackBoxFaces(juce::Graphics& g, const BoxCorners& c);
     void drawFrontBoxFaces(juce::Graphics& g, const BoxCorners& c);
     std::vector<float> generateMorphedWaveform(float t);
-    void drawMorphedWaveform( juce::Graphics& g, juce::Rectangle<float> area, float midY, float scaleY, float stepX);
+    
+    void drawMorphedWaveform(
+        juce::Graphics& g,
+        juce::Rectangle<float> area,
+        float midY,
+        float scaleY,
+        float stepX,
+        float morphIndex,
+        float scaleX,
+        float scaleYFactor,
+        float xOffset,
+        float yOffset
+    );
+    
     void timerCallback() override;
     float naive_lerp(float a, float b, float t);
 

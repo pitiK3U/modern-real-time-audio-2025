@@ -95,15 +95,10 @@ void WavetablePlotComponent::paint(juce::Graphics& g)
     const float scaleYFactor = (waveformArea.getHeight() - totalYOffset) / waveformArea.getHeight();
     const juce::Point<float> anchor = { waveformArea.getX(), waveformArea.getBottom() };
 
-    const float midY = waveformArea.getCentreY();
-    const float scaleY = waveformArea.getHeight() / 2.2f;
-    const float stepX = waveformArea.getWidth() / static_cast<float>(sampleSize - 1);
-
     auto corners = BoxCorners::getBoxCorners(waveformArea, xOffset, yOffset, scaleX, scaleYFactor, anchor, wavetableCount);
 
     drawBackBoxFaces(g, corners);
     drawWaveforms(g, waveformArea, scaleX, scaleYFactor, xOffset, yOffset);
-    drawMorphedWaveform(g, waveformArea, midY, scaleY, stepX);
     drawFrontBoxFaces(g, corners);
 }
 
@@ -128,8 +123,18 @@ void WavetablePlotComponent::drawWaveforms(
     const float scaleY = area.getHeight() / 2.2f;
     const float stepX = area.getWidth() / static_cast<float>(sampleSize - 1);
 
+    const float morphIndex = morphT * static_cast<float>(wavetableCount - 1);
+
     for (int i = wavetableCount - 1; i >= 0; --i)
+    {
+        // Check if morph lies between i and i+1 (render between those two)
+        if (static_cast<float>(i) <= morphIndex && morphIndex < static_cast<float>(i + 1))
+        {
+            drawMorphedWaveform(g, area, midY, scaleY, stepX, morphIndex, scaleX, scaleYFactor, xOffset, yOffset);
+        }
+
         drawSingleWaveform(g, i, area, midY, scaleY, stepX, scaleX, scaleYFactor, xOffset, yOffset);
+    }
 }
 
 void WavetablePlotComponent::drawSingleWaveform(
@@ -241,7 +246,12 @@ void WavetablePlotComponent::drawMorphedWaveform(
     juce::Rectangle<float> area,
     float midY,
     float scaleY,
-    float stepX)
+    float stepX,
+    float morphIndex,
+    float scaleX,
+    float scaleYFactor,
+    float xOffset,
+    float yOffset)
 {
     auto waveform = generateMorphedWaveform(morphT);
     juce::Path path;
@@ -254,20 +264,9 @@ void WavetablePlotComponent::drawMorphedWaveform(
         path.lineTo(x, y);
     }
 
-    // Compute transform
-    const float index = morphT * static_cast<float>(wavetableCount - 1);
-    const float xOffset = 20.0f;
-    const float yOffset = -10.0f;
-
-    const float totalXOffset = xOffset * (wavetableCount - 1);
-    const float totalYOffset = std::abs(yOffset) * (wavetableCount - 1);
-
-    const float scaleX = (area.getWidth() - totalXOffset) / area.getWidth();
-    const float scaleYFactor = (area.getHeight() - totalYOffset) / area.getHeight();
-
     juce::AffineTransform transform =
         juce::AffineTransform::scale(scaleX, scaleYFactor, area.getX(), area.getBottom())
-            .followedBy(juce::AffineTransform::translation(index * xOffset, index * yOffset));
+            .followedBy(juce::AffineTransform::translation(morphIndex * xOffset, morphIndex * yOffset));
 
     g.setColour(juce::Colours::yellow.withAlpha(0.9f));
     g.strokePath(path, juce::PathStrokeType(2.0f), transform);
