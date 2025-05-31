@@ -86,6 +86,7 @@ private:
     
     void timerCallback() override;
     float naive_lerp(float a, float b, float t);
+    juce::Colour lerpColour(const juce::Colour& a, const juce::Colour& b, float t);
 
     static constexpr int sampleSize = 128;
 

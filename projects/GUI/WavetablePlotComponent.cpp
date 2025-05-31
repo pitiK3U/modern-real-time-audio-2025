@@ -264,25 +264,35 @@ void WavetablePlotComponent::drawMorphedWaveform(
         path.lineTo(x, y);
     }
 
-    // Create a filled version of the path
     juce::Path fillPath(path);
     float endX = area.getX() + static_cast<float>(sampleSize - 1) * stepX;
     fillPath.lineTo(endX, area.getBottom());
     fillPath.lineTo(area.getX(), area.getBottom());
     fillPath.closeSubPath();
 
-    // Apply the same transform as the regular waveforms
+    // Get morph range
+    const int maxIndex = wavetableCount - 1;
+    const int indexA = static_cast<int>(std::floor(morphT * maxIndex));
+    const int indexB = std::min(indexA + 1, maxIndex);
+    const float localT = morphT * maxIndex - static_cast<float>(indexA);
+
+    // Lerp the color between neighbouring waveform colours
+    const juce::Colour colourA = waveformColours[indexA];
+    const juce::Colour colourB = waveformColours[indexB];
+    const juce::Colour morphColour = lerpColour(colourA, colourB, localT);
+
+    // Apply transform
     juce::AffineTransform transform =
         juce::AffineTransform::scale(scaleX, scaleYFactor, area.getX(), area.getBottom())
             .followedBy(juce::AffineTransform::translation(morphIndex * xOffset, morphIndex * yOffset));
 
-    // Fill and stroke
-    g.setColour(juce::Colours::yellow.withAlpha(0.2f));
+    g.setColour(morphColour.withAlpha(0.2f));
     g.fillPath(fillPath, transform);
 
-    g.setColour(juce::Colours::yellow.withAlpha(0.9f));
+    g.setColour(morphColour.withAlpha(0.9f));
     g.strokePath(path, juce::PathStrokeType(3.0f), transform);
 }
+
 
 
 void WavetablePlotComponent::timerCallback()
@@ -303,6 +313,19 @@ float WavetablePlotComponent::naive_lerp(float a, float b, float t)
     float gainB = std::sin(t * juce::MathConstants<float>::halfPi);
 
     return a * gainA + b * gainB;
+}
+
+juce::Colour WavetablePlotComponent::lerpColour(const juce::Colour& a, const juce::Colour& b, float t)
+{
+    t = std::clamp(t, 0.0f, 1.0f);
+    const float gainA = std::cos(t * juce::MathConstants<float>::halfPi);
+    const float gainB = std::sin(t * juce::MathConstants<float>::halfPi);
+
+    return juce::Colour::fromFloatRGBA(
+        a.getFloatRed()   * gainA + b.getFloatRed()   * gainB,
+        a.getFloatGreen() * gainA + b.getFloatGreen() * gainB,
+        a.getFloatBlue()  * gainA + b.getFloatBlue()  * gainB,
+        a.getFloatAlpha() * gainA + b.getFloatAlpha() * gainB);
 }
 
 }
