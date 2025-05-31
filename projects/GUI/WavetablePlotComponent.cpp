@@ -123,7 +123,7 @@ void WavetablePlotComponent::drawWaveforms(
     const float scaleY = area.getHeight() / 2.2f;
     const float stepX = area.getWidth() / static_cast<float>(sampleSize - 1);
 
-    const float morphIndex = morphT * static_cast<float>(wavetableCount - 1);
+    const float morphIndex = wavetablePosition * static_cast<float>(wavetableCount - 1);
 
     for (int i = wavetableCount - 1; i >= 0; --i)
     {
@@ -253,7 +253,7 @@ void WavetablePlotComponent::drawMorphedWaveform(
     float xOffset,
     float yOffset)
 {
-    auto waveform = generateMorphedWaveform(morphT);
+    auto waveform = generateMorphedWaveform(wavetablePosition);
     juce::Path path;
 
     path.startNewSubPath(area.getX(), midY - scaleY * waveform[0]);
@@ -272,9 +272,9 @@ void WavetablePlotComponent::drawMorphedWaveform(
 
     // Get morph range
     const int maxIndex = wavetableCount - 1;
-    const int indexA = static_cast<int>(std::floor(morphT * maxIndex));
+    const int indexA = static_cast<int>(std::floor(wavetablePosition * maxIndex));
     const int indexB = std::min(indexA + 1, maxIndex);
-    const float localT = morphT * maxIndex - static_cast<float>(indexA);
+    const float localT = wavetablePosition * maxIndex - static_cast<float>(indexA);
 
     // Lerp the color between neighbouring waveform colours
     const juce::Colour colourA = waveformColours[indexA];
@@ -297,11 +297,8 @@ void WavetablePlotComponent::drawMorphedWaveform(
 
 void WavetablePlotComponent::timerCallback()
 {
-    morphT += 0.005f;
-    if (morphT > 1.0f)
-        morphT = 0.0f;
-
-    repaint();
+    // TODO: later just create a note passing through preview to make it more fun
+    // repaint();
 }
 
 float WavetablePlotComponent::naive_lerp(float a, float b, float t)
@@ -326,6 +323,10 @@ juce::Colour WavetablePlotComponent::lerpColour(const juce::Colour& a, const juc
         a.getFloatGreen() * gainA + b.getFloatGreen() * gainB,
         a.getFloatBlue()  * gainA + b.getFloatBlue()  * gainB,
         a.getFloatAlpha() * gainA + b.getFloatAlpha() * gainB);
+}
+
+void WavetablePlotComponent::setWavetablePosition(float position) {
+    wavetablePosition = position;
 }
 
 }

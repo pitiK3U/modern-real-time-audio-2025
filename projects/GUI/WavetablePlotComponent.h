@@ -1,6 +1,5 @@
 #pragma once
 
-#include "juce_dsp/juce_dsp.h"
 #include <JuceHeader.h>
 
 namespace GUI
@@ -38,6 +37,8 @@ public:
 
     void paint(juce::Graphics& g) override;
     void resized() override;
+    void setWavetablePosition(float position);
+
     static constexpr int wavetableCount = 4;
 
 private:
@@ -90,7 +91,7 @@ private:
 
     static constexpr int sampleSize = 128;
 
-    float morphT = 0.0f;
+    float wavetablePosition = 0.0f;
 
     std::vector<std::vector<float>> wavetables;
     juce::Colour waveformColours[wavetableCount] = {

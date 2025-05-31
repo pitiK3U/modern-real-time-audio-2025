@@ -274,6 +274,10 @@ void WavetableSynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     buffer.clear();
     synth.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
 
+    lastWavetablePosition = lastWavetablePosition + 0.002f;
+    if (lastWavetablePosition > NUM_WAVEFORMS - 1) // Number of waveforms
+        lastWavetablePosition = 0.0f;
+
     for (int sample = 0; sample < buffer.getNumSamples(); sample++) {
         // Advance LFO for each sample
         lfo1.advancePhase();

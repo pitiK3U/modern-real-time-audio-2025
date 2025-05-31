@@ -153,6 +153,13 @@ void WavetableSynthAudioProcessorEditor::timerCallback()
         lfo1HistoryPlot.addValue (v);
     for (auto v : block2)
         lfo2HistoryPlot.addValue (v);
+
+    // 3) Get wavetable position
+    float index = audioProcessor.lastWavetablePosition.load(std::memory_order_relaxed);
+    float normalized = index / static_cast<float>(audioProcessor.NUM_WAVEFORMS - 1);
+
+    wavetablePlotComponent.setWavetablePosition(normalized);
+    wavetablePlotComponent.repaint();
 }
 
 void WavetableSynthAudioProcessorEditor::setupLabel(juce::Label& label)
