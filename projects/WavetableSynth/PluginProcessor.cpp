@@ -79,25 +79,6 @@ void setRelCurveY(std::vector<DSP::WavetableSynthVoice*> voices, float y)
     std::for_each(voices.begin(), voices.end(), [y] (auto& v) { v->setRelCurveY(y); });
 }
 
-void setAttTimeVCF(std::vector<DSP::WavetableSynthVoice*> voices, float ms)
-{
-    std::for_each(voices.begin(), voices.end(), [ms] (auto& v) { v->setAttTimeVCF(ms); });
-}
-
-void setDecayTimeVCF(std::vector<DSP::WavetableSynthVoice*> voices, float ms)
-{
-    std::for_each(voices.begin(), voices.end(), [ms] (auto& v) { v->setDecayTimeVCF(ms); });
-}
-
-void setSustainVCF(std::vector<DSP::WavetableSynthVoice*> voices, float norm)
-{
-    std::for_each(voices.begin(), voices.end(), [norm] (auto& v) { v->setSustainVCF(norm); });
-}
-
-void setRelTimeVCF(std::vector<DSP::WavetableSynthVoice*> voices, float ms)
-{
-    std::for_each(voices.begin(), voices.end(), [ms] (auto& v) { v->setRelTimeVCF(ms); });
-}
 
 void setLFOFreqVCF(std::vector<DSP::WavetableSynthVoice*> voices, float Hz)
 {
@@ -109,15 +90,6 @@ void setLFOTypeVCF(std::vector<DSP::WavetableSynthVoice*> voices, DSP::Wavetable
     std::for_each(voices.begin(), voices.end(), [type] (auto& v) { v->setLFOTypeVCF(type); });
 }
 
-void setEnvAmountVCF(std::vector<DSP::WavetableSynthVoice*> voices, float bipolar, bool skipRamp)
-{
-    std::for_each(voices.begin(), voices.end(), [bipolar, skipRamp] (auto& v) { v->setEnvAmountVCF(bipolar, skipRamp); });
-}
-
-void setLFOAmountVCF(std::vector<DSP::WavetableSynthVoice*> voices, float bipolar, bool skipRamp)
-{
-    std::for_each(voices.begin(), voices.end(), [bipolar, skipRamp] (auto& v) { v->setLFOAmountVCF(bipolar, skipRamp); });
-}
 
 void setFilterCutoff(std::vector<DSP::WavetableSynthVoice*> voices, float Hz, bool skipRamp)
 {
@@ -155,10 +127,30 @@ effectSetter<FloatType> getParameterCallback(Wavetable::ParameterID settingParam
 {
     if (Param::ID::WavetablePosition.compare(settingParameter) == 0) {
         return [voices](auto paramId, auto value, auto & reference) {
-            std::for_each(voices.begin(), voices.end(), [paramId, value, &reference] (auto& v) { v->setWavetablePositionEffect(paramId, Param::Ranges::WavetablePositionMax * value, reference); });
+            std::for_each(voices.begin(), voices.end(), [paramId, value, &reference] (auto& v) {
+                auto clampedPosition = [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
+                    auto value = previousValue + Param::Ranges::WavetablePositionMax * valueMultiplier * dsp.getCurrentValue();
+                    return std::clamp(value, Param::Ranges::WavetablePositionMin, Param::Ranges::WavetablePositionMax);
+                };
+                v->setWavetablePositionEffect(paramId, value, reference, clampedPosition);
+            });
+        };
+    }else if (Param::ID::VCF_Cutoff.compare(settingParameter) == 0) {
+        return [voices](auto paramId, auto value, auto & reference){
+            std::for_each(voices.begin(), voices.end(), [paramId, value, &reference] (auto& v) {
+                // const auto freqMod { std::clamp(vcfEnv * vcfEnvAmout + vcfLFOAmount * lfo, -1.f, 1.f) };
+                // const auto freq { std::clamp(FreqModRange * (std::pow(2.f, freqMod) - 1.f) + vcfFreq, MinFreqHz, MaxFreqHz) };
+                auto filterFreq = [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
+                    auto freqMod = valueMultiplier * dsp.getCurrentValue();
+                    return std::clamp(DSP::WavetableSynthVoice::FreqModRange * (std::pow(2.f, freqMod) - 1.f) + previousValue, Param::Ranges::FilterFreqMin, Param::Ranges::FilterFreqMax);
+                };
+                v->setFilterCutoffEffect(paramId, value, reference, filterFreq); 
+                });
         };
     } else {
+        DBG("Unsupported ParameterID: " + settingParameter);
         jassertfalse;
+        // return [](auto paramId, auto value, auto & reference) {};
     }
 }
 
@@ -233,17 +225,11 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::UnisonVoices, [this] (float value, bool force) { setUnisonVoices(voices, static_cast<uint8_t>(value)); });
     paramManager.registerParameterCallback(Param::ID::UnisonDetune, [this] (float value, bool force) { setUnisonDetune(voices, value, force); });
 
-    paramManager.registerParameterCallback(Param::ID::VCF_AttTime, [this] (float value, bool force) { setAttTimeVCF(voices, value); });
-    paramManager.registerParameterCallback(Param::ID::VCF_DecayTime, [this] (float value, bool force) { setDecayTimeVCF(voices, value); });
-    paramManager.registerParameterCallback(Param::ID::VCF_Sustain, [this] (float value, bool force) { setSustainVCF(voices, value); });
-    paramManager.registerParameterCallback(Param::ID::VCF_RelTime, [this] (float value, bool force) { setRelTimeVCF(voices, value); });
     paramManager.registerParameterCallback(Param::ID::VCF_LFOFreq, [this] (float value, bool force) { setLFOFreqVCF(voices, value); });
     paramManager.registerParameterCallback(Param::ID::VCF_LFOType, [this] (float value, bool force) { setLFOTypeVCF(voices, static_cast<DSP::WavetableSynthVoice::LFOType>(std::round(value))); });
     paramManager.registerParameterCallback(Param::ID::VCF_Cutoff, [this] (float value, bool force) { setFilterCutoff(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::VCF_Reso, [this] (float value, bool force) { setFilterReso(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::VCF_Type, [this] (float value, bool force) { setFilterType(voices, static_cast<DSP::WavetableSynthVoice::FilterType>(std::round(value)), force); });
-    paramManager.registerParameterCallback(Param::ID::VCF_EnvAmount, [this] (float value, bool force) { setEnvAmountVCF(voices, value, force); });
-    paramManager.registerParameterCallback(Param::ID::VCF_LFOAmount, [this] (float value, bool force) { setLFOAmountVCF(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::OutputVol, [this] (float value, bool force) { setOutputVol(voices, value, force); });
 
     paramManager.registerParameterCallback(Param::ID::LFO1_Freq, [this] (float value, bool force)  {lfo1.setFrequency(value);});

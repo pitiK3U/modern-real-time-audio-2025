@@ -11,20 +11,16 @@
 WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(WavetableSynthAudioProcessor& p) :
     juce::AudioProcessorEditor(p), audioProcessor(p),
     oscParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::WavetablePosition, Param::ID::UnisonVoices, Param::ID::UnisonDetune, Param::ID::WavetableVol, Param::ID::OutputVol }),
-    vcfEnvParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_AttTime, Param::ID::VCF_DecayTime, Param::ID::VCF_Sustain, Param::ID::VCF_RelTime }),
-    lfoParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_LFOFreq, Param::ID::VCF_LFOType }),
-    filterParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_Cutoff, Param::ID::VCF_Reso, Param::ID::VCF_Type, Param::ID::VCF_EnvAmount, Param::ID::VCF_LFOAmount }),
+    filterParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_Cutoff, Param::ID::VCF_Reso, Param::ID::VCF_Type }),
     lfo1ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_Freq, Param::ID::LFO1_Type, Param::ID::LFO1_Offset }),
     lfo2ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO2_Freq, Param::ID::LFO2_Type, Param::ID::LFO2_Offset, Param::ID::HistoryPlotBufferSize }),
     effectParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_mult }),
     oscLabel("", "Wavetable"),
     vcaEnvLabel("", "Amplitude Envelope"),
-    vcfEnvLabel("", "Filter Envelope"),
-    lfoLabel("", "Filter LFO"),
     filterLabel("", "Filter"),
-    finalLfoLabel("", "Volume LFO"),
     lfo1Label("", "LFO 1"),
     lfo2Label("", "LFO 2"),
+    selectedComponentLabel("Selected component label", ""),
     lfo1HistoryPlot(32768),
     lfo2HistoryPlot(32768),
     adsrComponent(
@@ -46,8 +42,6 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     selectButton("Select component")
     {
     addAndMakeVisible(oscParamEditor);
-    addAndMakeVisible(vcfEnvParamEditor);
-    addAndMakeVisible(lfoParamEditor);
     addAndMakeVisible(filterParamEditor);
     addAndMakeVisible(lfo1ParamEditor);
     addAndMakeVisible(lfo2ParamEditor);
@@ -58,13 +52,10 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     addAndMakeVisible (adsrComponent);
 
     setupLabel(oscLabel);
-    setupLabel(vcaEnvLabel);
-    setupLabel(vcfEnvLabel);
-    setupLabel(lfoLabel);
     setupLabel(filterLabel);
-    setupLabel(finalLfoLabel);
     setupLabel(lfo1Label);
     setupLabel(lfo2Label);
+    setupLabel(selectedComponentLabel);
 
     addAndMakeVisible(selectButton);
     selectButton.onClick = [this] {
@@ -97,6 +88,7 @@ void WavetableSynthAudioProcessorEditor::resized()
     {
         auto bottomBounds { bounds.removeFromBottom(PARAM_HEIGHT) };
         auto buttonBounds { bottomBounds.removeFromLeft(SECTION_WIDTH) };
+        selectedComponentLabel.setBounds(buttonBounds.removeFromTop(PARAM_HEIGHT / 2));
         selectButton.setBounds( buttonBounds );
         effectParamEditor.setBounds( bottomBounds );
     }
@@ -116,18 +108,6 @@ void WavetableSynthAudioProcessorEditor::resized()
         auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
         filterLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
         filterParamEditor.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
-    }
-
-    {
-        auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
-        vcfEnvLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
-        vcfEnvParamEditor.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
-    }
-
-    {
-        auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
-        lfoLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
-        lfoParamEditor.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
     }
 
     {
@@ -194,6 +174,8 @@ void WavetableSynthAudioProcessorEditor::mouseDown(const MouseEvent& mouseEvent)
     auto * slider = dynamic_cast<mrta::ParameterSlider *>(mouseSelectedComponent);
     if (slider == nullptr)
         return;
+
+    selectedComponentLabel.setText(slider->parameterID, juce::dontSendNotification);
 
     audioProcessor.selectedParameter = slider->parameterID;
 }

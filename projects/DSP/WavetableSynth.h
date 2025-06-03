@@ -6,7 +6,6 @@
 #include <cstdint>
 
 #include "ADSREnvelopeGenerator.h"
-#include "EnvelopeGenerator.h"
 #include "Parameter.h"
 #include "StateVariableFilter.h"
 #include "Ramp.h"
@@ -48,9 +47,12 @@ public:
     const WavetableSynthVoice& operator=(WavetableSynthVoice&&) = delete;
 
 
-    // Parameters
+    using EffectEvaluator = Parameter<float>::EffectEvaluator;
+    static constexpr auto defaultEffect = Parameter<float>::defaultEffect;
+
+    // Parameters    
     void setWavetablePosition(float index, bool skip);
-    void setWavetablePositionEffect(juce::String paramId, float paramMult, DSP<float> &reference);
+    void setWavetablePositionEffect(juce::String paramId, float paramMult, DSP<float> &reference, EffectEvaluator effectEvaluator = defaultEffect);
 
     void setWavetableVol(float db, bool skip);
 
@@ -83,6 +85,8 @@ public:
     void setFilterCutoff(float Hz, bool skipRamp);
     void setFilterReso(float Q, bool skipRamp);
     void setFilterType(FilterType type, bool skipRamp);
+
+    void setFilterCutoffEffect(juce::String paramId, float paramMult, DSP<float> &reference, EffectEvaluator effectEvaluator = defaultEffect);
 
     void setOutputVol(float dB, bool skipRamp);
     void setEnvelopeMonitor(EnvelopeStateCollector& collector, size_t index);
@@ -122,7 +126,6 @@ private:
     std::vector<std::array<float, SampleSize>> wavetables;
 
     ADSREnvelopeGenerator envGen;
-    EnvelopeGenerator vcfEnvGen;
 
     StateVariableFilter filter;
 
@@ -141,13 +144,10 @@ private:
     std::vector<float> unisonIncrements;
 
     Parameter<float> wavetableVolRamp;
-    Ramp<float> outputVolRamp;
+    Parameter<float> outputVolRamp;
 
-    Ramp<float> vcfEnvAmountRamp;
-    Ramp<float> vcfLFOAmountRamp;
-
-    Ramp<float> vcfFreqRamp;
-    Ramp<float> vcfResoRamp;
+    Parameter<float> vcfFreq;
+    Parameter<float> vcfReso;
     Ramp<float> vcfLPFRamp;
     Ramp<float> vcfBPFRamp;
     Ramp<float> vcfHPFRamp;

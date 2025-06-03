@@ -1,13 +1,11 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "ADSREnvelopeGenerator.h"
 #include "Parameter.h"
 #include "WavetableSynth.h"
 #include "LFO.h"
 #include "juce_core/juce_core.h"
 #include "ParameterHistoryBuffer.h"
-#include "ADSREnvelopeGenerator.h"
 
 namespace Param
 {

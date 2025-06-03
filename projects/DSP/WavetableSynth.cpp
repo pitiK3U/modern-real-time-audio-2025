@@ -27,8 +27,6 @@ WavetableSynthVoice::WavetableSynthVoice()
 :envGen(sampleRate)
 {
     fillWavetable();
-
-    vcfEnvGen.setAnalogStyle(false);
 }
 
 void WavetableSynthVoice::fillWavetable()
@@ -57,9 +55,9 @@ void WavetableSynthVoice::setWavetablePosition(float index, bool skip) {
     wavetableIndex.setValue(std::clamp(index, 0.f, static_cast<float>(wavetables.size() - 1)), skip);
 }
 
-void WavetableSynthVoice::setWavetablePositionEffect(juce::String paramId, float paramMult, DSP<float> &reference)
+void WavetableSynthVoice::setWavetablePositionEffect(juce::String paramId, float paramMult, DSP<float> &reference, EffectEvaluator effectEvaluator)
 {
-    wavetableIndex.setEffect(paramId, paramMult, reference);
+    wavetableIndex.setEffect(paramId, paramMult, reference, effectEvaluator);
 }
 
 void WavetableSynthVoice::setWavetableVol(float dB, bool skipRamp)
@@ -129,26 +127,6 @@ void WavetableSynthVoice::setRelCurveY(float y)
     envGen.setReleaseCurveY(y);
 }
 
-void WavetableSynthVoice::setAttTimeVCF(float ms)
-{
-    vcfEnvGen.setAttackTime(ms);
-}
-
-void WavetableSynthVoice::setDecayTimeVCF(float ms)
-{
-    vcfEnvGen.setDecayTime(ms);
-}
-
-void WavetableSynthVoice::setSustainVCF(float norm)
-{
-    vcfEnvGen.setSustainLevel(std::clamp(norm, 0.f, 1.f));
-}
-
-void WavetableSynthVoice::setRelTimeVCF(float ms)
-{
-    vcfEnvGen.setReleaseTime(ms);
-}
-
 void WavetableSynthVoice::setLFOFreqVCF(float Hz)
 {
     lfoFreq = std::fmax(Hz, 0.f);
@@ -160,24 +138,20 @@ void WavetableSynthVoice::setLFOTypeVCF(LFOType type)
     lfoType = type;
 }
 
-void WavetableSynthVoice::setEnvAmountVCF(float bipolar, bool skipRamp)
-{
-    vcfEnvAmountRamp.setTarget(std::clamp(bipolar, -1.f, 1.f), skipRamp);
-}
-
-void WavetableSynthVoice::setLFOAmountVCF(float bipolar, bool skipRamp)
-{
-    vcfLFOAmountRamp.setTarget(std::clamp(bipolar, -1.f, 1.f), skipRamp);
-}
-
 void WavetableSynthVoice::setFilterCutoff(float Hz, bool skipRamp)
 {
-    vcfFreqRamp.setTarget(std::clamp(Hz, MinFreqHz, MaxFreqHz), skipRamp);
+    vcfFreq.setValue(std::clamp(Hz, MinFreqHz, MaxFreqHz), skipRamp);
 }
+
+void WavetableSynthVoice::setFilterCutoffEffect(juce::String paramId, float paramMult, DSP<float> &reference, EffectEvaluator effectEvaluator)
+{
+    vcfFreq.setEffect(paramId, paramMult, reference, effectEvaluator);
+}
+
 
 void WavetableSynthVoice::setFilterReso(float Q, bool skipRamp)
 {
-    vcfResoRamp.setTarget(std::clamp(Q, MinReso, MaxReso), skipRamp);
+    vcfReso.setValue(std::clamp(Q, MinReso, MaxReso), skipRamp);
 }
 
 void WavetableSynthVoice::setFilterType(FilterType type, bool skipRamp)
@@ -189,7 +163,7 @@ void WavetableSynthVoice::setFilterType(FilterType type, bool skipRamp)
 
 void WavetableSynthVoice::setOutputVol(float dB, bool skipRamp)
 {
-    outputVolRamp.setTarget(std::pow(10.f, 0.05f * dB), skipRamp);
+    outputVolRamp.setValue(std::pow(10.f, 0.05f * dB), skipRamp);
 }
 
 void WavetableSynthVoice::setEnvelopeMonitor(EnvelopeStateCollector& collector, size_t index)
@@ -234,8 +208,6 @@ void WavetableSynthVoice::startNote(int midiNoteNumber, float newVelocity, juce:
         unisonPhases[unisonVoice] = 0.f;
     }
 
-    vcfEnvGen.start();
-
     velocity = newVelocity;
     voiceStarted = true;
     gateState = true;
@@ -243,7 +215,6 @@ void WavetableSynthVoice::startNote(int midiNoteNumber, float newVelocity, juce:
 
 void WavetableSynthVoice::stopNote(float velocity, bool allowTailOff)
 {
-    vcfEnvGen.end();
     gateState = false;
 
     if (!allowTailOff)
@@ -265,19 +236,13 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
     {
         sampleRate = newSampleRate;
 
-        // REMOVE: not sure if save to remove
-        //  fillWavetable();
-
         envGen.prepare(sampleRate);
-        vcfEnvGen.prepare(sampleRate);
         filter.prepare(sampleRate);
         wavetableVolRamp.prepare(sampleRate);
         outputVolRamp.prepare(sampleRate);
         unisonDetune.prepare(sampleRate);
-        vcfEnvAmountRamp.prepare(sampleRate);
-        vcfLFOAmountRamp.prepare(sampleRate);
-        vcfFreqRamp.prepare(sampleRate);
-        vcfResoRamp.prepare(sampleRate);
+        vcfFreq.prepare(sampleRate);
+        vcfReso.prepare(sampleRate);
         vcfLPFRamp.prepare(sampleRate);
         vcfBPFRamp.prepare(sampleRate);
         vcfHPFRamp.prepare(sampleRate);
@@ -295,9 +260,6 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         if (envelopeStateCollector != nullptr)
             envelopeStateCollector->setEnvelopeState(envelopeVoiceIndex, envGen.getCurrentState(), envGen.getCurrentStateTimer());
 
-        float vcfEnv { 0.f };
-        vcfEnvGen.process(&vcfEnv, 1);
-
         // Indices of which of the waveform in wavetable to use wavetables[integralindex]
         float integralIndexfloat = 0.f;
         const float fractionalIndex = std::modf(wavetableIndex.getNext(), &integralIndexfloat);
@@ -309,11 +271,8 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
 
         const auto wavetableVol { wavetableVolRamp.getNext() };
 
-        const auto vcfEnvAmout { vcfEnvAmountRamp.getNext() };
-        const auto vcfLFOAmount { vcfLFOAmountRamp.getNext() };
-
-        const auto vcfFreq { vcfFreqRamp.getNext() };
-        const auto vcfReso { vcfResoRamp.getNext() };
+        const auto vcfFreqCurrent { vcfFreq.getNext() };
+        const auto vcfResoCurrent { vcfReso.getNext() };
         const auto vcfLPF { vcfLPFRamp.getNext() };
         const auto vcfBPF { vcfBPFRamp.getNext() };
         const auto vcfHPF { vcfHPFRamp.getNext() };
@@ -345,13 +304,10 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         wavetableOut /= unisonVoices;
         wavetableOut *= (wavetableVol * envValue * velocity);
 
-        const auto freqMod { std::clamp(vcfEnv * vcfEnvAmout + vcfLFOAmount * lfo, -1.f, 1.f) };
-        const auto freq { std::clamp(FreqModRange * (std::pow(2.f, freqMod) - 1.f) + vcfFreq, MinFreqHz, MaxFreqHz) };
-
         float lpfOut { 0.f };
         float bpfOut { 0.f };
         float hpfOut { 0.f };
-        filter.process(&lpfOut, &bpfOut, &hpfOut, &wavetableOut, &freq, &vcfReso, 1);
+        filter.process(&lpfOut, &bpfOut, &hpfOut, &wavetableOut, &vcfFreqCurrent, &vcfResoCurrent, 1);
 
         const auto out { (vcfLPF * lpfOut + vcfBPF * bpfOut + vcfHPF * hpfOut) * outputVol };
         for (int ch = 0; ch < outputBuffer.getNumChannels(); ++ch)
@@ -359,7 +315,7 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
             outputBuffer.addSample(ch, startSample + i, out);
         }
 
-        if (voiceStarted && envGen.isOff() && vcfEnvGen.isOff())
+        if (voiceStarted && envGen.isOff())
         {
             voiceStarted = false;
             clearCurrentNote();
