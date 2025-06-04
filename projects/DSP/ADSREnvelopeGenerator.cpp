@@ -79,6 +79,11 @@ void ADSREnvelopeGenerator::setReleaseCurveY(float y)
 
 // GETTERS
 
+float ADSREnvelopeGenerator::getCurrentValue()
+{
+    return currentEnvelopeValue;
+}
+
 float ADSREnvelopeGenerator::getValue(bool midiGateState)
 {
     // Advance state timer

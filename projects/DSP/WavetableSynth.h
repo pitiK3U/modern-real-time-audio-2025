@@ -111,21 +111,22 @@ public:
     static constexpr double DefaultSampleRate { 1.0 };
 
     static constexpr float DefaultFreq { 1.f };
-
-private:
+    
+    ADSREnvelopeGenerator envGen;
+    
+    private:
     void fillWavetable();
     void updateUnisonIncrements();
-
+    
     static float getWavetableIncrement(float frequency, float defaultFrequency, size_t sampleSize, double SampleRate);
-
+    
     double sampleRate { DefaultSampleRate };
-
+    
     float lfoFreq { 1.f };
     float velocity { 1.f };
-
+    
     std::vector<std::array<float, SampleSize>> wavetables;
-
-    ADSREnvelopeGenerator envGen;
+    
 
     StateVariableFilter filter;
 
