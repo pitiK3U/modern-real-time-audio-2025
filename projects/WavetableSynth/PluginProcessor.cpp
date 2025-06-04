@@ -132,7 +132,7 @@ effectSetter<FloatType> getParameterCallback(Wavetable::ParameterID settingParam
             std::for_each(voices.begin(), voices.end(), [paramId, value, &reference] (auto& v) {
                 auto clampedPosition = [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
                     auto value = previousValue + Param::Ranges::WavetablePositionMax * valueMultiplier * dsp.getCurrentValue();
-                    return std::clamp(value, Param::Ranges::WavetablePositionMin, Param::Ranges::WavetablePositionMax);
+                    return std::fmod(value, Param::Ranges::WavetablePositionMax + 1);
                 };
                 v->setWavetablePositionEffect(paramId, value, reference, clampedPosition);
             });

@@ -228,7 +228,7 @@ std::vector<float> WavetablePlotComponent::generateMorphedWaveform(float t)
     int maxIndex = wavetableCount - 1;
     float scaledT = t * static_cast<float>(maxIndex);
     int indexA = static_cast<int>(std::floor(scaledT));
-    int indexB = std::min(indexA + 1, maxIndex);
+    int indexB = std::fmod(indexA + 1, maxIndex + 1);
     float localT = scaledT - static_cast<float>(indexA);
 
     for (int i = 0; i < sampleSize; ++i)
@@ -343,7 +343,7 @@ float WavetablePlotComponent::naive_lerp(float a, float b, float t)
     float gainA = std::cos(t * juce::MathConstants<float>::halfPi);
     float gainB = std::sin(t * juce::MathConstants<float>::halfPi);
 
-    return a * gainA + b * gainB;
+    return std::clamp(a * gainA + b * gainB, -1.0f, 1.0f);
 }
 
 juce::Colour WavetablePlotComponent::lerpColour(const juce::Colour& a, const juce::Colour& b, float t)

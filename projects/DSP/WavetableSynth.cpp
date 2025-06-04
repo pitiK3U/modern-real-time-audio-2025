@@ -360,7 +360,7 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         float wavetableOut = 0.f;
         for (int unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
             const auto unisonPhaseInteger = static_cast<size_t>(unisonPhases[unisonVoice]);
-            const auto unisonLerped = naive_lerp(wavetables[integralIndex][unisonPhaseInteger], wavetables[(integralIndex + 1) % wavetables.size()][unisonPhaseInteger], fractionalIndex);
+            const auto unisonLerped = naive_lerp(wavetables[integralIndex % wavetables.size()][unisonPhaseInteger], wavetables[(integralIndex + 1) % wavetables.size()][unisonPhaseInteger], fractionalIndex);
             const auto unisonOut { unisonLerped };
 
             wavetableOut += unisonOut;
