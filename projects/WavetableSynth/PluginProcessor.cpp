@@ -205,7 +205,19 @@ static const std::vector<mrta::ParameterInfo> paramVector
     {Param::ID::EnvelopeDecayCurveX, Param::Name::EnvelopeDecayCurveX, "", 0.0f, -Param::Ranges::ADSRPlotWidth, Param::Ranges::ADSRPlotWidth, 0.01f, 1.0f},
     {Param::ID::EnvelopeDecayCurveY, Param::Name::EnvelopeDecayCurveY, "", 0.0f, -Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelMax, 0.01f, 1.0f},
     {Param::ID::EnvelopeReleaseCurveX, Param::Name::EnvelopeReleaseCurveX, "", 0.0f, -Param::Ranges::ADSRPlotWidth, Param::Ranges::ADSRPlotWidth, 0.01f, 1.0f},
-    {Param::ID::EnvelopeReleaseCurveY, Param::Name::EnvelopeReleaseCurveY, "", 0.0f, -Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelMax, 0.01f, 1.0f}
+    {Param::ID::EnvelopeReleaseCurveY, Param::Name::EnvelopeReleaseCurveY, "", 0.0f, -Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelMax, 0.01f, 1.0f},
+
+    {Param::ID::Envelope_B_AttackTime, Param::Name::Envelope_B_AttackTime, Param::Units::Ms, Param::Ranges::AttackDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::ADSRPlotWidth, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
+    {Param::ID::Envelope_B_DecayTime, Param::Name::Envelope_B_DecayTime, Param::Units::Ms, Param::Ranges::DecayDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::ADSRPlotWidth, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
+    {Param::ID::Envelope_B_Sustain, Param::Name::Envelope_B_Sustain, "", Param::Ranges::SustainDefault, Param::Ranges::EnvelopeLevelMin, Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelInc, Param::Ranges::EnvelopeLevelSkw },
+    {Param::ID::Envelope_B_ReleaseTime, Param::Name::Envelope_B_ReleaseTime, Param::Units::Ms, Param::Ranges::ReleaseDefault, Param::Ranges::EnvelopeTimeMin, Param::Ranges::ADSRPlotWidth, Param::Ranges::EnvelopeTimeInc, Param::Ranges::EnvelopeTimeSkw },
+
+    {Param::ID::Envelope_B_AttackCurveX, Param::Name::Envelope_B_AttackCurveX, "", 0.0f, -Param::Ranges::ADSRPlotWidth, Param::Ranges::ADSRPlotWidth, 0.01f, 1.0f},
+    {Param::ID::Envelope_B_AttackCurveY, Param::Name::Envelope_B_AttackCurveY, "", 0.0f, -Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelMax, 0.01f, 1.0f},
+    {Param::ID::Envelope_B_DecayCurveX, Param::Name::Envelope_B_DecayCurveX, "", 0.0f, -Param::Ranges::ADSRPlotWidth, Param::Ranges::ADSRPlotWidth, 0.01f, 1.0f},
+    {Param::ID::Envelope_B_DecayCurveY, Param::Name::Envelope_B_DecayCurveY, "", 0.0f, -Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelMax, 0.01f, 1.0f},
+    {Param::ID::Envelope_B_ReleaseCurveX, Param::Name::Envelope_B_ReleaseCurveX, "", 0.0f, -Param::Ranges::ADSRPlotWidth, Param::Ranges::ADSRPlotWidth, 0.01f, 1.0f},
+    {Param::ID::Envelope_B_ReleaseCurveY, Param::Name::Envelope_B_ReleaseCurveY, "", 0.0f, -Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelMax, 0.01f, 1.0f}
 };
 
 WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :

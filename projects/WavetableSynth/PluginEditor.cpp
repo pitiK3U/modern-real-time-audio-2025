@@ -20,12 +20,12 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     filterLabel("", "Filter"),
     lfo1Label("", "LFO 1"),
     lfo2Label("", "LFO 2"),
-    envelopeLabel("", "Envelope 1"),
+    envelopeLabel("", "Envelope"),
     wavetableLabel("", "Wavetable"),
     selectedComponentLabel("Selected component label", ""),
     lfo1HistoryPlot(32768),
     lfo2HistoryPlot(32768),
-    adsrComponent(
+    adsrComponentA(
         p.getParamManager().getAPVTS(),
         p.getEnvelopeStateCollector(),
         Param::ID::EnvelopeAttackTime,
@@ -40,6 +40,21 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
         Param::ID::EnvelopeReleaseCurveY,
         Param::Ranges::ADSRPlotWidth
     ),
+    adsrComponentB(
+        p.getParamManager().getAPVTS(),
+        p.getEnvelopeStateCollector(),
+        Param::ID::Envelope_B_AttackTime,
+        Param::ID::Envelope_B_DecayTime,
+        Param::ID::Envelope_B_Sustain,
+        Param::ID::Envelope_B_ReleaseTime,
+        Param::ID::Envelope_B_AttackCurveX,
+        Param::ID::Envelope_B_AttackCurveY,
+        Param::ID::Envelope_B_DecayCurveX,
+        Param::ID::Envelope_B_DecayCurveY,
+        Param::ID::Envelope_B_ReleaseCurveX,
+        Param::ID::Envelope_B_ReleaseCurveY,
+        Param::Ranges::ADSRPlotWidth
+    ),
     vts (p.getParamManager().getAPVTS()),
     wavetablePlotComponent(),
     selectButton("Select component")
@@ -52,8 +67,12 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
 
     addAndMakeVisible (lfo1HistoryPlot);
     addAndMakeVisible(lfo2HistoryPlot);
-    addAndMakeVisible (adsrComponent);
+    addAndMakeVisible (adsrComponentA);
+    addAndMakeVisible (adsrComponentB);
     addAndMakeVisible(wavetablePlotComponent);
+
+    addAndMakeVisible(envelopeAButton);
+    addAndMakeVisible(envelopeBButton);
 
     setupLabel(oscLabel);
     setupLabel(filterLabel);
@@ -69,6 +88,8 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     };
 
     vts.addParameterListener (Param::ID::HistoryPlotBufferSize, this);
+
+    initializeEnvelopeSwitcher();
 
     startTimerHz ((int) REFRESH_RATE);
 
@@ -102,7 +123,22 @@ void WavetableSynthAudioProcessorEditor::resized()
     {
         auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
         envelopeLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
-        adsrComponent.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
+        
+        constexpr int buttonHeight = 24;
+        constexpr int buttonPadding = 6;
+
+        auto adsrBounds = secBounds.removeFromTop(secBounds.getHeight() - (buttonHeight + buttonPadding));
+        adsrComponentA.setBounds(adsrBounds.withSizeKeepingCentre(SECTION_WIDTH, adsrBounds.getHeight()));
+        adsrComponentB.setBounds(adsrBounds.withSizeKeepingCentre(SECTION_WIDTH, adsrBounds.getHeight()));
+
+        auto buttonRow = secBounds.reduced(6, 0); // horizontal padding from sides
+        auto buttonWidth = (buttonRow.getWidth() - 6) / 2; // spacing between buttons = 6
+        envelopeAButton.setBounds(buttonRow.removeFromLeft(buttonWidth));
+        buttonRow.removeFromLeft(6); // spacer
+        envelopeBButton.setBounds(buttonRow);
+        
+        envelopeAButton.setBounds(envelopeAButton.getBounds().withHeight(buttonHeight));
+        envelopeBButton.setBounds(envelopeBButton.getBounds().withHeight(buttonHeight));
     }
 
     {
@@ -219,4 +255,36 @@ void WavetableSynthAudioProcessorEditor::toggleSelectMode()
     }
 
     repaint();
+}
+
+void WavetableSynthAudioProcessorEditor::initializeEnvelopeSwitcher() {
+    envelopeAButton.onClick = [this]
+    {
+        showingEnvelopeA = true;
+        adsrComponentA.setVisible(true);
+        adsrComponentB.setVisible(false);
+
+        envelopeAButton.setToggleState(true, juce::dontSendNotification);
+        envelopeBButton.setToggleState(false, juce::dontSendNotification);
+    };
+
+    envelopeBButton.onClick = [this]
+    {
+        showingEnvelopeA = false;
+        adsrComponentA.setVisible(false);
+        adsrComponentB.setVisible(true);
+
+        envelopeAButton.setToggleState(false, juce::dontSendNotification);
+        envelopeBButton.setToggleState(true, juce::dontSendNotification);
+    };
+
+    envelopeAButton.setClickingTogglesState(true);
+    envelopeBButton.setClickingTogglesState(true);
+    adsrComponentA.setVisible(true);
+    adsrComponentB.setVisible(false);
+    envelopeAButton.setToggleState(true, juce::dontSendNotification);
+    envelopeBButton.setToggleState(false, juce::dontSendNotification);
+    auto& lf = getLookAndFeel();
+    envelopeAButton.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::lightblue.darker(0.3f));
+    envelopeBButton.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::lightblue.darker(0.3f));
 }

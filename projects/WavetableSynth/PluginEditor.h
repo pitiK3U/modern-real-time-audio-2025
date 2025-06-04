@@ -40,7 +40,8 @@ private:
     GUI::HorizontalParameterEditor effectParamEditor;
     GUI::HistoryPlotComponent lfo1HistoryPlot;
     GUI::HistoryPlotComponent lfo2HistoryPlot;
-    GUI::ADSREnvelopeComponent adsrComponent;
+    GUI::ADSREnvelopeComponent adsrComponentA;
+    GUI::ADSREnvelopeComponent adsrComponentB;
     GUI::WavetablePlotComponent wavetablePlotComponent;
 
     juce::AudioProcessorValueTreeState& vts;
@@ -57,6 +58,10 @@ private:
     juce::TextButton selectButton;
     bool selectMode { false };
 
+    juce::TextButton envelopeAButton { "Envelope A" };
+    juce::TextButton envelopeBButton { "Envelope B" };
+    bool showingEnvelopeA { true };
+
     void toggleSelectMode();
 
     void setupLabel(juce::Label& label);
@@ -64,6 +69,8 @@ private:
 
     // Listener callback
     void parameterChanged (const juce::String& paramID, float newValue) override;
+
+    void initializeEnvelopeSwitcher();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableSynthAudioProcessorEditor)
 };

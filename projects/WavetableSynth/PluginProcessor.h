@@ -59,6 +59,18 @@ namespace Param
         static const juce::String EnvelopeDecayCurveY { "envelope_decay_curve_y" };
         static const juce::String EnvelopeReleaseCurveX { "envelope_release_curve_x" };
         static const juce::String EnvelopeReleaseCurveY { "envelope_release_curve_y" };
+
+        static const juce::String Envelope_B_AttackTime { "envelope_B_attack_time" };
+        static const juce::String Envelope_B_DecayTime { "envelope_B_decay_time" };
+        static const juce::String Envelope_B_Sustain { "envelope_B_sustain" };
+        static const juce::String Envelope_B_ReleaseTime { "envelope_B_release_time" };
+
+        static const juce::String Envelope_B_AttackCurveX { "envelope_B_attack_curve_x" };
+        static const juce::String Envelope_B_AttackCurveY { "envelope_B_attack_curve_y" };
+        static const juce::String Envelope_B_DecayCurveX { "envelope_B_decay_curve_x" };
+        static const juce::String Envelope_B_DecayCurveY { "envelope_B_decay_curve_y" };
+        static const juce::String Envelope_B_ReleaseCurveX { "envelope_B_release_curve_x" };
+        static const juce::String Envelope_B_ReleaseCurveY { "envelope_B_release_curve_y" };
     }
 
     namespace Name
@@ -111,6 +123,18 @@ namespace Param
         static const juce::String EnvelopeDecayCurveY { "Decay Curve Y" };
         static const juce::String EnvelopeReleaseCurveX { "Release Curve X" };
         static const juce::String EnvelopeReleaseCurveY { "Release Curve Y" };
+
+        static const juce::String Envelope_B_AttackTime { "Attack" };
+        static const juce::String Envelope_B_DecayTime { "Decay" };
+        static const juce::String Envelope_B_Sustain { "Sustain" };
+        static const juce::String Envelope_B_ReleaseTime { "Release" };
+
+        static const juce::String Envelope_B_AttackCurveX { "Attack Curve X" };
+        static const juce::String Envelope_B_AttackCurveY { "Attack Curve Y" };
+        static const juce::String Envelope_B_DecayCurveX { "Decay Curve X" };
+        static const juce::String Envelope_B_DecayCurveY { "Decay Curve Y" };
+        static const juce::String Envelope_B_ReleaseCurveX { "Release Curve X" };
+        static const juce::String Envelope_B_ReleaseCurveY { "Release Curve Y" };
     }
 
     namespace Ranges
