@@ -99,6 +99,8 @@ public:
     void controllerMoved(int controllerNumber, int newControllerValue) override;
     void renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override;
 
+    float getLastWavetablePosition();
+
     static constexpr float MaxFreqHz { 20000.f };
     static constexpr float MinFreqHz { 20.f };
 
@@ -156,7 +158,9 @@ private:
     bool gateState { false };
 
     EnvelopeStateCollector* envelopeStateCollector = nullptr;
-    size_t envelopeVoiceIndex = 0;
+    size_t voiceIndex = 0;
+
+    float lastWavetablePosition = 0;
 };
 
 }

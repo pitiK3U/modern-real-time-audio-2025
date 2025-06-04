@@ -180,7 +180,11 @@ void WavetableSynthVoice::setOutputVol(float dB, bool skipRamp)
 void WavetableSynthVoice::setEnvelopeMonitor(EnvelopeStateCollector& collector, size_t index)
 {
     envelopeStateCollector = &collector;
-    envelopeVoiceIndex = index;
+    voiceIndex = index;
+}
+
+float WavetableSynthVoice::getLastWavetablePosition() {
+    return lastWavetablePosition;
 }
 
 bool WavetableSynthVoice::canPlaySound(juce::SynthesiserSound* ptr)
@@ -269,11 +273,12 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
 
         // Send envelope state to the GUI collector
         if (envelopeStateCollector != nullptr)
-            envelopeStateCollector->setEnvelopeState(envelopeVoiceIndex, envGen.getCurrentState(), envGen.getCurrentStateTimer());
+            envelopeStateCollector->setEnvelopeState(voiceIndex, envGen.getCurrentState(), envGen.getCurrentStateTimer());
 
         // Indices of which of the waveform in wavetable to use wavetables[integralindex]
         float integralIndexfloat = 0.f;
-        const float fractionalIndex = std::modf(wavetableIndex.getNext(), &integralIndexfloat);
+        lastWavetablePosition = wavetableIndex.getNext();
+        const float fractionalIndex = std::modf(lastWavetablePosition, &integralIndexfloat);
         const auto integralIndex = static_cast<size_t>(integralIndexfloat);
 
         for (auto unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
