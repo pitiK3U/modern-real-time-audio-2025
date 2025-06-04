@@ -86,10 +86,9 @@ void ADSREnvelopeComponent::paint (juce::Graphics& g)
 {
     g.fillAll(findColour(juce::ResizableWindow::backgroundColourId));
 
-    auto area = getLocalBounds()
-        .removeFromTop(getHeight() / 2)
-        .toFloat()
-        .reduced(10.0f);
+    auto bounds = getLocalBounds().toFloat().reduced(10.0f);
+    auto side = bounds.getWidth();
+    juce::Rectangle<float> area { bounds.getX(), bounds.getY(), side, side };
     envelopeArea = area;
 
     float a = (float)attackSlider.getValue();
@@ -375,10 +374,9 @@ void ADSREnvelopeComponent::mouseDrag (const juce::MouseEvent& e)
         return;
 
     // clamp mouse into envelope rect
-    auto area = getLocalBounds()
-        .removeFromTop (getHeight()/2)
-        .toFloat()
-        .reduced (10.0f);
+    auto bounds = getLocalBounds().toFloat().reduced(10.0f);
+    auto side = bounds.getWidth();
+    juce::Rectangle<float> area { bounds.getX(), bounds.getY(), side, side };
 
     juce::Point<float> pos = e.position;
     pos.x = juce::jlimit(area.getX(), area.getRight(), pos.x);
@@ -502,11 +500,10 @@ void ADSREnvelopeComponent::mouseUp (const juce::MouseEvent&)
 
 void ADSREnvelopeComponent::mouseMove (const juce::MouseEvent& e)
 {
-    // build exactly the same rect you use to paint the envelope:
-    auto envelopeArea = getLocalBounds()
-        .removeFromTop (getHeight() / 2)
-        .toFloat()
-        .reduced (10.0f);
+    auto bounds = getLocalBounds().toFloat().reduced(10.0f);
+    auto side = bounds.getWidth();
+    auto envelopeArea = juce::Rectangle<float> { bounds.getX(), bounds.getY(), side, side };
+
 
     bool nowOver = envelopeArea.contains (e.position);
     if (nowOver != isMouseOverEnvelopeArea)
