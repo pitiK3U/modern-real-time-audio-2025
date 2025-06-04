@@ -61,63 +61,62 @@ void HistoryPlotComponent::setBufferSize (int newSize)
 
 void HistoryPlotComponent::paint (juce::Graphics& g)
 {
-    auto w = getWidth();
-    auto h = getHeight();
+    const float padding = 4.0f;
 
-    // background
-    g.fillAll (juce::Colours::black);
+    // Define padded area and skip filling the outer padding
+    auto bounds = getLocalBounds().toFloat();
+    auto plotArea = bounds.reduced(padding);
 
-    // how many points do we actually have?
+    // fill inner plot area only
+    g.setColour(juce::Colours::darkgrey);
+    g.fillRect(plotArea);
+
+    // draw border around inner plot area
+    g.setColour(juce::Colours::white);
+    g.drawRect(plotArea, 1.5f);
+
     int numSamples = bufferFull ? bufferSize : writeIndex;
     if (numSamples < 2)
         return;
 
-    // oldest sample is at writeIndex (if full), or at 0 otherwise
     int startIndex = bufferFull ? writeIndex : 0;
 
-    // prepare drawing
-    juce::Path waveform;
-    juce::Path filledArea;
-
-    float dx = static_cast<float>(w) / (numSamples - 1);
-
-    // Calculate how many samples per horizontal pixel (on average)
-    float samplesPerPixel = static_cast<float>(numSamples) / static_cast<float>(w);
+    juce::Path waveform, filledArea;
+    float dx = plotArea.getWidth() / static_cast<float>(numSamples - 1);
+    float samplesPerPixel = static_cast<float>(numSamples) / plotArea.getWidth();
 
     // first point
     {
         float v = buffer[startIndex];
-        float y = h * 0.5f - 0.9f * v * (h * 0.5f);
-        waveform.startNewSubPath (0.0f, y);
-        filledArea.startNewSubPath (0.0f, static_cast<float>(h));
-        filledArea.lineTo (0.0f, y);
+        float y = plotArea.getCentreY() - 0.9f * v * (plotArea.getHeight() * 0.5f);
+        waveform.startNewSubPath(plotArea.getX(), y);
+        filledArea.startNewSubPath(plotArea.getX(), plotArea.getBottom());
+        filledArea.lineTo(plotArea.getX(), y);
     }
 
-    // remaining points
-    for (int pixelX = 1; pixelX < w; ++pixelX)
+    for (int pixelX = 1; pixelX < plotArea.getWidth(); ++pixelX)
     {
-        // calculate the index in the buffer for this pixel
         int i = static_cast<int>(pixelX * samplesPerPixel);
         if (i >= numSamples)
             break;
 
         int idx = (startIndex + i) % bufferSize;
         float v = buffer[idx];
-        float y = h * 0.5f - 0.9f * v * (h * 0.5f);
+        float x = plotArea.getX() + pixelX;
+        float y = plotArea.getCentreY() - 0.9f * v * (plotArea.getHeight() * 0.5f);
 
-        waveform.lineTo(static_cast<float>(pixelX), y);
-        filledArea.lineTo(static_cast<float>(pixelX), y);
+        waveform.lineTo(x, y);
+        filledArea.lineTo(x, y);
     }
 
-    // close filled area back to the start
-    filledArea.lineTo((numSamples - 1) * dx, static_cast<float>(h));
+    filledArea.lineTo(plotArea.getRight(), plotArea.getBottom());
     filledArea.closeSubPath();
 
-    g.setColour(juce::Colours::lightgreen.withAlpha (0.3f));
-    g.fillPath (filledArea);
+    g.setColour(juce::Colours::lightgreen.withAlpha(0.3f));
+    g.fillPath(filledArea);
 
-    g.setColour (juce::Colours::lightgreen);
-    g.strokePath (waveform, juce::PathStrokeType (3.0f));
+    g.setColour(juce::Colours::lightgreen);
+    g.strokePath(waveform, juce::PathStrokeType(3.0f));
 }
 
 }
