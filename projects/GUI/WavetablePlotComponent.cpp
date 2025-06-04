@@ -78,7 +78,7 @@ void WavetablePlotComponent::resized()
 
 void WavetablePlotComponent::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colours::black);
+    g.fillAll(findColour(juce::ResizableWindow::backgroundColourId));
 
     auto fullBounds = getLocalBounds().toFloat();
     const auto plotBounds = fullBounds.removeFromTop(fullBounds.getHeight() / 2.0f).reduced(10.0f);

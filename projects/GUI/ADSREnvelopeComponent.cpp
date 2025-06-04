@@ -84,7 +84,7 @@ void ADSREnvelopeComponent::setupSlider (juce::Slider& s)
 
 void ADSREnvelopeComponent::paint (juce::Graphics& g)
 {
-    g.fillAll(juce::Colours::black);
+    g.fillAll(findColour(juce::ResizableWindow::backgroundColourId));
 
     auto area = getLocalBounds()
         .removeFromTop(getHeight() / 2)
