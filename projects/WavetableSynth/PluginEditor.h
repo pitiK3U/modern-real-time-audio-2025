@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PluginProcessor.h"
+#include "WavetablePlotComponent.h"
 #include "juce_core/juce_core.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "mrta_utils/Source/GUI/GenericParameterEditor.h"
@@ -21,7 +22,7 @@ public:
     void resized() override;
     void mouseDown(const MouseEvent& mouseEvent) override;
 
-    static constexpr int NUM_SECTIONS { 5 };
+    static constexpr int NUM_SECTIONS { 6 };
     static constexpr int SECTION_WIDTH { 250 };
     static constexpr int SECTION_SPACER_WIDTH { 20 };
     static constexpr int LABEL_HEIGHT { 50 };
@@ -40,6 +41,7 @@ private:
     GUI::HistoryPlotComponent lfo1HistoryPlot;
     GUI::HistoryPlotComponent lfo2HistoryPlot;
     GUI::ADSREnvelopeComponent adsrComponent;
+    GUI::WavetablePlotComponent wavetablePlotComponent;
 
     juce::AudioProcessorValueTreeState& vts;
 
@@ -48,6 +50,8 @@ private:
     juce::Label filterLabel;
     juce::Label lfo1Label;
     juce::Label lfo2Label;
+    juce::Label envelopeLabel;
+    juce::Label wavetableLabel;
 
     juce::Label selectedComponentLabel;
     juce::TextButton selectButton;

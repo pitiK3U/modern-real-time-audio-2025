@@ -1,0 +1,107 @@
+#pragma once
+
+#include <JuceHeader.h>
+
+namespace GUI
+{
+
+struct BoxCorners
+{
+    juce::Point<float> frontBottomLeft;
+    juce::Point<float> frontBottomRight;
+    juce::Point<float> frontTopRight;
+    juce::Point<float> frontTopLeft;
+
+    juce::Point<float> backBottomLeft;
+    juce::Point<float> backBottomRight;
+    juce::Point<float> backTopRight;
+    juce::Point<float> backTopLeft;
+
+    BoxCorners static getBoxCorners(
+        juce::Rectangle<float> area,
+        float xOffset,
+        float yOffset,
+        float scaleX,
+        float scaleY,
+        juce::Point<float> anchor,
+        int depthCount
+    );
+};
+
+class WavetablePlotComponent
+: public juce::Component
+, private juce::Timer
+{
+public:
+    WavetablePlotComponent();
+
+    void paint(juce::Graphics& g) override;
+    void resized() override;
+    void setWavetablePosition(float position);
+
+    static constexpr int wavetableCount = 4;
+
+private:
+    void generateWavetables();
+
+    void drawPlotBackground(juce::Graphics& g, juce::Rectangle<float> area);
+    void drawWaveforms(
+        juce::Graphics& g,
+        juce::Rectangle<float> area,
+        float scaleX,
+        float scaleYFactor,
+        float xOffset,
+        float yOffset
+    );
+
+    void drawSingleWaveform(
+    juce::Graphics& g,
+    int index,
+    juce::Rectangle<float> area,
+    float midY,
+    float scaleY,
+    float stepX,
+    float scaleX,
+    float scaleYFactor,
+    float xOffset,
+    float yOffset
+    );
+
+    void fillFace(juce::Graphics& g, juce::Point<float> a, juce::Point<float> b, juce::Point<float> c, juce::Point<float> d, juce::Colour colour);
+    void drawBackBoxFaces(juce::Graphics& g, const BoxCorners& c);
+    void drawFrontBoxFaces(juce::Graphics& g, const BoxCorners& c);
+    std::vector<float> generateMorphedWaveform(float t);
+    
+    void drawMorphedWaveform(
+        juce::Graphics& g,
+        juce::Rectangle<float> area,
+        float midY,
+        float scaleY,
+        float stepX,
+        float morphIndex,
+        float scaleX,
+        float scaleYFactor,
+        float xOffset,
+        float yOffset
+    );
+    
+    void timerCallback() override;
+    float naive_lerp(float a, float b, float t);
+    juce::Colour lerpColour(const juce::Colour& a, const juce::Colour& b, float t);
+
+    static constexpr int sampleSize = 128;
+
+    float wavetablePosition = 0.0f;
+
+    float headPhase = 0.0f; // [0, 1]
+
+    std::vector<std::vector<float>> wavetables;
+    juce::Colour waveformColours[wavetableCount] = {
+        juce::Colours::cyan,
+        juce::Colours::yellow,
+        juce::Colours::limegreen,
+        juce::Colours::magenta
+    };
+};
+
+}

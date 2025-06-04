@@ -5,6 +5,8 @@
 namespace GUI
 {
 
+/// Point <Float> is used to represent pixel coordinates of the envelope points
+/// on the other hand, EnvelopePoint is used to represent the real ADSR values
 ADSREnvelopeComponent::ADSREnvelopeComponent(
     juce::AudioProcessorValueTreeState& state,
     DSP::EnvelopeStateCollector* envelopeStateCollector,
@@ -88,6 +90,7 @@ void ADSREnvelopeComponent::paint (juce::Graphics& g)
         .removeFromTop(getHeight() / 2)
         .toFloat()
         .reduced(10.0f);
+    envelopeArea = area;
 
     float a = (float)attackSlider.getValue();
     float d = (float)decaySlider.getValue();
@@ -117,17 +120,22 @@ void ADSREnvelopeComponent::drawEnvelope(juce::Graphics& g, juce::Rectangle<floa
     };
 
     // 1) compute the 4 on-curve points
-    float x0 = area.getX(), y0 = area.getBottom();
-    float x1 = mapX (a), y1 = area.getY();
-    float x2 = mapX (a + d), y2 = juce::jmap (s, 0.0f, 1.0f, area.getBottom(), area.getY());
-    float x3 = mapX (a + d + r), y3 = area.getBottom();
+    EnvelopePoint p0 = { 0.0f, 0.0f };
+    EnvelopePoint p1 = { a, 1.0f };
+    EnvelopePoint p2 = { a + d, s };
+    EnvelopePoint p3 = { a + d + r, 0.0f };
+
+    auto pt0 = p0.toPixel(area, maxLength);
+    auto pt1 = p1.toPixel(area, maxLength);
+    auto pt2 = p2.toPixel(area, maxLength);
+    auto pt3 = p3.toPixel(area, maxLength);
 
     // 2) stash them into points[]
     points.clear();
-    points.add ({ x0, y0 });
-    points.add ({ x1, y1 });
-    points.add ({ x2, y2 });
-    points.add ({ x3, y3 });
+    points.add (pt0);
+    points.add (pt1);
+    points.add (pt2);
+    points.add (pt3);
 
     // 3) ensure we have 3 offsets (init to zero → handles at midpoints)
     if (controlPointOffsets.size() != 3)
@@ -155,8 +163,8 @@ void ADSREnvelopeComponent::drawEnvelope(juce::Graphics& g, juce::Rectangle<floa
 
     // 6) fill under it
     juce::Path fillPath (path);
-    fillPath.lineTo (x3, area.getBottom());
-    fillPath.lineTo (x0, area.getBottom());
+    fillPath.lineTo (pt3.getX(), area.getBottom());
+    fillPath.lineTo (pt0.getY(), area.getBottom());
     fillPath.closeSubPath();
 
     g.setColour(juce::Colours::lightgreen.withAlpha (0.3f));
@@ -212,7 +220,7 @@ void ADSREnvelopeComponent::drawPlayhead(
 
         // compute x and y
         float xNorm = t / maxLength; // normalized by max ADSR duration
-        float x = area.getX() + xNorm * area.getWidth();
+        float x = EnvelopePoint { t, 0.0f }.toPixel(area, maxLength).x;
         float y = getYForX(x); // this should work in your coordinate space
 
         // distinct color per voice
@@ -254,6 +262,92 @@ void ADSREnvelopeComponent::resized()
     decaySlider.setBounds   (knobsArea.removeFromLeft (w));
     sustainSlider.setBounds (knobsArea.removeFromLeft (w));
     releaseSlider.setBounds (knobsArea);
+}
+
+EnvelopePoint ADSREnvelopeComponent::getEnvelopePoint(int idx) const
+{
+    switch (idx)
+    {
+        case 1: return { (float)attackSlider.getValue(), 1.0f };
+        case 2: return { (float)(attackSlider.getValue() + decaySlider.getValue()), (float)sustainSlider.getValue() };
+        case 3: return { (float)(attackSlider.getValue() + decaySlider.getValue() + releaseSlider.getValue()), 0.0f };
+        default: return { 0.0f, 0.0f };
+    }
+}
+
+EnvelopePoint ADSREnvelopeComponent::getControlPoint (int idx) const {
+    switch (idx) {
+        case 0: return { (float)attackCurveXSlider.getValue(), (float)attackCurveYSlider.getValue() };
+        case 1: return { (float)decayCurveXSlider.getValue(), (float)decayCurveYSlider.getValue() };
+        case 2: return { (float)releaseCurveXSlider.getValue(), (float)releaseCurveYSlider.getValue() };
+        default: return { 0.0f, 0.0f }; // should never happen
+    }
+}
+
+void ADSREnvelopeComponent::checkControlPoints() {
+
+    juce::Array<EnvelopePoint> _points = {
+        getEnvelopePoint(0),
+        getEnvelopePoint(1),
+        getEnvelopePoint(2),
+        getEnvelopePoint(3)
+    };
+
+    juce::Array<EnvelopePoint> _controlPoints = {
+        getControlPoint(0),
+        getControlPoint(1),
+        getControlPoint(2)
+    };
+
+    for (int i = 0; i < 3; ++i) {
+        bool modified = false;
+
+        // Validate x coordinate
+        float xRange = (_points[i + 1].time - _points[i].time) / 2.0f;
+        if (_controlPoints[i].time < - xRange) {
+            _controlPoints.set(i, {-xRange, _controlPoints[i].level});
+            modified = true;
+        } else if (_controlPoints[i].time > xRange) {
+            _controlPoints.set(i, {xRange, _controlPoints[i].level});
+            modified = true;
+        }
+
+        // Validate y coordinate
+        float yMidpoint = (_points[i].level + _points[i + 1].level) / 2.0f;
+        if (_controlPoints[i].level + yMidpoint < 0.0f) {
+            _controlPoints.set(i, {_controlPoints[i].time, -yMidpoint});
+            modified = true;
+        } else if (_controlPoints[i].level + yMidpoint > 1.0f) {
+            _controlPoints.set(i, {_controlPoints[i].time, 1 - yMidpoint});
+            modified = true;
+        }
+
+        if (modified) {
+            saveControlPointSliderValue(i, _controlPoints[i]);
+            // Update the controlPointOffsets used for drawing
+            auto cp = _controlPoints[i].toPixelOffset(envelopeArea, maxLength);
+            controlPointOffsets.set(i, cp);
+        }
+    }
+}
+
+void ADSREnvelopeComponent::saveControlPointSliderValue(int index, EnvelopePoint value) {
+    switch (index) {
+        case 0:
+            attackCurveXSlider.setValue(value.time);
+            attackCurveYSlider.setValue(value.level);
+            break;
+        case 1:
+            decayCurveXSlider.setValue(value.time);
+            decayCurveYSlider.setValue(value.level);
+            break;
+        case 2:
+            releaseCurveXSlider.setValue(value.time);
+            releaseCurveYSlider.setValue(value.level);
+            break;
+        default:
+            break;
+    }
 }
 
 void ADSREnvelopeComponent::mouseDown (const juce::MouseEvent& e)
@@ -307,23 +401,26 @@ void ADSREnvelopeComponent::mouseDrag (const juce::MouseEvent& e)
     float r = (float) releaseSlider.getValue();
 
     // endpoint drags (1–3)
-    if (draggingPoint >= 1 && draggingPoint <= 3) // TODO: When dragging point check if curve handle is not too far away
+    if (draggingPoint >= 1 && draggingPoint <= 3)
     {
         float newA = a, newD = d, newS = s, newR = r;
 
         if (draggingPoint == 1)
         {
-            newA = juce::jlimit (0.0f, maxLength - d - r, mapXToTime (pos.x));
+            EnvelopePoint ep = EnvelopePoint::fromPixel(pos, area, maxLength);
+            newA = juce::jlimit(0.0f, maxLength - d - r, ep.time);
         }
         else if (draggingPoint == 2)
         {
-            float total = mapXToTime (pos.x);
+            EnvelopePoint ep = EnvelopePoint::fromPixel(pos, area, maxLength);
+            float total = ep.time;
             newD = juce::jlimit (0.0f, maxLength - a - r, total - newA);
-            newS = juce::jlimit (0.0f, 1.0f, (area.getBottom() - pos.y) / area.getHeight());
+            newS = ep.level;
         }
         else // release
         {
-            float total = mapXToTime (pos.x);
+            EnvelopePoint ep = EnvelopePoint::fromPixel(pos, area, maxLength);
+            float total = ep.time;
             newR = juce::jlimit (0.0f, maxLength - newA - newD, total - newA - newD);
         }
 
@@ -345,6 +442,8 @@ void ADSREnvelopeComponent::mouseDrag (const juce::MouseEvent& e)
         decaySlider.setValue(newD);
         sustainSlider.setValue(newS);
         releaseSlider.setValue(newR);
+
+        checkControlPoints();
 
         repaint();
         return;

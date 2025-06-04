@@ -7,9 +7,20 @@
 namespace DSP
 {
 
+// float naive_lerp(float a, float b, float t)
+// {
+//     return a + t * (b - a);
+// }
+
 float naive_lerp(float a, float b, float t)
 {
-    return a + t * (b - a);
+    // Clamp t to [0, 1] if necessary
+    t = std::clamp(t, 0.0f, 1.0f);
+
+    float gainA = std::cos(t * juce::MathConstants<float>::halfPi);
+    float gainB = std::sin(t * juce::MathConstants<float>::halfPi);
+
+    return a * gainA + b * gainB;
 }
 
 float convertMidiNoteToFreq(int MidiNote)
@@ -313,6 +324,14 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         for (int ch = 0; ch < outputBuffer.getNumChannels(); ++ch)
         {
             outputBuffer.addSample(ch, startSample + i, out);
+        }
+
+        if (std::isnan(out))
+        {
+            voiceStarted = false;
+            clearCurrentNote();
+            DBG("WavetableSynthVoice: NaN detected in output buffer");
+            return;
         }
 
         if (voiceStarted && envGen.isOff())

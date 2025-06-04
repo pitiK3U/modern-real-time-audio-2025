@@ -20,6 +20,8 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     filterLabel("", "Filter"),
     lfo1Label("", "LFO 1"),
     lfo2Label("", "LFO 2"),
+    envelopeLabel("", "Envelope 1"),
+    wavetableLabel("", "Wavetable"),
     selectedComponentLabel("Selected component label", ""),
     lfo1HistoryPlot(32768),
     lfo2HistoryPlot(32768),
@@ -39,6 +41,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
         Param::Ranges::ADSRPlotWidth
     ),
     vts (p.getParamManager().getAPVTS()),
+    wavetablePlotComponent(),
     selectButton("Select component")
     {
     addAndMakeVisible(oscParamEditor);
@@ -50,11 +53,14 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     addAndMakeVisible (lfo1HistoryPlot);
     addAndMakeVisible(lfo2HistoryPlot);
     addAndMakeVisible (adsrComponent);
+    addAndMakeVisible(wavetablePlotComponent);
 
     setupLabel(oscLabel);
     setupLabel(filterLabel);
     setupLabel(lfo1Label);
     setupLabel(lfo2Label);
+    setupLabel(envelopeLabel);
+    setupLabel(wavetableLabel);
     setupLabel(selectedComponentLabel);
 
     addAndMakeVisible(selectButton);
@@ -95,7 +101,14 @@ void WavetableSynthAudioProcessorEditor::resized()
 
     {
         auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
+        envelopeLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
         adsrComponent.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
+    }
+
+    {
+        auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
+        wavetableLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
+        wavetablePlotComponent.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
     }
 
     {
@@ -141,6 +154,13 @@ void WavetableSynthAudioProcessorEditor::timerCallback()
         lfo1HistoryPlot.addValue (v);
     for (auto v : block2)
         lfo2HistoryPlot.addValue (v);
+
+    // 3) Get wavetable position
+    float index = audioProcessor.lastWavetablePosition.load(std::memory_order_relaxed);
+    float normalized = index / static_cast<float>(audioProcessor.NUM_WAVEFORMS - 1);
+
+    wavetablePlotComponent.setWavetablePosition(normalized);
+    wavetablePlotComponent.repaint();
 }
 
 void WavetableSynthAudioProcessorEditor::setupLabel(juce::Label& label)
