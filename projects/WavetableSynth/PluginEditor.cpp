@@ -14,7 +14,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     filterParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_Cutoff, Param::ID::VCF_Reso, Param::ID::VCF_Type }),
     lfo1ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_Freq, Param::ID::LFO1_Type, Param::ID::LFO1_Offset }),
     lfo2ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO2_Freq, Param::ID::LFO2_Type, Param::ID::LFO2_Offset, Param::ID::HistoryPlotBufferSize }),
-    effectParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_mult }),
+    effectParamEditor(p.getParamManager(), { Param::ID::LFO1_mult, Param::ID::LFO2_mult }),
     oscLabel("", "Wavetable"),
     vcaEnvLabel("", "Amplitude Envelope"),
     filterLabel("", "Filter"),

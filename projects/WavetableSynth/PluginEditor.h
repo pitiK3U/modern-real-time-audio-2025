@@ -4,6 +4,7 @@
 #include "juce_core/juce_core.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "mrta_utils/Source/GUI/GenericParameterEditor.h"
+#include "HorizontalParameterEditor.h"
 #include "HistoryPlotComponent.h"
 #include "ADSREnvelopeComponent.h"
 
@@ -35,7 +36,7 @@ private:
     mrta::GenericParameterEditor filterParamEditor;
     mrta::GenericParameterEditor lfo1ParamEditor;
     mrta::GenericParameterEditor lfo2ParamEditor;
-    mrta::GenericParameterEditor effectParamEditor;
+    GUI::HorizontalParameterEditor effectParamEditor;
     GUI::HistoryPlotComponent lfo1HistoryPlot;
     GUI::HistoryPlotComponent lfo2HistoryPlot;
     GUI::ADSREnvelopeComponent adsrComponent;

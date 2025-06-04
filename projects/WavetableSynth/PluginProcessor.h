@@ -38,11 +38,13 @@ namespace Param
         static const juce::String LFO1_Freq { "lfo1_freq" };
         static const juce::String LFO1_Type { "lfo1_type" };
         static const juce::String LFO1_Offset { "lfo1_offset" };
-        static const juce::String LFO1_mult { "lfo_amount" };
-
+        
         static const juce::String LFO2_Freq { "lfo2_freq" };
         static const juce::String LFO2_Type { "lfo2_type" };
         static const juce::String LFO2_Offset { "lfo2_offset" };
+
+        static const juce::String LFO1_mult { "lfo1_amount" };
+        static const juce::String LFO2_mult { "lfo2_amount" };
 
         static const juce::String HistoryPlotBufferSize { "history_plot_buffer_size" };
 
@@ -88,11 +90,13 @@ namespace Param
         static const juce::String LFO1_Freq { "LFO 1 Freq." };
         static const juce::String LFO1_Type { "LFO 1 Type" };
         static const juce::String LFO1_Offset { "LFO 1 Offset" };
-        static const juce::String LFO1_mult {"LFO volume multiplier" };
-
+        
         static const juce::String LFO2_Freq { "LFO 2 Freq." };
         static const juce::String LFO2_Type { "LFO 2 Type" };
         static const juce::String LFO2_Offset { "LFO 2 Offset" };
+
+        static const juce::String LFO1_mult {"LFO 1 multiplier" };
+        static const juce::String LFO2_mult {"LFO 2 multiplier" };
 
         static const juce::String HistoryPlotBufferSize { "History Plot Buffer Size" };
 
