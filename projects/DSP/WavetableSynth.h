@@ -59,17 +59,17 @@ public:
     void setUnisonVoices(uint8_t numberOfVoices);
     void setUnisonDetune(float cents, bool skip);
 
-    void setAttTime(float ms);
-    void setDecayTime(float ms);
-    void setSustain(float norm);
-    void setRelTime(float ms);
+    void setAttTime(float ms, int env_id);
+    void setDecayTime(float ms, int env_id);
+    void setSustain(float norm, int env_id);
+    void setRelTime(float ms, int env_id);
 
-    void setAttCurveX(float x);
-    void setAttCurveY(float y);
-    void setDecayCurveX(float x);
-    void setDecayCurveY(float y);
-    void setRelCurveX(float x);
-    void setRelCurveY(float y);
+    void setAttCurveX(float x, int env_id);
+    void setAttCurveY(float y, int env_id);
+    void setDecayCurveX(float x, int env_id);
+    void setDecayCurveY(float y, int env_id);
+    void setRelCurveX(float x, int env_id);
+    void setRelCurveY(float y, int env_id);
 
     void setAttTimeVCF(float ms);
     void setDecayTimeVCF(float ms);
@@ -89,7 +89,7 @@ public:
     void setFilterCutoffEffect(juce::String paramId, float paramMult, DSP<float> &reference, EffectEvaluator effectEvaluator = defaultEffect);
 
     void setOutputVol(float dB, bool skipRamp);
-    void setEnvelopeMonitor(EnvelopeStateCollector& collector, size_t index);
+    void setEnvelopeMonitor(EnvelopeStateCollector& collector, size_t index, int envelopeIndex);
 
 
     bool canPlaySound(juce::SynthesiserSound* ptr) override;
@@ -127,7 +127,8 @@ private:
 
     std::vector<std::array<float, SampleSize>> wavetables;
 
-    ADSREnvelopeGenerator envGen;
+    ADSREnvelopeGenerator envGenA;
+    ADSREnvelopeGenerator envGenB;
 
     StateVariableFilter filter;
 
@@ -157,7 +158,8 @@ private:
     bool voiceStarted { false };
     bool gateState { false };
 
-    EnvelopeStateCollector* envelopeStateCollector = nullptr;
+    EnvelopeStateCollector* envelopeStateCollectorA = nullptr;
+    EnvelopeStateCollector* envelopeStateCollectorB = nullptr;
     size_t voiceIndex = 0;
 
     float lastWavetablePosition = 0;

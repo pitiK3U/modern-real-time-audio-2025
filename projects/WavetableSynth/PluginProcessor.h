@@ -249,7 +249,7 @@ public:
     void getLastLfo1Values (std::vector<float>& outValues);
     void getLastLfo2Values (std::vector<float>& outValues);
 
-    DSP::EnvelopeStateCollector* getEnvelopeStateCollector() const;
+    DSP::EnvelopeStateCollector* getEnvelopeStateCollector(int envelopeIndex) const;
 
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
@@ -286,8 +286,8 @@ private:
     DSP::ParameterHistoryBuffer<float> lfo1History { 32768 };  // remember up to 2^15 samples
     DSP::ParameterHistoryBuffer<float> lfo2History { 32768 };  // remember up to 2^15 samples
 
-    std::unique_ptr<DSP::EnvelopeStateCollector> envelopeCollector;
-
+    std::unique_ptr<DSP::EnvelopeStateCollector> envelopeCollectorA;
+    std::unique_ptr<DSP::EnvelopeStateCollector> envelopeCollectorB;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableSynthAudioProcessor)
 };

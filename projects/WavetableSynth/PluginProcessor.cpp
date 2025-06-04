@@ -30,54 +30,54 @@ void setUnisonDetune(std::vector<DSP::WavetableSynthVoice *> voices, float cents
     std::for_each(voices.begin(), voices.end(), [cents, force] (auto& v) { v->setUnisonDetune(cents, force); });
 }
 
-void setAttTime(std::vector<DSP::WavetableSynthVoice*> voices, float ms)
+void setAttTime(std::vector<DSP::WavetableSynthVoice*> voices, float ms, int env_id)
 {
-    std::for_each(voices.begin(), voices.end(), [ms] (auto& v) { v->setAttTime(ms); });
+    std::for_each(voices.begin(), voices.end(), [ms, env_id] (auto& v) { v->setAttTime(ms, env_id); });
 }
 
-void setDecayTime(std::vector<DSP::WavetableSynthVoice*> voices, float ms)
+void setDecayTime(std::vector<DSP::WavetableSynthVoice*> voices, float ms, int env_id)
 {
-    std::for_each(voices.begin(), voices.end(), [ms] (auto& v) { v->setDecayTime(ms); });
+    std::for_each(voices.begin(), voices.end(), [ms, env_id] (auto& v) { v->setDecayTime(ms, env_id); });
 }
 
-void setSustain(std::vector<DSP::WavetableSynthVoice*> voices, float norm)
+void setSustain(std::vector<DSP::WavetableSynthVoice*> voices, float norm, int env_id)
 {
-    std::for_each(voices.begin(), voices.end(), [norm] (auto& v) { v->setSustain(norm); });
+    std::for_each(voices.begin(), voices.end(), [norm, env_id] (auto& v) { v->setSustain(norm, env_id); });
 }
 
-void setRelTime(std::vector<DSP::WavetableSynthVoice*> voices, float ms)
+void setRelTime(std::vector<DSP::WavetableSynthVoice*> voices, float ms, int env_id)
 {
-    std::for_each(voices.begin(), voices.end(), [ms] (auto& v) { v->setRelTime(ms); });
+    std::for_each(voices.begin(), voices.end(), [ms, env_id] (auto& v) { v->setRelTime(ms, env_id); });
 }
 
-void setAttCurveX(std::vector<DSP::WavetableSynthVoice*> voices, float x)
+void setAttCurveX(std::vector<DSP::WavetableSynthVoice*> voices, float x, int env_id)
 {
-    std::for_each(voices.begin(), voices.end(), [x] (auto& v) { v->setAttCurveX(x); });
+    std::for_each(voices.begin(), voices.end(), [x, env_id] (auto& v) { v->setAttCurveX(x, env_id); });
 }
 
-void setAttCurveY(std::vector<DSP::WavetableSynthVoice*> voices, float y)
+void setAttCurveY(std::vector<DSP::WavetableSynthVoice*> voices, float y, int env_id)
 {
-    std::for_each(voices.begin(), voices.end(), [y] (auto& v) { v->setAttCurveY(y); });
+    std::for_each(voices.begin(), voices.end(), [y, env_id] (auto& v) { v->setAttCurveY(y, env_id); });
 }
 
-void setDecayCurveX(std::vector<DSP::WavetableSynthVoice*> voices, float x)
+void setDecayCurveX(std::vector<DSP::WavetableSynthVoice*> voices, float x, int env_id)
 {
-    std::for_each(voices.begin(), voices.end(), [x] (auto& v) { v->setDecayCurveX(x); });
+    std::for_each(voices.begin(), voices.end(), [x, env_id] (auto& v) { v->setDecayCurveX(x, env_id); });
 }
 
-void setDecayCurveY(std::vector<DSP::WavetableSynthVoice*> voices, float y)
+void setDecayCurveY(std::vector<DSP::WavetableSynthVoice*> voices, float y, int env_id)
 {
-    std::for_each(voices.begin(), voices.end(), [y] (auto& v) { v->setDecayCurveY(y); });
+    std::for_each(voices.begin(), voices.end(), [y, env_id] (auto& v) { v->setDecayCurveY(y, env_id); });
 }
 
-void setRelCurveX(std::vector<DSP::WavetableSynthVoice*> voices, float x)
+void setRelCurveX(std::vector<DSP::WavetableSynthVoice*> voices, float x, int env_id)
 {
-    std::for_each(voices.begin(), voices.end(), [x] (auto& v) { v->setRelCurveX(x); });
+    std::for_each(voices.begin(), voices.end(), [x, env_id] (auto& v) { v->setRelCurveX(x, env_id); });
 }
 
-void setRelCurveY(std::vector<DSP::WavetableSynthVoice*> voices, float y)
+void setRelCurveY(std::vector<DSP::WavetableSynthVoice*> voices, float y, int env_id)
 {
-    std::for_each(voices.begin(), voices.end(), [y] (auto& v) { v->setRelCurveY(y); });
+    std::for_each(voices.begin(), voices.end(), [y, env_id] (auto& v) { v->setRelCurveY(y, env_id); });
 }
 
 
@@ -225,13 +225,15 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     lfo1(DSP::LFO(44100.f, Param::Ranges::LFODefaultFreq, DSP::Waveform::Sine)),
     lfo2(DSP::LFO(44100.f, Param::Ranges::LFODefaultFreq, DSP::Waveform::Sine))
 {
-    envelopeCollector = std::make_unique<DSP::EnvelopeStateCollector>(NUM_VOICES);
+    envelopeCollectorA = std::make_unique<DSP::EnvelopeStateCollector>(NUM_VOICES);
+    envelopeCollectorB = std::make_unique<DSP::EnvelopeStateCollector>(NUM_VOICES);
 
     synth.addSound(new DSP::SynthSound());
     for (size_t i = 0; i < NUM_VOICES; ++i)
     {
         voices.emplace_back(new DSP::WavetableSynthVoice());
-        voices.back()->setEnvelopeMonitor(*envelopeCollector, i);
+        voices.back()->setEnvelopeMonitor(*envelopeCollectorA, i, 0);
+        voices.back()->setEnvelopeMonitor(*envelopeCollectorB, i, 1);
         synth.addVoice(voices.back());
     }
     synth.setNoteStealingEnabled(false);
@@ -256,17 +258,31 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::LFO2_Offset, [this] (float value, bool force) { lfo2.setOffset(value); });
     paramManager.registerParameterCallback(Param::ID::LFO2_Type, [this] (float value, bool force) { lfo2.setWaveform(static_cast<DSP::Waveform>(std::round(value))); });
 
-    paramManager.registerParameterCallback(Param::ID::EnvelopeAttackTime, [this] (float value, bool force) { setAttTime(voices, value); });
-    paramManager.registerParameterCallback(Param::ID::EnvelopeDecayTime, [this] (float value, bool force) { setDecayTime(voices, value); });
-    paramManager.registerParameterCallback(Param::ID::EnvelopeSustain, [this] (float value, bool force) { setSustain(voices, value); });
-    paramManager.registerParameterCallback(Param::ID::EnvelopeReleaseTime, [this] (float value, bool force) { setRelTime(voices, value); });
+    // Envelope A
+    paramManager.registerParameterCallback(Param::ID::EnvelopeAttackTime, [this] (float value, bool force) { setAttTime(voices, value, 0); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeDecayTime, [this] (float value, bool force) { setDecayTime(voices, value, 0); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeSustain, [this] (float value, bool force) { setSustain(voices, value, 0); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeReleaseTime, [this] (float value, bool force) { setRelTime(voices, value, 0); });
 
-    paramManager.registerParameterCallback(Param::ID::EnvelopeAttackCurveX, [this] (float value, bool force) { setAttCurveX(voices, value); });
-    paramManager.registerParameterCallback(Param::ID::EnvelopeAttackCurveY, [this] (float value, bool force) { setAttCurveY(voices, value); });
-    paramManager.registerParameterCallback(Param::ID::EnvelopeDecayCurveX, [this] (float value, bool force) { setDecayCurveX(voices, value); });
-    paramManager.registerParameterCallback(Param::ID::EnvelopeDecayCurveY, [this] (float value, bool force) { setDecayCurveY(voices, value); });
-    paramManager.registerParameterCallback(Param::ID::EnvelopeReleaseCurveX, [this] (float value, bool force) { setRelCurveX(voices, value); });
-    paramManager.registerParameterCallback(Param::ID::EnvelopeReleaseCurveY, [this] (float value, bool force) { setRelCurveY(voices, value); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeAttackCurveX, [this] (float value, bool force) { setAttCurveX(voices, value, 0); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeAttackCurveY, [this] (float value, bool force) { setAttCurveY(voices, value, 0); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeDecayCurveX, [this] (float value, bool force) { setDecayCurveX(voices, value, 0); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeDecayCurveY, [this] (float value, bool force) { setDecayCurveY(voices, value, 0); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeReleaseCurveX, [this] (float value, bool force) { setRelCurveX(voices, value, 0); });
+    paramManager.registerParameterCallback(Param::ID::EnvelopeReleaseCurveY, [this] (float value, bool force) { setRelCurveY(voices, value, 0); });
+
+    // Envelope B
+    paramManager.registerParameterCallback(Param::ID::Envelope_B_AttackTime, [this] (float value, bool force) { setAttTime(voices, value, 1); });
+    paramManager.registerParameterCallback(Param::ID::Envelope_B_DecayTime, [this] (float value, bool force) { setDecayTime(voices, value, 1); });
+    paramManager.registerParameterCallback(Param::ID::Envelope_B_Sustain, [this] (float value, bool force) { setSustain(voices, value, 1); });
+    paramManager.registerParameterCallback(Param::ID::Envelope_B_ReleaseTime, [this] (float value, bool force) { setRelTime(voices, value, 1); });
+
+    paramManager.registerParameterCallback(Param::ID::Envelope_B_AttackCurveX, [this] (float value, bool force) { setAttCurveX(voices, value, 1); });
+    paramManager.registerParameterCallback(Param::ID::Envelope_B_AttackCurveY, [this] (float value, bool force) { setAttCurveY(voices, value, 1); });
+    paramManager.registerParameterCallback(Param::ID::Envelope_B_DecayCurveX, [this] (float value, bool force) { setDecayCurveX(voices, value, 1); });
+    paramManager.registerParameterCallback(Param::ID::Envelope_B_DecayCurveY, [this] (float value, bool force) { setDecayCurveY(voices, value, 1); });
+    paramManager.registerParameterCallback(Param::ID::Envelope_B_ReleaseCurveX, [this] (float value, bool force) { setRelCurveX(voices, value, 1); });
+    paramManager.registerParameterCallback(Param::ID::Envelope_B_ReleaseCurveY, [this] (float value, bool force) { setRelCurveY(voices, value, 1); });
 
     auto multipliers = [this](const juce::String& paramID, DSP::DSP<float>& dsp) {
         return [this, &paramID, &dsp] (float value, bool force) { 
@@ -326,9 +342,13 @@ void WavetableSynthAudioProcessor::getLastLfo2Values (std::vector<float>& outVal
     lfo2History.getHistory (outValues);
 }
 
-DSP::EnvelopeStateCollector* WavetableSynthAudioProcessor::getEnvelopeStateCollector() const
+DSP::EnvelopeStateCollector* WavetableSynthAudioProcessor::getEnvelopeStateCollector(int envelopeIndex) const
 {
-    return envelopeCollector.get();
+    if (envelopeIndex == 0) {
+        return envelopeCollectorA.get();
+    } else {
+        return envelopeCollectorB.get();
+    }
 }
 
 void WavetableSynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

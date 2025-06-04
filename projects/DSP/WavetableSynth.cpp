@@ -35,7 +35,7 @@ float moveFrequencyByCents(float frequency, float cents)
 }
 
 WavetableSynthVoice::WavetableSynthVoice()
-:envGen(sampleRate)
+:envGenA(sampleRate), envGenB(sampleRate)
 {
     fillWavetable();
 }
@@ -88,54 +88,94 @@ void WavetableSynthVoice::setUnisonDetune(float cents, bool skip)
     unisonDetune.setValue(cents, skip);
 }
 
-void WavetableSynthVoice::setAttTime(float ms)
+void WavetableSynthVoice::setAttTime(float ms, int env_id)
 {
-    envGen.setAttackTime(ms);
+    if (env_id == 0) {
+        envGenA.setAttackTime(ms);
+    } else {
+        envGenB.setAttackTime(ms);
+    }
 }
 
-void WavetableSynthVoice::setDecayTime(float ms)
+void WavetableSynthVoice::setDecayTime(float ms, int env_id)
 {
-    envGen.setDecayTime(ms);
+    if (env_id == 0) {
+        envGenA.setDecayTime(ms);
+    } else {
+        envGenB.setDecayTime(ms);
+    }
 }
 
-void WavetableSynthVoice::setSustain(float norm)
+void WavetableSynthVoice::setSustain(float norm, int env_id)
 {
-    envGen.setSustainLevel(norm);
+    if (env_id == 0) {
+        envGenA.setSustainLevel(norm);
+    } else {
+        envGenB.setSustainLevel(norm);
+    }
 }
 
-void WavetableSynthVoice::setRelTime(float ms)
+void WavetableSynthVoice::setRelTime(float ms, int env_id)
 {
-    envGen.setReleaseTime(ms);
+    if (env_id == 0) {
+        envGenA.setReleaseTime(ms);
+    } else {
+        envGenB.setReleaseTime(ms);
+    }
 }
 
-void WavetableSynthVoice::setAttCurveX(float x)
+void WavetableSynthVoice::setAttCurveX(float x, int env_id)
 {
-    envGen.setAttackCurveX(x);
+    if (env_id == 0) {
+        envGenA.setAttackCurveX(x);
+    } else {
+        envGenB.setAttackCurveX(x);
+    }
 }
 
-void WavetableSynthVoice::setAttCurveY(float y)
+void WavetableSynthVoice::setAttCurveY(float y, int env_id)
 {
-    envGen.setAttackCurveY(y);
+    if (env_id == 0) {
+        envGenA.setAttackCurveY(y);
+    } else {
+        envGenB.setAttackCurveY(y);
+    }
 }
 
-void WavetableSynthVoice::setDecayCurveX(float x)
+void WavetableSynthVoice::setDecayCurveX(float x, int env_id)
 {
-    envGen.setDecayCurveX(x);
+    if (env_id == 0) {
+        envGenA.setDecayCurveX(x);
+    } else {
+        envGenB.setDecayCurveX(x);
+    }
 }
 
-void WavetableSynthVoice::setDecayCurveY(float y)
+void WavetableSynthVoice::setDecayCurveY(float y, int env_id)
 {
-    envGen.setDecayCurveY(y);
+    if (env_id == 0) {
+        envGenA.setDecayCurveY(y);
+    } else {
+        envGenB.setDecayCurveY(y);
+    }
 }
 
-void WavetableSynthVoice::setRelCurveX(float x)
+void WavetableSynthVoice::setRelCurveX(float x, int env_id)
 {
-    envGen.setReleaseCurveX(x);
+    if (env_id == 0) {
+        envGenA.setReleaseCurveX(x);
+    } else {
+        envGenB.setReleaseCurveX(x);
+    }
 }
 
-void WavetableSynthVoice::setRelCurveY(float y)
+void WavetableSynthVoice::setRelCurveY(float y, int env_id)
 {
-    envGen.setReleaseCurveY(y);
+    if (env_id == 0) {
+        envGenA.setReleaseCurveY(y);
+    } else {
+        envGenB.setReleaseCurveY(y);
+    }
 }
 
 void WavetableSynthVoice::setLFOFreqVCF(float Hz)
@@ -177,9 +217,13 @@ void WavetableSynthVoice::setOutputVol(float dB, bool skipRamp)
     outputVolRamp.setValue(std::pow(10.f, 0.05f * dB), skipRamp);
 }
 
-void WavetableSynthVoice::setEnvelopeMonitor(EnvelopeStateCollector& collector, size_t index)
+void WavetableSynthVoice::setEnvelopeMonitor(EnvelopeStateCollector& collector, size_t index, int envelopeIndex)
 {
-    envelopeStateCollector = &collector;
+    if (envelopeIndex == 0) {
+        envelopeStateCollectorA = &collector;
+    } else {
+        envelopeStateCollectorB = &collector;
+    }
     voiceIndex = index;
 }
 
@@ -251,7 +295,8 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
     {
         sampleRate = newSampleRate;
 
-        envGen.prepare(sampleRate);
+        envGenA.prepare(sampleRate);
+        envGenB.prepare(sampleRate);
         filter.prepare(sampleRate);
         wavetableVolRamp.prepare(sampleRate);
         outputVolRamp.prepare(sampleRate);
@@ -269,11 +314,14 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
     {
         unisonDetune.getNext();
 
-        float envValue = envGen.getValue(gateState);
+        float envValueA = envGenA.getValue(gateState);
+        float envValueB = envGenB.getValue(gateState);
 
-        // Send envelope state to the GUI collector
-        if (envelopeStateCollector != nullptr)
-            envelopeStateCollector->setEnvelopeState(voiceIndex, envGen.getCurrentState(), envGen.getCurrentStateTimer());
+        // Send envelope states to the GUI collector
+        if (envelopeStateCollectorA != nullptr)
+            envelopeStateCollectorA->setEnvelopeState(voiceIndex, envGenA.getCurrentState(), envGenA.getCurrentStateTimer());
+        if (envelopeStateCollectorB != nullptr)
+            envelopeStateCollectorB->setEnvelopeState(voiceIndex, envGenB.getCurrentState(), envGenB.getCurrentStateTimer());
 
         // Indices of which of the waveform in wavetable to use wavetables[integralindex]
         float integralIndexfloat = 0.f;
@@ -318,7 +366,7 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
             wavetableOut += unisonOut;
         }
         wavetableOut /= unisonVoices;
-        wavetableOut *= (wavetableVol * envValue * velocity);
+        wavetableOut *= (wavetableVol * envValueA * velocity);
 
         float lpfOut { 0.f };
         float bpfOut { 0.f };
@@ -339,7 +387,7 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
             return;
         }
 
-        if (voiceStarted && envGen.isOff())
+        if (voiceStarted && envGenA.isOff() && envGenB.isOff())
         {
             voiceStarted = false;
             clearCurrentNote();
