@@ -52,7 +52,6 @@ public:
 
     // Parameters    
     void setWavetablePosition(float index, bool skip);
-    void setWavetablePositionEffect(juce::String paramId, float paramMult, DSP<float> &reference, EffectEvaluator effectEvaluator = defaultEffect);
 
     void setWavetableVol(float db, bool skip);
 
@@ -86,8 +85,6 @@ public:
     void setFilterReso(float Q, bool skipRamp);
     void setFilterType(FilterType type, bool skipRamp);
 
-    void setFilterCutoffEffect(juce::String paramId, float paramMult, DSP<float> &reference, EffectEvaluator effectEvaluator = defaultEffect);
-
     void setOutputVol(float dB, bool skipRamp);
     void setEnvelopeMonitor(EnvelopeStateCollector& collector, size_t index);
 
@@ -113,6 +110,17 @@ public:
     static constexpr float DefaultFreq { 1.f };
     
     ADSREnvelopeGenerator envGen;
+
+    // Wave table position/index in the wavetables table - which sample in the set to use 
+    Parameter<float> wavetableIndex { Parameter<float>(0) };
+    
+    Parameter<float> vcfFreq;
+    Parameter<float> vcfReso;
+
+    // Volume of individual wavetable voice at the beginning
+    Parameter<float> wavetableVolRamp;
+    // Volume of the voice after lfo's, env's and filter
+    Parameter<float> outputVolRamp;
     
     private:
     void fillWavetable();
@@ -122,21 +130,11 @@ public:
     
     double sampleRate { DefaultSampleRate };
     
-    float lfoFreq { 1.f };
     float velocity { 1.f };
     
     std::vector<std::array<float, SampleSize>> wavetables;
-    
 
     StateVariableFilter filter;
-
-    LFOType lfoType;
-    float lfoPhaseState { 0.f };
-    float lfoPhaseInc { 0.f };
-
-    Parameter<float> wavetableIndex { Parameter<float>(0) };
-    float wavetablePhase { 0 };
-    float wavetableInc { 0 };
 
     float frequency { 1.f };
     uint8_t unisonVoices { 1 };
@@ -144,11 +142,6 @@ public:
     std::vector<float> unisonPhases;
     std::vector<float> unisonIncrements;
 
-    Parameter<float> wavetableVolRamp;
-    Parameter<float> outputVolRamp;
-
-    Parameter<float> vcfFreq;
-    Parameter<float> vcfReso;
     Ramp<float> vcfLPFRamp;
     Ramp<float> vcfBPFRamp;
     Ramp<float> vcfHPFRamp;

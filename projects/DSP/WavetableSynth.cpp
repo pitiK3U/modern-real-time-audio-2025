@@ -66,11 +66,6 @@ void WavetableSynthVoice::setWavetablePosition(float index, bool skip) {
     wavetableIndex.setValue(std::clamp(index, 0.f, static_cast<float>(wavetables.size() - 1)), skip);
 }
 
-void WavetableSynthVoice::setWavetablePositionEffect(juce::String paramId, float paramMult, DSP<float> &reference, EffectEvaluator effectEvaluator)
-{
-    wavetableIndex.setEffect(paramId, paramMult, reference, effectEvaluator);
-}
-
 void WavetableSynthVoice::setWavetableVol(float dB, bool skipRamp)
 {
     wavetableVolRamp.setValue(std::pow(10.f, 0.05f * dB), skipRamp);
@@ -138,27 +133,10 @@ void WavetableSynthVoice::setRelCurveY(float y)
     envGen.setReleaseCurveY(y);
 }
 
-void WavetableSynthVoice::setLFOFreqVCF(float Hz)
-{
-    lfoFreq = std::fmax(Hz, 0.f);
-    lfoPhaseInc = static_cast<float>(2.0 * M_PI / sampleRate) * lfoFreq;
-}
-
-void WavetableSynthVoice::setLFOTypeVCF(LFOType type)
-{
-    lfoType = type;
-}
-
 void WavetableSynthVoice::setFilterCutoff(float Hz, bool skipRamp)
 {
     vcfFreq.setValue(std::clamp(Hz, MinFreqHz, MaxFreqHz), skipRamp);
 }
-
-void WavetableSynthVoice::setFilterCutoffEffect(juce::String paramId, float paramMult, DSP<float> &reference, EffectEvaluator effectEvaluator)
-{
-    vcfFreq.setEffect(paramId, paramMult, reference, effectEvaluator);
-}
-
 
 void WavetableSynthVoice::setFilterReso(float Q, bool skipRamp)
 {
@@ -257,8 +235,6 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         vcfLPFRamp.prepare(sampleRate);
         vcfBPFRamp.prepare(sampleRate);
         vcfHPFRamp.prepare(sampleRate);
-
-        lfoPhaseInc = static_cast<float>(2.0 * M_PI / sampleRate) * std::fmax(lfoFreq, 0.f);
     }
 
     for (int i = 0; i < numSamples; ++i)
@@ -289,20 +265,6 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         const auto vcfHPF { vcfHPFRamp.getNext() };
 
         const auto outputVol { outputVolRamp.getNext() };
-
-        // Process LFO acording to mod type
-        float lfo { 0.f };
-        switch (lfoType)
-        {
-        case TRI:
-            lfo = std::fabs((lfoPhaseState - static_cast<float>(M_PI)) / static_cast<float>(M_PI));
-            break;
-
-        case SIN:
-            lfo = 0.5f + 0.5f * std::sin(lfoPhaseState);
-            break;
-        }
-        lfoPhaseState = std::fmod(lfoPhaseState + lfoPhaseInc, static_cast<float>(2 * M_PI));
 
         float wavetableOut = 0.f;
         for (int unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
