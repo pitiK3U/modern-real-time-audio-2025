@@ -1,5 +1,6 @@
 #pragma once
 
+#include <JuceHeader.h>
 #include <vector>
 
 namespace DSP::WavetablePlugins {
@@ -60,4 +61,65 @@ namespace DSP::WavetablePlugins {
         // Folded Sine
         {0.200000f, 0.160746f, 0.121586f, 0.082616f, 0.043928f, 0.005616f, -0.032228f, -0.069512f, -0.106147f, -0.142044f, -0.177117f, -0.188718f, -0.155544f, -0.123441f, -0.092485f, -0.062753f, -0.034315f, -0.007239f, 0.018408f, 0.042566f, 0.065176f, 0.086183f, 0.105537f, 0.123191f, 0.139104f, 0.153235f, 0.165552f, 0.176025f, 0.184628f, 0.191341f, 0.196148f, 0.199036f, 0.200000f, 0.199036f, 0.196148f, 0.191341f, 0.184628f, 0.176025f, 0.165552f, 0.153235f, 0.139104f, 0.123191f, 0.105537f, 0.086183f, 0.065176f, 0.042566f, 0.018408f, -0.007239f, -0.034315f, -0.062753f, -0.092485f, -0.123441f, -0.155544f, -0.188718f, -0.177117f, -0.142044f, -0.106147f, -0.069512f, -0.032228f, 0.005616f, 0.043928f, 0.082616f, 0.121586f, 0.160746f, 0.200000f, 0.239254f, 0.278414f, 0.317384f, 0.356072f, 0.394384f, 0.432228f, 0.469512f, 0.506147f, 0.542044f, 0.577117f, 0.611282f, 0.644456f, 0.676559f, 0.707515f, 0.737247f, 0.765685f, 0.792761f, 0.818408f, 0.842566f, 0.865176f, 0.886183f, 0.905537f, 0.923191f, 0.939104f, 0.953235f, 0.965552f, 0.976025f, 0.984628f, 0.991341f, 0.996148f, 0.999036f, 1.000000f, 0.999036f, 0.996148f, 0.991341f, 0.984628f, 0.976025f, 0.965552f, 0.953235f, 0.939104f, 0.923191f, 0.905537f, 0.886183f, 0.865176f, 0.842566f, 0.818408f, 0.792761f, 0.765685f, 0.737247f, 0.707515f, 0.676559f, 0.644456f, 0.611282f, 0.577117f, 0.542044f, 0.506147f, 0.469512f, 0.432228f, 0.394384f, 0.356072f, 0.317384f, 0.278414f, 0.239254f},
     };
+
+    enum class PresetID
+    {
+        PluginA,
+        PluginB,
+        Ghostly,
+        Seafoam,
+        GlitchPop
+    };
+
+    inline const juce::StringArray& getPresetNames()
+    {
+        static const juce::StringArray names {
+            "Plugin A",
+            "Plugin B",
+            "Ghostly",
+            "Seafoam",
+            "Glitch Pop"
+        };
+        return names;
+    }
+
+    inline const std::vector<std::vector<float>>& getPreset(PresetID id)
+    {
+        switch (id)
+        {
+            case PresetID::PluginA:   return pluginA;
+            case PresetID::PluginB:   return pluginB;
+            case PresetID::Ghostly:   return pluginGhostly;
+            case PresetID::Seafoam:   return pluginSeafoam;
+            case PresetID::GlitchPop: return pluginGlitchPop;
+        }
+
+        return pluginA;
+    }
+
+    inline const unsigned int getPresetIndex(PresetID id) {
+        switch (id)
+        {
+            case PresetID::PluginA:   return 0;
+            case PresetID::PluginB:   return 1;
+            case PresetID::Ghostly:   return 2;
+            case PresetID::Seafoam:   return 3;
+            case PresetID::GlitchPop: return 4;
+        }
+
+        return 0;
+    }
+
+    inline const PresetID getPresetId(unsigned int id) {
+        switch (id)
+        {
+            case 0:   return PresetID::PluginA;
+            case 1:   return PresetID::PluginB;
+            case 2:   return PresetID::Ghostly;
+            case 3:   return PresetID::Seafoam;
+            case 4:   return PresetID::GlitchPop;
+        }
+
+        return PresetID::PluginA;
+    }
 }

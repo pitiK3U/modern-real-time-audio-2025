@@ -34,7 +34,9 @@ class WavetablePlotComponent
 {
 public:
     WavetablePlotComponent(
-        std::vector<std::vector<float>> wavetable
+        std::vector<std::vector<float>> wavetable,
+        mrta::ParameterManager& paramManager,
+        const juce::String& wavetablePresetId
     );
 
     void paint(juce::Graphics& g) override;
@@ -102,6 +104,8 @@ private:
         juce::Colours::limegreen,
         juce::Colours::magenta
     };
+
+    mrta::GenericParameterEditor pluginSelectionComponent;
 };
 
 }

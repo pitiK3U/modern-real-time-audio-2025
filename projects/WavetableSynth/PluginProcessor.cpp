@@ -238,7 +238,9 @@ static const std::vector<mrta::ParameterInfo> paramVector
     {Param::ID::Envelope_B_DecayCurveX, Param::Name::Envelope_B_DecayCurveX, "", 0.0f, -Param::Ranges::ADSRPlotWidth, Param::Ranges::ADSRPlotWidth, 0.01f, 1.0f},
     {Param::ID::Envelope_B_DecayCurveY, Param::Name::Envelope_B_DecayCurveY, "", 0.0f, -Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelMax, 0.01f, 1.0f},
     {Param::ID::Envelope_B_ReleaseCurveX, Param::Name::Envelope_B_ReleaseCurveX, "", 0.0f, -Param::Ranges::ADSRPlotWidth, Param::Ranges::ADSRPlotWidth, 0.01f, 1.0f},
-    {Param::ID::Envelope_B_ReleaseCurveY, Param::Name::Envelope_B_ReleaseCurveY, "", 0.0f, -Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelMax, 0.01f, 1.0f}
+    {Param::ID::Envelope_B_ReleaseCurveY, Param::Name::Envelope_B_ReleaseCurveY, "", 0.0f, -Param::Ranges::EnvelopeLevelMax, Param::Ranges::EnvelopeLevelMax, 0.01f, 1.0f},
+
+    {Param::ID::SelectedWavetablePreset, Param::Name::SelectedWavetablePreset, Param::Ranges::WavetablePresetChoices, Param::Ranges::WavetableDefaultPreset}
 };
 
 WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :

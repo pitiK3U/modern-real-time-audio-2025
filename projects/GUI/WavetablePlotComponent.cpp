@@ -4,9 +4,13 @@ namespace GUI
 {
 
 WavetablePlotComponent::WavetablePlotComponent(
-    std::vector<std::vector<float>> wavetable
+    std::vector<std::vector<float>> wavetable,
+    mrta::ParameterManager& paramManager,
+    const juce::String& wavetablePresetId
 )
+    : pluginSelectionComponent(paramManager, 100, {wavetablePresetId})
 {
+    addAndMakeVisible(pluginSelectionComponent);
     setWavetable(wavetable);
     setOpaque(true);
     startTimerHz(60);
@@ -47,7 +51,12 @@ BoxCorners BoxCorners::getBoxCorners(
 
 void WavetablePlotComponent::resized()
 {
-    // Nothing to lay out
+    auto bounds = getLocalBounds();
+
+    const int pluginSelectorHeight = 100;
+    auto plotArea = bounds.removeFromTop(bounds.getHeight() - pluginSelectorHeight);
+
+    pluginSelectionComponent.setBounds(bounds.withTrimmedTop(5));
 }
 
 void WavetablePlotComponent::paint(juce::Graphics& g)

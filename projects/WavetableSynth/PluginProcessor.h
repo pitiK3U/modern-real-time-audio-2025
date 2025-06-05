@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "Parameter.h"
+#include "WavetablePlugins.h"
 #include "WavetableSynth.h"
 #include "LFO.h"
 #include "juce_core/juce_core.h"
@@ -68,6 +69,8 @@ namespace Param
         static const juce::String Envelope_B_DecayCurveY { "envelope_B_decay_curve_y" };
         static const juce::String Envelope_B_ReleaseCurveX { "envelope_B_release_curve_x" };
         static const juce::String Envelope_B_ReleaseCurveY { "envelope_B_release_curve_y" };
+
+        static const juce::String SelectedWavetablePreset { "selected_wavetable_preset" };
     }
 
     namespace Name
@@ -128,6 +131,8 @@ namespace Param
         static const juce::String Envelope_B_DecayCurveY { "Decay Curve Y" };
         static const juce::String Envelope_B_ReleaseCurveX { "Release Curve X" };
         static const juce::String Envelope_B_ReleaseCurveY { "Release Curve Y" };
+
+        static const juce::String SelectedWavetablePreset { "Preset" };
     }
 
     namespace Ranges
@@ -212,6 +217,9 @@ namespace Param
         static constexpr float ReleaseDefault { 400.0f };
 
         static constexpr float ADSRPlotWidth { 4000.f }; // In milliseconds
+
+        static const juce::StringArray& WavetablePresetChoices = DSP::WavetablePlugins::getPresetNames();
+        static const unsigned int WavetableDefaultPreset = DSP::WavetablePlugins::getPresetIndex(DSP::WavetablePlugins::PresetID::PluginA);
     }
 
     namespace Units
