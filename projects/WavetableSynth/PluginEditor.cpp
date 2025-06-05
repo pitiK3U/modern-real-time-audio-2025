@@ -24,8 +24,8 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     envelopeLabel("", "Envelope"),
     wavetableLabel("", "Wavetable"),
     selectedComponentLabel("Selected component label", ""),
-    lfo1HistoryPlot(32768),
-    lfo2HistoryPlot(32768),
+    lfo1HistoryPlot(Param::Ranges::HistoryPlotBufferSizeDefault),
+    lfo2HistoryPlot(Param::Ranges::HistoryPlotBufferSizeDefault),
     adsrComponentA(
         p.getParamManager().getAPVTS(),
         p.getEnvelopeStateCollector(0),

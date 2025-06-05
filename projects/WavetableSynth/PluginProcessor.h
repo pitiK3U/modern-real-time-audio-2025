@@ -203,6 +203,7 @@ namespace Param
         static constexpr int HistoryPlotBufferSizeMax { 32768 };
         static constexpr int HistoryPlotBufferSizeInc { 512 };
         static constexpr int HistoryPlotBufferSizeSkw { 1 };
+        static constexpr int HistoryPlotBufferSizeDefault { 32768 };
 
         static const juce::StringArray LFOType { "Sin", "Tri" };
         static const juce::StringArray FilterType { "Low Pass", "Band Pass", "High Pass" };
