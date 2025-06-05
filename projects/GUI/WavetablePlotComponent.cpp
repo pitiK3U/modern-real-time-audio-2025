@@ -176,10 +176,10 @@ void WavetablePlotComponent::drawSingleWaveform(
         juce::AffineTransform::scale(scaleX, scaleYFactor, area.getX(), area.getBottom())
             .followedBy(juce::AffineTransform::translation(index * xOffset, index * yOffset));
 
-    g.setColour(waveformColours[index].withAlpha(0.2f));
+    g.setColour(waveformColours[index % 4].withAlpha(0.2f));
     g.fillPath(fillPath, transform);
 
-    g.setColour(waveformColours[index].withAlpha(1.0f));
+    g.setColour(waveformColours[index % 4].withAlpha(1.0f));
     g.strokePath(path, juce::PathStrokeType(1.5f), transform);
 }
 
@@ -277,8 +277,8 @@ void WavetablePlotComponent::drawMorphedWaveform(
     const float localT = wavetablePosition * maxIndex - static_cast<float>(indexA);
 
     // Lerp the color between neighbouring waveform colours
-    const juce::Colour colourA = waveformColours[indexA];
-    const juce::Colour colourB = waveformColours[indexB];
+    const juce::Colour colourA = waveformColours[indexA % 4];
+    const juce::Colour colourB = waveformColours[indexB % 4];
     const juce::Colour morphColour = lerpColour(colourA, colourB, localT);
 
     // Apply transform
