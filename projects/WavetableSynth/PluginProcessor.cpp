@@ -1,12 +1,15 @@
 #include "PluginProcessor.h"
+#include "Parameter.h"
 #include "PluginEditor.h"
 #include "WavetableSynth.h"
+#include "juce_audio_basics/juce_audio_basics.h"
 #include "juce_audio_processors/juce_audio_processors.h"
 #include "juce_core/juce_core.h"
 #include "juce_core/system/juce_PlatformDefs.h"
 #include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <optional>
 #include <sys/types.h>
 #include <vector>
 
@@ -80,18 +83,6 @@ void setRelCurveY(std::vector<DSP::WavetableSynthVoice*> voices, float y, int en
     std::for_each(voices.begin(), voices.end(), [y, env_id] (auto& v) { v->setRelCurveY(y, env_id); });
 }
 
-
-void setLFOFreqVCF(std::vector<DSP::WavetableSynthVoice*> voices, float Hz)
-{
-    std::for_each(voices.begin(), voices.end(), [Hz] (auto& v) { v->setLFOFreqVCF(Hz); });
-}
-
-void setLFOTypeVCF(std::vector<DSP::WavetableSynthVoice*> voices, DSP::WavetableSynthVoice::LFOType type)
-{
-    std::for_each(voices.begin(), voices.end(), [type] (auto& v) { v->setLFOTypeVCF(type); });
-}
-
-
 void setFilterCutoff(std::vector<DSP::WavetableSynthVoice*> voices, float Hz, bool skipRamp)
 {
     std::for_each(voices.begin(), voices.end(), [Hz, skipRamp] (auto& v) { v->setFilterCutoff(Hz, skipRamp); });
@@ -112,11 +103,6 @@ void setOutputVol(std::vector<DSP::WavetableSynthVoice*> voices, float dB, bool 
     std::for_each(voices.begin(), voices.end(), [dB, skipRamp] (auto& v) { v->setOutputVol(dB, skipRamp); });
 }
 
-void setLfoMult(std::vector<DSP::WavetableSynthVoice*> voices, juce::String paramId, float value, DSP::DSP<float> &reference)
-{
-    std::for_each(voices.begin(), voices.end(), [paramId, value, &reference] (auto& v) { v->setWavetablePositionEffect(paramId, Param::Ranges::WavetablePositionMax * value, reference); });
-}
-
 namespace Wavetable {
     using ParameterID = const juce::String&;
 }
@@ -125,34 +111,73 @@ template<typename FloatType>
 using effectSetter = std::function<void(Wavetable::ParameterID, float, DSP::DSP<FloatType> &reference)>;
 
 template<typename FloatType>
-effectSetter<FloatType> getParameterCallback(Wavetable::ParameterID settingParameter, std::vector<DSP::WavetableSynthVoice *>& voices)
+typename DSP::Parameter<FloatType>::EffectEvaluator getParameterEffect(Wavetable::ParameterID settingParameter)
 {
     if (Param::ID::WavetablePosition.compare(settingParameter) == 0) {
-        return [voices](auto paramId, auto value, auto & reference) {
-            std::for_each(voices.begin(), voices.end(), [paramId, value, &reference] (auto& v) {
-                auto clampedPosition = [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
+        return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
                     auto value = previousValue + Param::Ranges::WavetablePositionMax * valueMultiplier * dsp.getCurrentValue();
                     return std::fmod(value, Param::Ranges::WavetablePositionMax + 1);
                 };
-                v->setWavetablePositionEffect(paramId, value, reference, clampedPosition);
-            });
-        };
-    }else if (Param::ID::VCF_Cutoff.compare(settingParameter) == 0) {
-        return [voices](auto paramId, auto value, auto & reference){
-            std::for_each(voices.begin(), voices.end(), [paramId, value, &reference] (auto& v) {
-                // const auto freqMod { std::clamp(vcfEnv * vcfEnvAmout + vcfLFOAmount * lfo, -1.f, 1.f) };
-                // const auto freq { std::clamp(FreqModRange * (std::pow(2.f, freqMod) - 1.f) + vcfFreq, MinFreqHz, MaxFreqHz) };
-                auto filterFreq = [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
+    } else if (Param::ID::VCF_Cutoff.compare(settingParameter) == 0) {
+        // const auto freqMod { std::clamp(vcfEnv * vcfEnvAmout + vcfLFOAmount * lfo, -1.f, 1.f) };
+        // const auto freq { std::clamp(FreqModRange * (std::pow(2.f, freqMod) - 1.f) + vcfFreq, MinFreqHz, MaxFreqHz) };
+        return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
                     auto freqMod = valueMultiplier * dsp.getCurrentValue();
                     return std::clamp(DSP::WavetableSynthVoice::FreqModRange * (std::pow(2.f, freqMod) - 1.f) + previousValue, Param::Ranges::FilterFreqMin, Param::Ranges::FilterFreqMax);
-                };
-                v->setFilterCutoffEffect(paramId, value, reference, filterFreq); 
-                });
         };
-    } else {
+    } else if (Param::ID::VCF_Reso.compare(settingParameter) == 0) {
+        return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
+            auto resoMod = valueMultiplier * dsp.getCurrentValue();
+            return std::clamp(Param::Ranges::FilterResoMax * (resoMod) + previousValue, Param::Ranges::FilterResoMin, Param::Ranges::FilterResoMax);
+        };
+    } else if (Param::ID::WavetableVol.compare(settingParameter) == 0
+            || Param::ID::OutputVol.compare(settingParameter) == 0) {
+        return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
+            auto multipliedVal = valueMultiplier * dsp.getCurrentValue();
+            return previousValue * multipliedVal;
+        };
+    }
+
+    DBG("Unsupported ParameterID: " + settingParameter);
+    jassertfalse;
+    return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
+        return 0.0f;
+    };
+}
+
+template <typename FloatType>
+void applyParameterEffect(Wavetable::ParameterID settingParameter, Wavetable::ParameterID dspParameterID, std::vector<DSP::WavetableSynthVoice *>& voices, FloatType effectMultiplier, std::optional<std::reference_wrapper<DSP::DSP<FloatType>>> dsp)
+{
+    auto effect = getParameterEffect<FloatType>(settingParameter);
+    
+    if (Param::ID::WavetablePosition.compare(settingParameter) == 0) {
+        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &dsp, effect](DSP::WavetableSynthVoice * & voice) {
+            auto reference = dsp.has_value() ? dsp.value() : voice->envGenA;
+            voice->wavetableIndex.setEffect(dspParameterID, effectMultiplier, reference, effect);
+        });
+    } else if (Param::ID::VCF_Cutoff.compare(settingParameter) == 0) {
+        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &dsp, effect](DSP::WavetableSynthVoice * & voice) {
+            auto reference = dsp.has_value() ? dsp.value() : voice->envGenA;
+            voice->vcfFreq.setEffect(dspParameterID, effectMultiplier, reference, effect);
+        });
+    } else if (Param::ID::VCF_Reso.compare(settingParameter) == 0) {
+        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &dsp, effect](DSP::WavetableSynthVoice * & voice) {
+            auto reference = dsp.has_value() ? dsp.value() : voice->envGenA;
+            voice->vcfReso.setEffect(dspParameterID, effectMultiplier, reference, effect);
+        });
+    } else if (Param::ID::WavetableVol.compare(settingParameter) == 0) {
+        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &dsp, effect](DSP::WavetableSynthVoice * & voice) {
+            auto reference = dsp.has_value() ? dsp.value() : voice->envGenA;
+            voice->wavetableVolRamp.setEffect(dspParameterID, effectMultiplier, reference, effect);
+        });
+    } else if (Param::ID::OutputVol.compare(settingParameter) == 0) {
+        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &dsp, effect](DSP::WavetableSynthVoice * & voice) {
+            auto reference = dsp.has_value() ? dsp.value() : voice->envGenA;
+            voice->outputVolRamp.setEffect(dspParameterID, effectMultiplier, reference, effect);
+        });
+    } else {   
         DBG("Unsupported ParameterID: " + settingParameter);
         jassertfalse;
-        // return [](auto paramId, auto value, auto & reference) {};
     }
 }
 
@@ -175,12 +200,7 @@ static const std::vector<mrta::ParameterInfo> paramVector
     { Param::ID::VCF_Reso,   Param::Name::VCF_Reso,   "",                0.71f, Param::Ranges::FilterResoMin, Param::Ranges::FilterResoMax, Param::Ranges::FilterResoInc, Param::Ranges::FilterResoSkw },
     { Param::ID::VCF_Type,   Param::Name::VCF_Type,   Param::Ranges::FilterType, 0 },
 
-    { Param::ID::VCF_EnvAmount, Param::Name::VCF_EnvAmount, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
-    { Param::ID::VCF_LFOAmount, Param::Name::VCF_LFOAmount, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
-
     { Param::ID::OutputVol, Param::Name::OutputVol, Param::Units::dB, 0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
-
-    { Param::ID::FinalVol, Param::Name::FinalVol, Param::Units::dB, 0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
     
     {Param::ID::LFO1_Freq, Param::Name::LFO1_Freq, Param::Units::Hz, Param::Ranges::LFODefaultFreq, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
     {Param::ID::LFO1_Offset, Param::Name::LFO1_Offset, "", 0.f, Param::Ranges::LFOOffsetMin, Param::Ranges::LFOOffsetMax, Param::Ranges::LFOOffsetInc, Param::Ranges::LFOOffsetSkw },
@@ -190,6 +210,7 @@ static const std::vector<mrta::ParameterInfo> paramVector
     {Param::ID::LFO2_Offset, Param::Name::LFO2_Offset, "", 0.f, Param::Ranges::LFOOffsetMin, Param::Ranges::LFOOffsetMax, Param::Ranges::LFOOffsetInc, Param::Ranges::LFOOffsetSkw },
     {Param::ID::LFO2_Type, Param::Name::LFO2_Type, Param::Ranges::LFO1Type, 0},
     
+    { Param::ID::Envelope_mult, Param::Name::Envelope_mult, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
     { Param::ID::LFO1_mult, Param::Name::LFO1_mult, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
     { Param::ID::LFO2_mult, Param::Name::LFO2_mult, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
     
@@ -225,6 +246,8 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     lfo1(DSP::LFO(44100.f, Param::Ranges::LFODefaultFreq, DSP::Waveform::Sine)),
     lfo2(DSP::LFO(44100.f, Param::Ranges::LFODefaultFreq, DSP::Waveform::Sine))
 {
+    formatManager.registerBasicFormats();
+
     envelopeCollectorA = std::make_unique<DSP::EnvelopeStateCollector>(NUM_VOICES);
     envelopeCollectorB = std::make_unique<DSP::EnvelopeStateCollector>(NUM_VOICES);
 
@@ -234,6 +257,7 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
         voices.emplace_back(new DSP::WavetableSynthVoice());
         voices.back()->setEnvelopeMonitor(*envelopeCollectorA, i, 0);
         voices.back()->setEnvelopeMonitor(*envelopeCollectorB, i, 1);
+        voices.back()->fillWavetable();
         synth.addVoice(voices.back());
     }
     synth.setNoteStealingEnabled(false);
@@ -243,8 +267,6 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::UnisonVoices, [this] (float value, bool force) { setUnisonVoices(voices, static_cast<uint8_t>(value)); });
     paramManager.registerParameterCallback(Param::ID::UnisonDetune, [this] (float value, bool force) { setUnisonDetune(voices, value, force); });
 
-    paramManager.registerParameterCallback(Param::ID::VCF_LFOFreq, [this] (float value, bool force) { setLFOFreqVCF(voices, value); });
-    paramManager.registerParameterCallback(Param::ID::VCF_LFOType, [this] (float value, bool force) { setLFOTypeVCF(voices, static_cast<DSP::WavetableSynthVoice::LFOType>(std::round(value))); });
     paramManager.registerParameterCallback(Param::ID::VCF_Cutoff, [this] (float value, bool force) { setFilterCutoff(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::VCF_Reso, [this] (float value, bool force) { setFilterReso(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::VCF_Type, [this] (float value, bool force) { setFilterType(voices, static_cast<DSP::WavetableSynthVoice::FilterType>(std::round(value)), force); });
@@ -284,15 +306,15 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::Envelope_B_ReleaseCurveX, [this] (float value, bool force) { setRelCurveX(voices, value, 1); });
     paramManager.registerParameterCallback(Param::ID::Envelope_B_ReleaseCurveY, [this] (float value, bool force) { setRelCurveY(voices, value, 1); });
 
-    auto multipliers = [this](const juce::String& paramID, DSP::DSP<float>& dsp) {
-        return [this, &paramID, &dsp] (float value, bool force) { 
+    auto multipliers = [this](const juce::String& paramID, std::optional<std::reference_wrapper<DSP::DSP<float>>> dsp) {
+        return [this, &paramID, dsp] (float value, bool force) { 
             if (!selectedParameter.has_value()) return;
-            auto fn = getParameterCallback<float>(selectedParameter.value(), voices); 
-            fn(paramID, value, dsp);
+            applyParameterEffect(selectedParameter.value(), paramID, voices, value, dsp);
         };
     };
-    paramManager.registerParameterCallback(Param::ID::LFO1_mult, multipliers(Param::ID::LFO1_mult, lfo1));
-    paramManager.registerParameterCallback(Param::ID::LFO2_mult, multipliers(Param::ID::LFO2_mult, lfo2));
+    paramManager.registerParameterCallback(Param::ID::Envelope_mult, multipliers(Param::ID::Envelope_mult, std::nullopt));
+    paramManager.registerParameterCallback(Param::ID::LFO1_mult, multipliers(Param::ID::LFO1_mult, std::ref(lfo1)));
+    paramManager.registerParameterCallback(Param::ID::LFO2_mult, multipliers(Param::ID::LFO2_mult, std::ref(lfo2)));
 }
 
 WavetableSynthAudioProcessor::~WavetableSynthAudioProcessor()
@@ -349,6 +371,23 @@ DSP::EnvelopeStateCollector* WavetableSynthAudioProcessor::getEnvelopeStateColle
     } else {
         return envelopeCollectorB.get();
     }
+}
+
+void WavetableSynthAudioProcessor::loadFile(const juce::File& file)
+{
+    auto* reader = formatManager.createReaderFor (file);
+    if (reader == nullptr) return;
+
+    // auto newSource = std::make_unique<juce::AudioFormatReaderSource> (reader, true);
+
+    const int numberOfChannels = 1;
+    juce::AudioSampleBuffer buffer(numberOfChannels, reader->lengthInSamples);
+
+    reader->read(buffer.getArrayOfWritePointers(), numberOfChannels, 0, reader->lengthInSamples);
+    auto readerSampleRate = reader->sampleRate;
+    std::for_each(voices.begin(), voices.end(), [this, &buffer, readerSampleRate](DSP::WavetableSynthVoice *& voice) {
+        voice->loadFromBuffer(buffer, readerSampleRate);
+    });
 }
 
 void WavetableSynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

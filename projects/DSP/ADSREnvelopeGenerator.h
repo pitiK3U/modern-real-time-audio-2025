@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DSP.h"
 #include <utility>
 
 namespace DSP
@@ -13,7 +14,7 @@ namespace DSP
         RELEASE
     };
 
-    class ADSREnvelopeGenerator
+    class ADSREnvelopeGenerator : public DSP<float>
     {
         public:
             ADSREnvelopeGenerator(float sampleRate);
@@ -24,8 +25,11 @@ namespace DSP
             const ADSREnvelopeGenerator& operator=(const ADSREnvelopeGenerator&) = delete;
             const ADSREnvelopeGenerator& operator=(ADSREnvelopeGenerator&&) = delete;
 
-            void prepare(double newSampleRate);
-            
+            // ----- DSP methods -----
+            void prepare(double newSampleRate) override;
+
+            float getCurrentValue() override;
+
             // ----- SAMPLE-LEVEL API -----
 
             /**

@@ -46,13 +46,15 @@ public:
     const WavetableSynthVoice& operator=(const WavetableSynthVoice&) = delete;
     const WavetableSynthVoice& operator=(WavetableSynthVoice&&) = delete;
 
+    void clearWavetable();
+    void fillWavetable();
+    void loadFromBuffer(const AudioSampleBuffer& buffer, double bufferSampleRate);
 
     using EffectEvaluator = Parameter<float>::EffectEvaluator;
     static constexpr auto defaultEffect = Parameter<float>::defaultEffect;
 
     // Parameters    
     void setWavetablePosition(float index, bool skip);
-    void setWavetablePositionEffect(juce::String paramId, float paramMult, DSP<float> &reference, EffectEvaluator effectEvaluator = defaultEffect);
 
     void setWavetableVol(float db, bool skip);
 
@@ -86,11 +88,8 @@ public:
     void setFilterReso(float Q, bool skipRamp);
     void setFilterType(FilterType type, bool skipRamp);
 
-    void setFilterCutoffEffect(juce::String paramId, float paramMult, DSP<float> &reference, EffectEvaluator effectEvaluator = defaultEffect);
-
     void setOutputVol(float dB, bool skipRamp);
     void setEnvelopeMonitor(EnvelopeStateCollector& collector, size_t index, int envelopeIndex);
-
 
     bool canPlaySound(juce::SynthesiserSound* ptr) override;
     void startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound*, int currentPitchWheelPosition) override;
@@ -109,36 +108,38 @@ public:
 
     static constexpr float FreqModRange { 10000.f };
 
-    static constexpr size_t SampleSize { 2048 };
+    static constexpr size_t SampleSize { 2048ul /* * 4994ul */ };
     static constexpr double DefaultSampleRate { 1.0 };
 
-    static constexpr float DefaultFreq { 1.f };
-
-private:
-    void fillWavetable();
-    void updateUnisonIncrements();
-
-    static float getWavetableIncrement(float frequency, float defaultFrequency, size_t sampleSize, double SampleRate);
-
-    double sampleRate { DefaultSampleRate };
-
-    float lfoFreq { 1.f };
-    float velocity { 1.f };
-
-    std::vector<std::array<float, SampleSize>> wavetables;
-
+    static constexpr float DefaultFrequency { 1.f };
+    
     ADSREnvelopeGenerator envGenA;
     ADSREnvelopeGenerator envGenB;
 
-    StateVariableFilter filter;
-
-    LFOType lfoType;
-    float lfoPhaseState { 0.f };
-    float lfoPhaseInc { 0.f };
-
+    // Wave table position/index in the wavetables table - which sample in the set to use 
     Parameter<float> wavetableIndex { Parameter<float>(0) };
-    float wavetablePhase { 0 };
-    float wavetableInc { 0 };
+    
+    Parameter<float> vcfFreq;
+    Parameter<float> vcfReso;
+
+    // Volume of individual wavetable voice at the beginning
+    Parameter<float> wavetableVolRamp;
+    // Volume of the voice after lfo's, env's and filter
+    Parameter<float> outputVolRamp;
+    
+    private:
+    void updateUnisonIncrements();
+    
+    static float getWavetableIncrement(float frequency, double originalFrequency, size_t sampleSize, double SampleRate);
+    
+    double sampleRate { DefaultSampleRate };
+    double originalSampleFrequency { DefaultFrequency };
+    
+    float velocity { 1.f };
+    
+    std::vector<std::array<float, SampleSize>> wavetables;
+
+    StateVariableFilter filter;
 
     float frequency { 1.f };
     uint8_t unisonVoices { 1 };
@@ -146,11 +147,8 @@ private:
     std::vector<float> unisonPhases;
     std::vector<float> unisonIncrements;
 
-    Parameter<float> wavetableVolRamp;
-    Parameter<float> outputVolRamp;
+    size_t processedSample { 0 };
 
-    Parameter<float> vcfFreq;
-    Parameter<float> vcfReso;
     Ramp<float> vcfLPFRamp;
     Ramp<float> vcfBPFRamp;
     Ramp<float> vcfHPFRamp;

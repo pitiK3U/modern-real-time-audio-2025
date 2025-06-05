@@ -30,10 +30,6 @@ namespace Param
         static const juce::String VCF_Cutoff { "vcf_cutoff" };
         static const juce::String VCF_Reso { "vcf_reso" };
         static const juce::String VCF_Type { "vcf_type" };
-        static const juce::String VCF_EnvAmount { "vcf_env_amount" };
-        static const juce::String VCF_LFOAmount { "vcf_lfo_amount" };
-
-        static const juce::String FinalVol { "final_vol" };
         
         static const juce::String LFO1_Freq { "lfo1_freq" };
         static const juce::String LFO1_Type { "lfo1_type" };
@@ -43,6 +39,7 @@ namespace Param
         static const juce::String LFO2_Type { "lfo2_type" };
         static const juce::String LFO2_Offset { "lfo2_offset" };
 
+        static const juce::String Envelope_mult { "env_amount" };
         static const juce::String LFO1_mult { "lfo1_amount" };
         static const juce::String LFO2_mult { "lfo2_amount" };
 
@@ -93,11 +90,6 @@ namespace Param
         static const juce::String VCF_Cutoff { "VCF Cutoff" };
         static const juce::String VCF_Reso { "VCF Resonance" };
         static const juce::String VCF_Type { "VCF Type" };
-
-        static const juce::String VCF_EnvAmount { "VCF Env. Amount" };
-        static const juce::String VCF_LFOAmount { "VCF LFO Amount" };
-
-        static const juce::String FinalVol { "Final Vol." };
         
         static const juce::String LFO1_Freq { "LFO 1 Freq." };
         static const juce::String LFO1_Type { "LFO 1 Type" };
@@ -107,6 +99,7 @@ namespace Param
         static const juce::String LFO2_Type { "LFO 2 Type" };
         static const juce::String LFO2_Offset { "LFO 2 Offset" };
 
+        static const juce::String Envelope_mult { "Envelope multiplier" };
         static const juce::String LFO1_mult {"LFO 1 multiplier" };
         static const juce::String LFO2_mult {"LFO 2 multiplier" };
 
@@ -140,7 +133,7 @@ namespace Param
     namespace Ranges
     {
         static constexpr float WavetablePositionMin { 0 };
-        static constexpr float WavetablePositionMax { 3 };
+        static constexpr float WavetablePositionMax { 4994 };
 
         static constexpr float UnisonVoicesMin { 1 };
         static constexpr float UnisonVoicesMax { 16 };
@@ -251,6 +244,8 @@ public:
 
     DSP::EnvelopeStateCollector* getEnvelopeStateCollector(int envelopeIndex) const;
 
+    void loadFile(const juce::File& file);
+
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
@@ -288,6 +283,8 @@ private:
 
     std::unique_ptr<DSP::EnvelopeStateCollector> envelopeCollectorA;
     std::unique_ptr<DSP::EnvelopeStateCollector> envelopeCollectorB;
+
+    juce::AudioFormatManager formatManager;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableSynthAudioProcessor)
 };

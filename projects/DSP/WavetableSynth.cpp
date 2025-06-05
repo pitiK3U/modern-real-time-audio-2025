@@ -1,7 +1,10 @@
+#include "LFO.h"
+#include "juce_audio_formats/juce_audio_formats.h"
 #include "juce_core/juce_core.h"
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <cstring>
 #include "WavetableSynth.h"
 
 namespace DSP
@@ -37,13 +40,26 @@ float moveFrequencyByCents(float frequency, float cents)
 WavetableSynthVoice::WavetableSynthVoice()
 :envGenA(sampleRate), envGenB(sampleRate)
 {
-    fillWavetable();
+    juce::AudioFormatManager formatManager;
+    formatManager.registerBasicFormats();
+    File file("~/Downloads/ef2ad2c11729050ed05430a86caf147dRick_Astley_-_Never_Gonna_Give_You_Up_Official_Mus.wav");
+    auto* reader = formatManager.createReaderFor (file);
+    if (reader == nullptr) return;
+
+    const int numberOfChannels = 1;
+    juce::AudioSampleBuffer buffer(numberOfChannels, reader->lengthInSamples);
+
+    reader->read(buffer.getArrayOfWritePointers(), numberOfChannels, 0, reader->lengthInSamples);
+    
+    loadFromBuffer(buffer, reader->sampleRate);
 }
 
 void WavetableSynthVoice::fillWavetable()
 {
     const int wavetableCount = 4;
     wavetables.resize(wavetableCount);
+
+    originalSampleFrequency = 1.f;
 
     for (int sample = 0; sample < SampleSize; sample++) {
         auto phase = static_cast<float>(sample) / static_cast<float>(SampleSize);
@@ -58,17 +74,34 @@ void WavetableSynthVoice::fillWavetable()
     }
 }
 
+void WavetableSynthVoice::clearWavetable()
+{
+    wavetables.clear();
+}
+
+void WavetableSynthVoice::loadFromBuffer(const AudioSampleBuffer& buffer, double bufferSampleRate)
+{
+    int numOfSamples = buffer.getNumSamples();
+    // round it up, so we dont lose samples
+    int numberOfWaveforms = (numOfSamples + SampleSize - 1) / SampleSize;
+    wavetables.resize(numberOfWaveforms);
+    // 440.f to make it normal on A4
+    originalSampleFrequency = static_cast<double>(SampleSize) * 440.0 / bufferSampleRate;
+
+    for (auto waveform = 0; waveform < numberOfWaveforms; waveform++) {
+        auto end = std::min(SampleSize, numOfSamples - waveform * SampleSize);
+        for (auto sample = 0; sample < end; sample++) {
+            wavetables[waveform][sample] = buffer.getSample(0, sample + waveform * SampleSize);
+        }
+    }
+}
+
 WavetableSynthVoice::~WavetableSynthVoice()
 {
 }
 
 void WavetableSynthVoice::setWavetablePosition(float index, bool skip) {
     wavetableIndex.setValue(std::clamp(index, 0.f, static_cast<float>(wavetables.size() - 1)), skip);
-}
-
-void WavetableSynthVoice::setWavetablePositionEffect(juce::String paramId, float paramMult, DSP<float> &reference, EffectEvaluator effectEvaluator)
-{
-    wavetableIndex.setEffect(paramId, paramMult, reference, effectEvaluator);
 }
 
 void WavetableSynthVoice::setWavetableVol(float dB, bool skipRamp)
@@ -178,27 +211,10 @@ void WavetableSynthVoice::setRelCurveY(float y, int env_id)
     }
 }
 
-void WavetableSynthVoice::setLFOFreqVCF(float Hz)
-{
-    lfoFreq = std::fmax(Hz, 0.f);
-    lfoPhaseInc = static_cast<float>(2.0 * M_PI / sampleRate) * lfoFreq;
-}
-
-void WavetableSynthVoice::setLFOTypeVCF(LFOType type)
-{
-    lfoType = type;
-}
-
 void WavetableSynthVoice::setFilterCutoff(float Hz, bool skipRamp)
 {
     vcfFreq.setValue(std::clamp(Hz, MinFreqHz, MaxFreqHz), skipRamp);
 }
-
-void WavetableSynthVoice::setFilterCutoffEffect(juce::String paramId, float paramMult, DSP<float> &reference, EffectEvaluator effectEvaluator)
-{
-    vcfFreq.setEffect(paramId, paramMult, reference, effectEvaluator);
-}
-
 
 void WavetableSynthVoice::setFilterReso(float Q, bool skipRamp)
 {
@@ -236,10 +252,10 @@ bool WavetableSynthVoice::canPlaySound(juce::SynthesiserSound* ptr)
     return true;
 }
 
-float WavetableSynthVoice::getWavetableIncrement(float frequency, float defaultFrequency, size_t sampleSize, double sampleRate)
+float WavetableSynthVoice::getWavetableIncrement(float frequency, double originalFrequency, size_t sampleSize, double sampleRate)
 {
     return static_cast<float>(
-        static_cast<double>(frequency) / static_cast<double>(DefaultFreq) * static_cast<double>(SampleSize) / sampleRate
+        static_cast<double>(frequency) / originalFrequency * static_cast<double>(SampleSize) / sampleRate
     );
 }
 
@@ -253,7 +269,7 @@ void WavetableSynthVoice::updateUnisonIncrements()
             unisonMultiplier = std::copysign(unisonMultiplier, (static_cast<float>(unisonVoice % 2)) - 1);
         }
         const auto unisonFrequency = moveFrequencyByCents(frequency, unisonMultiplier * unisonDetune.getCurrentValue());
-        unisonIncrements[unisonVoice] = getWavetableIncrement(unisonFrequency, DefaultFreq, SampleSize, sampleRate);
+        unisonIncrements[unisonVoice] = getWavetableIncrement(unisonFrequency, originalSampleFrequency, SampleSize, sampleRate);
     }
 }
 
@@ -306,8 +322,6 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         vcfLPFRamp.prepare(sampleRate);
         vcfBPFRamp.prepare(sampleRate);
         vcfHPFRamp.prepare(sampleRate);
-
-        lfoPhaseInc = static_cast<float>(2.0 * M_PI / sampleRate) * std::fmax(lfoFreq, 0.f);
     }
 
     for (int i = 0; i < numSamples; ++i)
@@ -342,20 +356,6 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         const auto vcfHPF { vcfHPFRamp.getNext() };
 
         const auto outputVol { outputVolRamp.getNext() };
-
-        // Process LFO acording to mod type
-        float lfo { 0.f };
-        switch (lfoType)
-        {
-        case TRI:
-            lfo = std::fabs((lfoPhaseState - static_cast<float>(M_PI)) / static_cast<float>(M_PI));
-            break;
-
-        case SIN:
-            lfo = 0.5f + 0.5f * std::sin(lfoPhaseState);
-            break;
-        }
-        lfoPhaseState = std::fmod(lfoPhaseState + lfoPhaseInc, static_cast<float>(2 * M_PI));
 
         float wavetableOut = 0.f;
         for (int unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
