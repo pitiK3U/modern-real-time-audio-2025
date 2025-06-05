@@ -65,25 +65,26 @@ def format_wave(wave):
 
 def main():
     presets = {
-        "A": [
+        "Plugin_A": [
             ("// Sine", sine_wave()),
             ("// Triangle", triangle_wave()),
             ("// Sawtooth", saw_wave()),
             ("// Square", square_wave())
         ],
-        "B": [
+        "Plugin_B": [
             ("// Sine", sine_wave()),
             ("// Sine bottoms", wave_min(sine_wave(), flat_wave()))
         ],
         "Ghostly": ghostly(),
         "Seafoam": seafoam(),
-        "GlitchPop": glitchpop(),
+        "Glitch_Pop": glitchpop(),
     }
 
     print("#pragma once\n")
-    print("#include <vector>\n")
+    print("#include <vector>\n#include <JuceHeader.h>\n")
     print("namespace DSP::WavetablePlugins {")
 
+    # Write wave data
     for name, waves in presets.items():
         print(f"\n    static const std::vector<std::vector<float>> plugin{name} = {{")
         for comment, wave in waves:
@@ -91,7 +92,57 @@ def main():
             print(f"        {format_wave(wave)},")
         print("    };")
 
-    print("}\n")
+    # Write enum
+    print("\n    enum class PresetID")
+    print("    {")
+    for i, name in enumerate(presets.keys()):
+        comma = "," if i < len(presets) - 1 else ""
+        print(f"        {name}{comma}")
+    print("    };")
+
+    # getPresetNames
+    print("\n    inline const juce::StringArray& getPresetNames()")
+    print("    {")
+    print("        static const juce::StringArray names {")
+    for name in presets.keys():
+        printable = name.replace("Plugin", "Plugin ") if "Plugin" in name else name
+        print(f"            \"{printable}\",")
+    print("        };")
+    print("        return names;")
+    print("    }")
+
+    # getPreset
+    print("\n    inline const std::vector<std::vector<float>>& getPreset(PresetID id)")
+    print("    {")
+    print("        switch (id)")
+    print("        {")
+    for name in presets.keys():
+        print(f"            case PresetID::{name}: return plugin{name};")
+    print("        }")
+    print("        return pluginPlugin_A; // default fallback")
+    print("    }")
+
+    # getPresetIndex
+    print("\n    inline const unsigned int getPresetIndex(PresetID id) {")
+    print("        switch (id)")
+    print("        {")
+    for i, name in enumerate(presets.keys()):
+        print(f"            case PresetID::{name}: return {i};")
+    print("        }")
+    print("        return 0;")
+    print("    }")
+
+    # getPresetId
+    print("\n    inline const PresetID getPresetId(unsigned int id) {")
+    print("        switch (id)")
+    print("        {")
+    for i, name in enumerate(presets.keys()):
+        print(f"            case {i}: return PresetID::{name};")
+    print("        }")
+    print("        return PresetID::Plugin_A;")
+    print("    }")
+
+    print("} // namespace DSP::WavetablePlugins")
 
 if __name__ == "__main__":
     main()

@@ -58,7 +58,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     ),
     vts (p.getParamManager().getAPVTS()),
     wavetablePlotComponent(
-        DSP::WavetablePlugins::pluginA,
+        DSP::WavetablePlugins::pluginPlugin_A,
         p.getParamManager(),
         Param::ID::SelectedWavetablePreset,
         [this]() { openFilePicker(); }

@@ -224,7 +224,7 @@ namespace Param
         static constexpr float ADSRPlotWidth { 4000.f }; // In milliseconds
 
         static const juce::StringArray& WavetablePresetChoices = DSP::WavetablePlugins::getPresetNames();
-        static const unsigned int WavetableDefaultPreset = DSP::WavetablePlugins::getPresetIndex(DSP::WavetablePlugins::PresetID::PluginA);
+        static const unsigned int WavetableDefaultPreset = DSP::WavetablePlugins::getPresetIndex(DSP::WavetablePlugins::PresetID::Plugin_A);
     }
 
     namespace Units
