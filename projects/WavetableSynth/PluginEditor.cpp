@@ -101,7 +101,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
 
     startTimerHz ((int) REFRESH_RATE);
 
-    wavetablePlotComponent.setWavetables(DSP::WavetablePlugins::pluginA);
+    wavetablePlotComponent.setWavetables(DSP::WavetablePlugins::pluginB);
 
     setSize(NUM_SECTIONS * SECTION_WIDTH + (NUM_SECTIONS - 1) * SECTION_SPACER_WIDTH, LABEL_HEIGHT + PARAM_HEIGHT * (MAX_PARAM_COUNT + 1));
 }
