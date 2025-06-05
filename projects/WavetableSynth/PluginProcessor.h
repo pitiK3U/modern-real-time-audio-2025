@@ -287,6 +287,8 @@ public:
         return wavetable.wavetables.size();
     }
 
+    using ParameterID = const juce::String&;
+
 private:
     mrta::ParameterManager paramManager;
     std::vector<DSP::WavetableSynthVoice *> voices;
@@ -306,6 +308,13 @@ private:
     std::unique_ptr<DSP::EnvelopeStateCollector> envelopeCollectorB;
 
     juce::AudioFormatManager formatManager;
+
+    template<typename FloatType>
+    using DspGetter = std::function<std::reference_wrapper<DSP::DSP<FloatType>>(DSP::WavetableSynthVoice *)>;
+    
+    template< typename FloatType >
+    void applyParameterEffect(ParameterID settingParameter, ParameterID dspParameterID, FloatType effectMultiplier, DspGetter<FloatType> getDSP);
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableSynthAudioProcessor)
 };

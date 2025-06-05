@@ -1,4 +1,5 @@
 #include "PluginProcessor.h"
+#include "LFO.h"
 #include "Parameter.h"
 #include "PluginEditor.h"
 #include "WavetableSynth.h"
@@ -103,15 +104,11 @@ void setOutputVol(std::vector<DSP::WavetableSynthVoice*> voices, float dB, bool 
     std::for_each(voices.begin(), voices.end(), [dB, skipRamp] (auto& v) { v->setOutputVol(dB, skipRamp); });
 }
 
-namespace Wavetable {
-    using ParameterID = const juce::String&;
-}
+template<typename FloatType>
+using effectSetter = std::function<void(WavetableSynthAudioProcessor::ParameterID, float, DSP::DSP<FloatType> &reference)>;
 
 template<typename FloatType>
-using effectSetter = std::function<void(Wavetable::ParameterID, float, DSP::DSP<FloatType> &reference)>;
-
-template<typename FloatType>
-typename DSP::Parameter<FloatType>::EffectEvaluator getParameterEffect(Wavetable::ParameterID settingParameter)
+typename DSP::Parameter<FloatType>::EffectEvaluator getParameterEffect(WavetableSynthAudioProcessor::ParameterID settingParameter)
 {
     if (Param::ID::WavetablePosition.compare(settingParameter) == 0) {
         return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
@@ -136,6 +133,12 @@ typename DSP::Parameter<FloatType>::EffectEvaluator getParameterEffect(Wavetable
             auto multipliedVal = valueMultiplier * dsp.getCurrentValue();
             return previousValue * multipliedVal;
         };
+    } else if (Param::ID::LFO1_Freq.compare(settingParameter) == 0
+            || Param::ID::LFO2_Freq.compare(settingParameter) == 0) {
+        return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
+            auto freqMod = valueMultiplier * dsp.getCurrentValue();
+            return std::clamp(Param::Ranges::LFOFreqMax * (std::pow(2.f, freqMod) - 1.f) + previousValue, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax);
+        };
     }
 
     DBG("Unsupported ParameterID: " + settingParameter);
@@ -145,11 +148,8 @@ typename DSP::Parameter<FloatType>::EffectEvaluator getParameterEffect(Wavetable
     };
 }
 
-template<typename FloatType>
-using DspGetter = std::function<std::reference_wrapper<DSP::DSP<FloatType>>(DSP::WavetableSynthVoice *)>;
-
 template <typename FloatType>
-void applyParameterEffect(Wavetable::ParameterID settingParameter, Wavetable::ParameterID dspParameterID, std::vector<DSP::WavetableSynthVoice *>& voices, FloatType effectMultiplier, DspGetter<FloatType> getDSP)
+void WavetableSynthAudioProcessor::applyParameterEffect(ParameterID settingParameter, ParameterID dspParameterID, FloatType effectMultiplier, DspGetter<FloatType> getDSP)
 {
     auto effect = getParameterEffect<FloatType>(settingParameter);
     
@@ -178,6 +178,14 @@ void applyParameterEffect(Wavetable::ParameterID settingParameter, Wavetable::Pa
             auto reference = getDSP(voice);
             voice->outputVolRamp.setEffect(dspParameterID, effectMultiplier, reference, effect);
         });
+    } else if (Param::ID::LFO1_Freq.compare(settingParameter) == 0) {
+        // FIXME: nullptr bleh
+        auto reference = getDSP(nullptr);
+        lfo1.frequency.setEffect(dspParameterID, effectMultiplier, reference, effect);
+    } else if (Param::ID::LFO2_Freq.compare(settingParameter) == 0) {
+        // FIXME: nullptr bleh
+        auto reference = getDSP(nullptr);
+        lfo2.frequency.setEffect(dspParameterID, effectMultiplier, reference, effect);
     } else {   
         DBG("Unsupported ParameterID: " + settingParameter);
         jassertfalse;
@@ -316,7 +324,7 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     auto multipliers = [this](const juce::String& paramID, DspGetter<float> getDSP) {
         return [this, &paramID, getDSP] (float value, bool force) { 
             if (!selectedParameter.has_value()) return;
-            applyParameterEffect(selectedParameter.value(), paramID, voices, value, getDSP);
+            applyParameterEffect(selectedParameter.value(), paramID, value, getDSP);
         };
     };
     paramManager.registerParameterCallback(Param::ID::EnvelopeA_mult, multipliers(Param::ID::EnvelopeA_mult, [](DSP::WavetableSynthVoice * voice) { return std::ref(voice->envGenA); }));
