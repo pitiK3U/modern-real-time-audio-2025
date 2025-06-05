@@ -142,22 +142,28 @@ void WavetablePlotComponent::drawSingleWaveform(
     const auto& waveform = wavetables[index];
     juce::Path path;
 
-    const int viewLength = sampleSize + 2;
-    const int viewOffset = sampleSize - 1;
+    const int pixelWidth = static_cast<int>(area.getWidth());
+    const int numSamplesToRender = std::min(pixelWidth, sampleSize);
+    const float plotStepX = area.getWidth() / static_cast<float>(numSamplesToRender - 1);
+    const float sampleStep = static_cast<float>(sampleSize - 1) / static_cast<float>(numSamplesToRender - 1);
 
-    int index0 = (viewOffset + 0) % sampleSize;
-    path.startNewSubPath(area.getX(), midY - scaleY * waveform[index0]);
+    path.startNewSubPath(area.getX(), midY - scaleY * waveform[0]);
 
-    for (int j = 1; j < viewLength; ++j)
+    for (int j = 1; j < numSamplesToRender; ++j)
     {
-        int sampleIdx = (viewOffset + j) % sampleSize;
-        float x = area.getX() + static_cast<float>(j) * stepX;
-        float y = midY - scaleY * waveform[sampleIdx];
+        float sampleIndex = static_cast<float>(j) * sampleStep;
+        int idx0 = static_cast<int>(sampleIndex);
+        int idx1 = std::min(idx0 + 1, sampleSize - 1);
+        float t = sampleIndex - static_cast<float>(idx0);
+        float ySample = juce::jmap(t, waveform[idx0], waveform[idx1]);
+
+        float x = area.getX() + static_cast<float>(j) * plotStepX;
+        float y = midY - scaleY * ySample;
         path.lineTo(x, y);
     }
 
     juce::Path fillPath(path);
-    float endX = area.getX() + static_cast<float>(viewLength - 1) * stepX;
+    float endX = area.getX() + static_cast<float>(numSamplesToRender - 1) * plotStepX;
     fillPath.lineTo(endX, area.getBottom());
     fillPath.lineTo(area.getX(), area.getBottom());
     fillPath.closeSubPath();
