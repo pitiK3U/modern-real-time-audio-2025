@@ -38,8 +38,7 @@ public:
     void paint(juce::Graphics& g) override;
     void resized() override;
     void setWavetablePosition(float position);
-
-    static constexpr int wavetableCount = 4;
+    void setWavetables(std::vector<std::vector<float>> newWavetable);
 
 private:
     void generateWavetables();
@@ -89,14 +88,15 @@ private:
     float naive_lerp(float a, float b, float t);
     juce::Colour lerpColour(const juce::Colour& a, const juce::Colour& b, float t);
 
-    static constexpr int sampleSize = 128;
+    float wavetablePosition = 0.0f; // Where (on which position) is currently synth playing
 
-    float wavetablePosition = 0.0f;
-
-    float headPhase = 0.0f; // [0, 1]
+    float headPhase = 0.0f; // [0, 1] - where is currently the animated point
 
     std::vector<std::vector<float>> wavetables;
-    juce::Colour waveformColours[wavetableCount] = {
+    int sampleSize = 128;
+    int wavetableCount = 4;
+
+    juce::Colour waveformColours[4] = {
         juce::Colours::cyan,
         juce::Colours::yellow,
         juce::Colours::limegreen,

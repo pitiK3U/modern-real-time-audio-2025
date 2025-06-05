@@ -363,4 +363,14 @@ void WavetablePlotComponent::setWavetablePosition(float position) {
     wavetablePosition = position;
 }
 
+void WavetablePlotComponent::setWavetables(std::vector<std::vector<float>> newWavetable)
+{
+    jassert(!newWavetable.empty());
+
+    sampleSize = static_cast<int>(newWavetable.front().size());
+    wavetables = std::move(newWavetable);
+    wavetableCount = static_cast<int>(wavetables.size());
+    repaint();
+}
+
 }

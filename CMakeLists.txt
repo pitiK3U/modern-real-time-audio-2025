@@ -356,6 +356,7 @@ add_plugin(wave_synth
         ${dsp_source}/EnvelopeStateCollector.h
         ${gui_source}/WavetablePlotComponent.cpp
         ${gui_source}/HorizontalParameterEditor.cpp
+        ${dsp_source}/WavetablePlugins.h
     INCLUDE_DIRS
         ${gui_source}
         ${dsp_source}

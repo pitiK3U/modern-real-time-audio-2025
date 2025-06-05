@@ -6,6 +6,7 @@
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "mrta_utils/Source/GUI/ParameterComponents.h"
+#include "WavetablePlugins.h"
 #include <optional>
 
 WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(WavetableSynthAudioProcessor& p) :
@@ -92,6 +93,8 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     initializeEnvelopeSwitcher();
 
     startTimerHz ((int) REFRESH_RATE);
+
+    wavetablePlotComponent.setWavetables(DSP::WavetablePlugins::pluginA);
 
     setSize(NUM_SECTIONS * SECTION_WIDTH + (NUM_SECTIONS - 1) * SECTION_SPACER_WIDTH, LABEL_HEIGHT + PARAM_HEIGHT * (MAX_PARAM_COUNT + 1));
 }
