@@ -143,7 +143,7 @@ namespace Param
     {
         static constexpr float WavetablePositionMin { 0.f };
         static constexpr float WavetablePositionMax { 1.f };
-        static constexpr float WavetablePositionInc { 0.001f };
+        static constexpr float WavetablePositionInc { 0.000001f };
 
         static constexpr float LinearSkw { 1.f };
 
