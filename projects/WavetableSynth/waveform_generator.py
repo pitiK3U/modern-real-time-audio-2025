@@ -40,12 +40,18 @@ def main():
         ]
     }
 
+    print("#pragma once\n")
+    print("#include <vector>\n")
+    print("namespace DSP::WavetablePlugins {")
+
     for name, waves in presets.items():
-        print(f"static const std::vector<std::vector<float>> plugin{name} = {{")
+        print(f"\n    static const std::vector<std::vector<float>> plugin{name} = {{")
         for comment, wave in waves:
-            print(f"    {comment}")
-            print(f"    {format_wave(wave)},")
-        print("};\n")
+            print(f"        {comment}")
+            print(f"        {format_wave(wave)},")
+        print("    };")
+
+    print("}\n")
 
 if __name__ == "__main__":
     main()
