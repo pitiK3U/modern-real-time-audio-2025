@@ -23,7 +23,44 @@ def flat_wave(value=0.0, sample_size = sample_size):
 def wave_min(wave_a, wave_b):
     return np.minimum(wave_a, wave_b)
 
+def ghostly():
+    t = np.linspace(0, 1, sample_size, endpoint=False)
+    return [
+        ("// Whisper Sine", 0.2 * sine_wave()),
+        ("// Fade-in Inverted Sine", -sine_wave() * t),
+        ("// Curved Triangle (tanh)", np.tanh(triangle_wave() * 2.0)),
+        ("// Sine Pulse-Top", np.clip(sine_wave() + square_wave() * 0.3, -1.0, 1.0))
+    ]
+
+def seafoam():
+    t = np.linspace(0, 1, sample_size, endpoint=False)
+    mod = 0.5 * (1 + np.sin(2 * np.pi * t * 4))
+    return [
+        ("// Soft Saw", saw_wave() * 0.6),
+        ("// Phase-Twisted Sine", np.sin(2 * np.pi * (t ** 1.5))),
+        ("// Square-Triangle", 0.6 * square_wave() + 0.4 * triangle_wave()),
+        ("// AM Sine", sine_wave() * mod),
+        ("// Tri-Pulse Morph", np.where(triangle_wave() > 0, 1.0, -1.0) * 0.7 + triangle_wave() * 0.3)
+    ]
+
+def glitchpop():
+    t = np.linspace(0, 1, sample_size, endpoint=False)
+    sine = sine_wave()
+    saw = saw_wave()
+    return [
+        ("// Bit Sine", np.round(sine * 5) / 5),
+        ("// Hard Saw", np.clip(saw * 2.5, -1, 1)),
+        ("// Sine Pulses", np.where((t * 16) % 1 < 0.5, sine, 0)),
+        ("// Spike Comb", np.where((t * 8) % 1 < 0.1, -1, 1)),
+        ("// DC Step", np.where(t < 0.5, -0.7, 0.7)),
+        ("// Folded Sine", np.abs(sine * 2 - 1) * 2 - 1)
+    ]
+
 def format_wave(wave):
+    # Scale waves which are not in range -1 1
+    max_abs = np.max(np.abs(wave))
+    if max_abs > 1.0:
+        wave = wave / max_abs
     return "{" + ", ".join(f"{x:.6f}f" for x in wave) + "}"
 
 def main():
@@ -37,7 +74,10 @@ def main():
         "B": [
             ("// Sine", sine_wave()),
             ("// Sine bottoms", wave_min(sine_wave(), flat_wave()))
-        ]
+        ],
+        "Ghostly": ghostly(),
+        "Seafoam": seafoam(),
+        "GlitchPop": glitchpop(),
     }
 
     print("#pragma once\n")
