@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "Parameter.h"
 #include "PluginEditor.h"
+#include "WavetablePlugins.h"
 #include "WavetableSynth.h"
 #include "juce_audio_basics/juce_audio_basics.h"
 #include "juce_audio_processors/juce_audio_processors.h"
@@ -389,6 +390,10 @@ void WavetableSynthAudioProcessor::loadFile(const juce::File& file)
     reader->read(buffer.getArrayOfWritePointers(), numberOfChannels, 0, reader->lengthInSamples);
     auto readerSampleRate = reader->sampleRate;
     wavetable.loadFromBuffer(buffer, reader->sampleRate);
+}
+
+void WavetableSynthAudioProcessor::setWavetable(const DSP::WavetablePlugins::PresetID wavetableId) {
+    wavetable.loadFromPreset(wavetableId);
 }
 
 void WavetableSynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

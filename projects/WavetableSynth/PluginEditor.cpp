@@ -99,11 +99,14 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
 
     startTimerHz ((int) REFRESH_RATE);
 
-    p.getParamManager().registerParameterCallback(Param::ID::SelectedWavetablePreset, [this](float value, bool /*force*/) {
+    p.getParamManager().registerParameterCallback(Param::ID::SelectedWavetablePreset, [this, &p](float value, bool /*force*/) {
         juce::MessageManager::callAsync([this, value]() {
             const auto presetId = DSP::WavetablePlugins::getPresetId((unsigned int)value);
             wavetablePlotComponent.setWavetable(DSP::WavetablePlugins::getPreset(presetId));
         });
+
+        auto wavetableId = DSP::WavetablePlugins::getPresetId((unsigned int) value);
+        p.setWavetable(wavetableId);
     });
 
     setSize(NUM_SECTIONS * SECTION_WIDTH + (NUM_SECTIONS - 1) * SECTION_SPACER_WIDTH, LABEL_HEIGHT + PARAM_HEIGHT * (MAX_PARAM_COUNT + 1));

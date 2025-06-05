@@ -258,6 +258,7 @@ public:
     DSP::EnvelopeStateCollector* getEnvelopeStateCollector(int envelopeIndex) const;
 
     void loadFile(const juce::File& file);
+    void setWavetable(const DSP::WavetablePlugins::PresetID wavetableId);
 
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;

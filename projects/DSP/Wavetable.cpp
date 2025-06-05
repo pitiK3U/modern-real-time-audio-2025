@@ -1,4 +1,5 @@
 #include "Wavetable.h"
+#include "WavetablePlugins.h"
 
 namespace DSP
 {
@@ -45,4 +46,23 @@ void Wavetable::loadFromBuffer(const AudioSampleBuffer& buffer, double bufferSam
         }
     }
 }
+
+void Wavetable::loadFromPreset(const DSP::WavetablePlugins::PresetID wavetableId)
+{
+    auto preset = DSP::WavetablePlugins::getPreset(wavetableId);
+    jassert(!preset.empty());
+
+    wavetables.clear();
+    wavetables.reserve(preset.size());
+
+    for (const auto& wave : preset)
+    {
+        std::array<float, SampleSize> arr {};
+        std::copy(wave.begin(), wave.end(), arr.begin());
+        wavetables.push_back(std::move(arr));
+    }
+
+    originalSampleFrequency = 1.0;
+}
+
 }

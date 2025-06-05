@@ -3,6 +3,7 @@
 #include <vector>
 #include <array>
 #include <JuceHeader.h>
+#include "WavetablePlugins.h"
 
 namespace DSP {
 class Wavetable {
@@ -15,6 +16,7 @@ public:
     void clearWavetable();
     void fillWavetable();
     void loadFromBuffer(const AudioSampleBuffer& buffer, double bufferSampleRate);
+    void loadFromPreset(const WavetablePlugins::PresetID wavetableId);
 
     std::vector<std::array<float, SampleSize>> wavetables;
     double sampleRate { DefaultSampleRate };

@@ -1,6 +1,6 @@
 import numpy as np
 
-sample_size = 128
+sample_size = 2048 # Keep it same as the constant in Wavetable.h
 
 def sine_wave():
     return np.sin(2 * np.pi * np.linspace(0, 1, sample_size, endpoint=False))
