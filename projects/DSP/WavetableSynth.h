@@ -1,7 +1,6 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include <array>
 #include <cstddef>
 #include <cstdint>
 
@@ -10,7 +9,7 @@
 #include "StateVariableFilter.h"
 #include "Ramp.h"
 #include "EnvelopeStateCollector.h"
-#include "juce_core/juce_core.h"
+#include "Wavetable.h"
 
 namespace DSP
 {
@@ -25,7 +24,7 @@ public:
 class WavetableSynthVoice : public juce::SynthesiserVoice
 {
 public:
-    WavetableSynthVoice();
+    WavetableSynthVoice(const Wavetable& initialWavetable);
     ~WavetableSynthVoice();
 
     enum LFOType : unsigned int
@@ -45,10 +44,6 @@ public:
     WavetableSynthVoice(WavetableSynthVoice&&) = delete;
     const WavetableSynthVoice& operator=(const WavetableSynthVoice&) = delete;
     const WavetableSynthVoice& operator=(WavetableSynthVoice&&) = delete;
-
-    void clearWavetable();
-    void fillWavetable();
-    void loadFromBuffer(const AudioSampleBuffer& buffer, double bufferSampleRate);
 
     using EffectEvaluator = Parameter<float>::EffectEvaluator;
     static constexpr auto defaultEffect = Parameter<float>::defaultEffect;
@@ -108,7 +103,6 @@ public:
 
     static constexpr float FreqModRange { 10000.f };
 
-    static constexpr size_t SampleSize { 2048ul /* * 4994ul */ };
     static constexpr double DefaultSampleRate { 1.0 };
 
     static constexpr float DefaultFrequency { 1.f };
@@ -133,11 +127,10 @@ public:
     static float getWavetableIncrement(float frequency, double originalFrequency, size_t sampleSize, double SampleRate);
     
     double sampleRate { DefaultSampleRate };
-    double originalSampleFrequency { DefaultFrequency };
     
     float velocity { 1.f };
     
-    std::vector<std::array<float, SampleSize>> wavetables;
+    const Wavetable& wavetable;
 
     StateVariableFilter filter;
 
@@ -146,8 +139,6 @@ public:
     Parameter<float> unisonDetune {0.f };
     std::vector<float> unisonPhases;
     std::vector<float> unisonIncrements;
-
-    size_t processedSample { 0 };
 
     Ramp<float> vcfLPFRamp;
     Ramp<float> vcfBPFRamp;
