@@ -285,7 +285,7 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
 
         // Indices of which of the waveform in wavetable to use wavetables[integralindex]
         float integralIndexfloat = 0.f;
-        lastWavetablePosition = wavetableIndex.getNext() * static_cast<float>(wavetable.wavetables.size() - 1);
+        lastWavetablePosition = wavetableIndex.getNext() * static_cast<float>(wavetable.wavetables.size());
         const float fractionalIndex = std::modf(lastWavetablePosition, &integralIndexfloat);
         const auto integralIndex = static_cast<size_t>(integralIndexfloat);
 

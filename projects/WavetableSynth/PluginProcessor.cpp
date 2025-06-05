@@ -112,8 +112,8 @@ typename DSP::Parameter<FloatType>::EffectEvaluator getParameterEffect(Wavetable
 {
     if (Param::ID::WavetablePosition.compare(settingParameter) == 0) {
         return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
-                    auto value = previousValue + Param::Ranges::WavetablePositionMax * valueMultiplier * dsp.getCurrentValue();
-                    return std::fmod(value, Param::Ranges::WavetablePositionMax + 1);
+                    auto value = previousValue + valueMultiplier * dsp.getCurrentValue();
+                    return std::fmod(value, Param::Ranges::WavetablePositionMax);
                 };
     } else if (Param::ID::VCF_Cutoff.compare(settingParameter) == 0) {
         // const auto freqMod { std::clamp(vcfEnv * vcfEnvAmout + vcfLFOAmount * lfo, -1.f, 1.f) };
