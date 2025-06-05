@@ -1,4 +1,5 @@
 #include "WavetablePlotComponent.h"
+#include "juce_core/system/juce_PlatformDefs.h"
 
 namespace GUI
 {
@@ -362,10 +363,9 @@ void WavetablePlotComponent::setWavetablePosition(float position) {
 void WavetablePlotComponent::setWavetable(std::vector<std::vector<float>> newWavetable)
 {
     jassert(!newWavetable.empty());
-
+    wavetableCount = static_cast<int>(newWavetable.size());
     sampleSize = static_cast<int>(newWavetable.front().size());
     wavetables = std::move(newWavetable);
-    wavetableCount = static_cast<int>(wavetables.size());
     repaint();
 }
 

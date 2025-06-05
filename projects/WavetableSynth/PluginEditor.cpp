@@ -231,7 +231,7 @@ void WavetableSynthAudioProcessorEditor::timerCallback()
 
     // 3) Get wavetable position
     float index = audioProcessor.lastWavetablePosition.load(std::memory_order_relaxed);
-    float normalized = index / static_cast<float>(audioProcessor.NUM_WAVEFORMS - 1);
+    float normalized = index / static_cast<float>(audioProcessor.getWavetableCount() - 1);
 
     wavetablePlotComponent.setWavetablePosition(normalized);
     wavetablePlotComponent.repaint();

@@ -260,6 +260,7 @@ public:
     void loadFile(const juce::File& file);
     void setWavetable(const DSP::WavetablePlugins::PresetID wavetableId);
     std::vector<std::vector<float>> getWavetablePreview() const;
+    int getWavetableCount() const;
 
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
@@ -277,7 +278,6 @@ public:
     //==============================================================================
 
     static constexpr size_t NUM_VOICES { 8 };
-    static constexpr float NUM_WAVEFORMS { 4 };
 
     std::atomic<float> lastWavetablePosition { 0.0f };
 

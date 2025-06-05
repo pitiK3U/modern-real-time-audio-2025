@@ -91,7 +91,7 @@ private:
     float naive_lerp(float a, float b, float t);
     juce::Colour lerpColour(const juce::Colour& a, const juce::Colour& b, float t);
 
-    float wavetablePosition = 0.0f; // Where (on which position) is currently synth playing
+    float wavetablePosition = 0.0f; // Where (on which position) is currently synth playing - should be in range [0, 1]
 
     float headPhase = 0.0f; // [0, 1] - where is currently the animated point
 

@@ -400,6 +400,10 @@ std::vector<std::vector<float>> WavetableSynthAudioProcessor::getWavetablePrevie
     return wavetable.getRenderPreview();
 }
 
+int WavetableSynthAudioProcessor::getWavetableCount() const {
+    return  wavetable.wavetables.size();
+}
+
 void WavetableSynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     paramManager.getStateInformation(destData);
