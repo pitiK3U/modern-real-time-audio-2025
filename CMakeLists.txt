@@ -357,6 +357,7 @@ add_plugin(wave_synth
         ${gui_source}/WavetablePlotComponent.cpp
         ${gui_source}/HorizontalParameterEditor.cpp
         ${dsp_source}/WavetablePlugins.h
+        ${dsp_source}/Wavetable.cpp
     INCLUDE_DIRS
         ${gui_source}
         ${dsp_source}

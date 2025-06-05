@@ -1,7 +1,9 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <cstddef>
 #include "Parameter.h"
+#include "Wavetable.h"
 #include "WavetablePlugins.h"
 #include "WavetableSynth.h"
 #include "LFO.h"
@@ -137,8 +139,11 @@ namespace Param
 
     namespace Ranges
     {
-        static constexpr float WavetablePositionMin { 0 };
-        static constexpr float WavetablePositionMax { 4994 };
+        static constexpr float WavetablePositionMin { 0.f };
+        static constexpr float WavetablePositionMax { 1.f };
+        static constexpr float WavetablePositionInc { 0.001f };
+
+        static constexpr float LinearSkw { 1.f };
 
         static constexpr float UnisonVoicesMin { 1 };
         static constexpr float UnisonVoicesMax { 16 };
@@ -276,10 +281,16 @@ public:
 
     std::optional<std::reference_wrapper<const juce::String>> selectedParameter {};
 
+    const std::size_t getWavetableSize() const {
+        return wavetable.wavetables.size();
+    }
+
 private:
     mrta::ParameterManager paramManager;
     std::vector<DSP::WavetableSynthVoice *> voices;
     juce::Synthesiser synth;
+
+    DSP::Wavetable wavetable;
 
     DSP::LFO lfo1;
     DSP::LFO lfo2;

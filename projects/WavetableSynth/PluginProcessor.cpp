@@ -183,7 +183,7 @@ void applyParameterEffect(Wavetable::ParameterID settingParameter, Wavetable::Pa
 
 static const std::vector<mrta::ParameterInfo> paramVector
 {
-    { Param::ID::WavetablePosition, Param::Name::WavetablePos, "", 0, Param::Ranges::WavetablePositionMin, Param::Ranges::WavetablePositionMax, .1f, 1.f },
+    { Param::ID::WavetablePosition, Param::Name::WavetablePos, "", 0, Param::Ranges::WavetablePositionMin, Param::Ranges::WavetablePositionMax, Param::Ranges::WavetablePositionInc, Param::Ranges::LinearSkw },
     { Param::ID::WavetableVol,    Param::Name::WavetableVol,    Param::Units::dB,   0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
     { Param::ID::UnisonVoices, Param::Name::UnisonVoices, "", 1.f, Param::Ranges::UnisonVoicesMin, Param::Ranges::UnisonVoicesMax, Param::Ranges::UnisonVoicesInc, Param::Ranges::UnisonVoicesSkw },
     { Param::ID::UnisonDetune, Param::Name::UnisonDetune, Param::Units::Cent, 0.f, Param::Ranges::UnisonDetuneMin, Param::Ranges::UnisonDetuneMax, Param::Ranges::UnisonDetuneInc, Param::Ranges::UnisonDetuneSkw },
@@ -253,13 +253,14 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     envelopeCollectorA = std::make_unique<DSP::EnvelopeStateCollector>(NUM_VOICES);
     envelopeCollectorB = std::make_unique<DSP::EnvelopeStateCollector>(NUM_VOICES);
 
+    wavetable.fillWavetable();
+
     synth.addSound(new DSP::SynthSound());
     for (size_t i = 0; i < NUM_VOICES; ++i)
     {
-        voices.emplace_back(new DSP::WavetableSynthVoice());
+        voices.emplace_back(new DSP::WavetableSynthVoice(wavetable));
         voices.back()->setEnvelopeMonitor(*envelopeCollectorA, i, 0);
         voices.back()->setEnvelopeMonitor(*envelopeCollectorB, i, 1);
-        voices.back()->fillWavetable();
         synth.addVoice(voices.back());
     }
     synth.setNoteStealingEnabled(false);
@@ -387,9 +388,7 @@ void WavetableSynthAudioProcessor::loadFile(const juce::File& file)
 
     reader->read(buffer.getArrayOfWritePointers(), numberOfChannels, 0, reader->lengthInSamples);
     auto readerSampleRate = reader->sampleRate;
-    std::for_each(voices.begin(), voices.end(), [this, &buffer, readerSampleRate](DSP::WavetableSynthVoice *& voice) {
-        voice->loadFromBuffer(buffer, readerSampleRate);
-    });
+    wavetable.loadFromBuffer(buffer, reader->sampleRate);
 }
 
 void WavetableSynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
