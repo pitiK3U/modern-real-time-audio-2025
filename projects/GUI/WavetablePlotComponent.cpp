@@ -3,9 +3,11 @@
 namespace GUI
 {
 
-WavetablePlotComponent::WavetablePlotComponent()
+WavetablePlotComponent::WavetablePlotComponent(
+    std::vector<std::vector<float>> wavetable
+)
 {
-    generateWavetables();
+    setWavetable(wavetable);
     setOpaque(true);
     startTimerHz(60);
 }
@@ -41,34 +43,6 @@ BoxCorners BoxCorners::getBoxCorners(
         apply(area.getTopRight(), true),
         apply(area.getTopLeft(), true)
     };
-}
-
-
-void WavetablePlotComponent::generateWavetables()
-{
-    wavetables.resize(wavetableCount, std::vector<float>(sampleSize));
-
-    for (int sample = 0; sample < sampleSize; sample++) {
-        float phase = static_cast<float>(sample) / static_cast<float>(sampleSize); // [0, 1)
-
-        // Sine: starts at 0
-        wavetables[0][sample] = std::sin(juce::MathConstants<float>::twoPi * phase);
-
-        // Triangle: starts at 0
-        wavetables[1][sample] = 4.0f * phase - 1.0f; // ramp up
-        if (phase < 0.25f)
-            wavetables[1][sample] = 4.0f * phase;
-        else if (phase < 0.75f)
-            wavetables[1][sample] = 2.0f - 4.0f * phase;
-        else
-            wavetables[1][sample] = -4.0f + 4.0f * phase;
-
-        // Sawtooth: starts at -1 → shifted to 0
-        wavetables[2][sample] = 2.0f * phase - 1.0f;
-
-        // Square: starts at 0 → use sine for phase-aligned threshold
-        wavetables[3][sample] = std::sin(juce::MathConstants<float>::twoPi * phase) >= 0 ? 1.0f : -1.0f;
-    }
 }
 
 void WavetablePlotComponent::resized()
@@ -363,7 +337,7 @@ void WavetablePlotComponent::setWavetablePosition(float position) {
     wavetablePosition = position;
 }
 
-void WavetablePlotComponent::setWavetables(std::vector<std::vector<float>> newWavetable)
+void WavetablePlotComponent::setWavetable(std::vector<std::vector<float>> newWavetable)
 {
     jassert(!newWavetable.empty());
 

@@ -58,7 +58,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
         Param::Ranges::ADSRPlotWidth
     ),
     vts (p.getParamManager().getAPVTS()),
-    wavetablePlotComponent(),
+    wavetablePlotComponent(DSP::WavetablePlugins::pluginA),
     selectButton("Select component"),
     filePickerButton("Load waveform file" )
     {
@@ -101,7 +101,7 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
 
     startTimerHz ((int) REFRESH_RATE);
 
-    wavetablePlotComponent.setWavetables(DSP::WavetablePlugins::pluginGlitchPop);
+    wavetablePlotComponent.setWavetable(DSP::WavetablePlugins::pluginGlitchPop);
 
     setSize(NUM_SECTIONS * SECTION_WIDTH + (NUM_SECTIONS - 1) * SECTION_SPACER_WIDTH, LABEL_HEIGHT + PARAM_HEIGHT * (MAX_PARAM_COUNT + 1));
 }

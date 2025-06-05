@@ -33,16 +33,16 @@ class WavetablePlotComponent
 , private juce::Timer
 {
 public:
-    WavetablePlotComponent();
+    WavetablePlotComponent(
+        std::vector<std::vector<float>> wavetable
+    );
 
     void paint(juce::Graphics& g) override;
     void resized() override;
     void setWavetablePosition(float position);
-    void setWavetables(std::vector<std::vector<float>> newWavetable);
+    void setWavetable(std::vector<std::vector<float>> newWavetable);
 
 private:
-    void generateWavetables();
-
     void drawPlotBackground(juce::Graphics& g, juce::Rectangle<float> area);
     void drawWaveforms(
         juce::Graphics& g,
