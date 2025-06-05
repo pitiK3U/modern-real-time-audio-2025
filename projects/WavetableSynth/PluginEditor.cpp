@@ -272,6 +272,7 @@ void WavetableSynthAudioProcessorEditor::mouseDown(const MouseEvent& mouseEvent)
     selectedComponentLabel.setText(slider->parameterID, juce::dontSendNotification);
 
     audioProcessor.selectedParameter = slider->parameterID;
+    audioProcessor.updateParameterCoefficients(slider->parameterID);
 }
 
 void WavetableSynthAudioProcessorEditor::toggleSelectMode()

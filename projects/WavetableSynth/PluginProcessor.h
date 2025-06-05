@@ -265,6 +265,10 @@ public:
     std::vector<std::vector<float>> getWavetablePreview() const;
     int getWavetableCount() const;
 
+    using ParameterID = const juce::String&;
+
+    void updateParameterCoefficients(ParameterID settingParameterId);
+
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
@@ -290,8 +294,6 @@ public:
         return wavetable.wavetables.size();
     }
 
-    using ParameterID = const juce::String&;
-
 private:
     mrta::ParameterManager paramManager;
     std::vector<DSP::WavetableSynthVoice *> voices;
@@ -315,6 +317,9 @@ private:
     template<typename FloatType>
     using DspGetter = std::function<std::reference_wrapper<DSP::DSP<FloatType>>(DSP::WavetableSynthVoice *)>;
     
+    using TYPE = std::vector<std::tuple<juce::String, float, std::reference_wrapper<DSP::DSP<float>>, DSP::Parameter<float>::EffectEvaluator>>;
+    const TYPE& getParameterSettings(WavetableSynthAudioProcessor::ParameterID settingParameterId);
+
     template< typename FloatType >
     void applyParameterEffect(ParameterID settingParameter, ParameterID dspParameterID, FloatType effectMultiplier, DspGetter<FloatType> getDSP);
 

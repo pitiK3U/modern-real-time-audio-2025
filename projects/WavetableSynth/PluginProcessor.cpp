@@ -1,4 +1,5 @@
 #include "PluginProcessor.h"
+#include "DSP.h"
 #include "LFO.h"
 #include "Parameter.h"
 #include "PluginEditor.h"
@@ -148,6 +149,56 @@ typename DSP::Parameter<FloatType>::EffectEvaluator getParameterEffect(Wavetable
     return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
         return 0.0f;
     };
+}
+
+void WavetableSynthAudioProcessor::updateParameterCoefficients(WavetableSynthAudioProcessor::ParameterID settingParameterId) {
+    const TYPE& effects = getParameterSettings(settingParameterId);
+
+    float min = Param::Ranges::AmountMin;
+    float max = Param::Ranges::AmountMax;
+    float normalizedMiddle = juce::jlimit(0.0f, 1.0f, (0.0f - min) / (max - min));
+    
+    // First reset all knobs to 0
+    paramManager.getAPVTS().getParameter(Param::ID::EnvelopeA_mult)->setValueNotifyingHost(normalizedMiddle);
+    paramManager.getAPVTS().getParameter(Param::ID::EnvelopeB_mult)->setValueNotifyingHost(normalizedMiddle);
+    paramManager.getAPVTS().getParameter(Param::ID::LFO1_mult)->setValueNotifyingHost(normalizedMiddle);
+    paramManager.getAPVTS().getParameter(Param::ID::LFO2_mult)->setValueNotifyingHost(normalizedMiddle);
+
+    for (auto & element : effects) {
+        auto key = std::get<0>(element);
+        auto value = std::get<1>(element);
+        if (auto* param = paramManager.getAPVTS().getParameter(key)) {
+            float normalized = juce::jlimit(0.0f, 1.0f, (value - min) / (max - min));
+            param->setValueNotifyingHost(normalized);
+        } else {
+            DBG("Parameter not found: " << key);
+            jassertfalse;
+        }
+    }
+}
+
+const WavetableSynthAudioProcessor::TYPE& WavetableSynthAudioProcessor::getParameterSettings(WavetableSynthAudioProcessor::ParameterID settingParameterId) {
+    if (Param::ID::WavetablePosition.compare(settingParameterId) == 0) {
+        return  voices[0]->wavetableIndex.effects;
+    } else if (Param::ID::VCF_Cutoff.compare(settingParameterId) == 0) {
+        return  voices[0]->vcfFreq.effects;
+    } else if (Param::ID::VCF_Reso.compare(settingParameterId) == 0) {
+        return  voices[0]->vcfReso.effects;
+    } else if (Param::ID::WavetableVol.compare(settingParameterId) == 0) {
+        return  voices[0]->wavetableVolRamp.effects;
+    } else if (Param::ID::OutputVol.compare(settingParameterId) == 0) {
+        return  voices[0]->outputVolRamp.effects;
+    } else if (Param::ID::LFO1_Freq.compare(settingParameterId) == 0) {
+        return  lfo1.frequency.effects;
+    } else if (Param::ID::LFO2_Freq.compare(settingParameterId) == 0) {
+        return  lfo2.frequency.effects;
+    }
+
+    DBG("Unsupported ParameterID: " + settingParameterId);
+    jassertfalse;
+
+    // Failsafe
+    return voices[0]->wavetableIndex.effects;
 }
 
 template <typename FloatType>

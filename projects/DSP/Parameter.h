@@ -76,12 +76,12 @@ public:
     return previousValue + valueMultiplier * dsp.getCurrentValue();
   };
 
-private:
-  juce::SmoothedValue<FloatType> smoothedValue;
-  double sampleRate { 48000.f };
-
   // Use vector, since hash map used more than 40% cpu on 2 parameters
   std::vector<std::tuple<juce::String, FloatType, std::reference_wrapper<DSP<FloatType>>, EffectEvaluator>>
       effects;
+
+private:
+  juce::SmoothedValue<FloatType> smoothedValue;
+  double sampleRate { 48000.f };
 };
 }
