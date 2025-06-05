@@ -4,6 +4,7 @@
 #include "juce_core/juce_core.h"
 #include "DSP.h"
 #include <functional>
+#include <tuple>
 #include <unordered_map>
 
 namespace DSP {
@@ -39,15 +40,22 @@ public:
                  DSP<FloatType> &reference,
                  EffectEvaluator effectEvaluator = defaultEffect
                 ) {
-    effects.insert_or_assign(paramId, std::make_tuple(paramMult, std::ref(reference), effectEvaluator));
+    for (auto & element : effects) {
+      auto key = std::get<0>(element);
+      if (paramId.compare(key) == 0) {
+        element = std::make_tuple(paramId, paramMult, std::ref(reference), effectEvaluator);
+        return;
+      }
+    }
+
+    effects.emplace_back(paramId, paramMult, reference, effectEvaluator);
   }
 
   FloatType getCurrentValue() {
     auto rampedValue = smoothedValue.getCurrentValue();
 
     auto finalValue = rampedValue;
-    for (auto [_key, val] : effects) {
-      auto [valueMultiplier, dspEffector, effect] = val;
+    for (auto [_key, valueMultiplier, dspEffector, effect] : effects) {
       finalValue = effect(finalValue, rampedValue, valueMultiplier, dspEffector);
     }
 
@@ -72,7 +80,8 @@ private:
   juce::SmoothedValue<FloatType> smoothedValue;
   double sampleRate { 48000.f };
 
-  std::unordered_map<juce::String, std::tuple<FloatType, std::reference_wrapper<DSP<FloatType>>, EffectEvaluator>>
+  // Use vector, since hash map used more than 40% cpu on 2 parameters
+  std::vector<std::tuple<juce::String, FloatType, std::reference_wrapper<DSP<FloatType>>, EffectEvaluator>>
       effects;
 };
 }
