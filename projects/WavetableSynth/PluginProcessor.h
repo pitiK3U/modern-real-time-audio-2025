@@ -42,7 +42,8 @@ namespace Param
         static const juce::String LFO2_Type { "lfo2_type" };
         static const juce::String LFO2_Offset { "lfo2_offset" };
 
-        static const juce::String Envelope_mult { "env_amount" };
+        static const juce::String EnvelopeA_mult { "enva_amount" };
+        static const juce::String EnvelopeB_mult { "envb_amount" };
         static const juce::String LFO1_mult { "lfo1_amount" };
         static const juce::String LFO2_mult { "lfo2_amount" };
 
@@ -104,7 +105,8 @@ namespace Param
         static const juce::String LFO2_Type { "LFO 2 Type" };
         static const juce::String LFO2_Offset { "LFO 2 Offset" };
 
-        static const juce::String Envelope_mult { "Envelope multiplier" };
+        static const juce::String EnvelopeA_mult { "Envelope A multiplier" };
+        static const juce::String EnvelopeB_mult { "Envelope B multiplier" };
         static const juce::String LFO1_mult {"LFO 1 multiplier" };
         static const juce::String LFO2_mult {"LFO 2 multiplier" };
 
@@ -287,6 +289,8 @@ public:
         return wavetable.wavetables.size();
     }
 
+    using ParameterID = const juce::String&;
+
 private:
     mrta::ParameterManager paramManager;
     std::vector<DSP::WavetableSynthVoice *> voices;
@@ -306,6 +310,13 @@ private:
     std::unique_ptr<DSP::EnvelopeStateCollector> envelopeCollectorB;
 
     juce::AudioFormatManager formatManager;
+
+    template<typename FloatType>
+    using DspGetter = std::function<std::reference_wrapper<DSP::DSP<FloatType>>(DSP::WavetableSynthVoice *)>;
+    
+    template< typename FloatType >
+    void applyParameterEffect(ParameterID settingParameter, ParameterID dspParameterID, FloatType effectMultiplier, DspGetter<FloatType> getDSP);
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableSynthAudioProcessor)
 };

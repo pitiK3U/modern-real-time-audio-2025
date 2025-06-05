@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DSP.h"
+#include "Parameter.h"
 
 namespace DSP
 {
@@ -21,7 +22,7 @@ namespace DSP
                 return getValue(false);
             };
             void prepare(double newSampleRate) override {
-                prepare(newSampleRate, frequency, waveform);
+                prepare(newSampleRate, frequency.getCurrentValue(), waveform);
             };
 
             void prepare(float sampleRate, float frequency, Waveform waveform);
@@ -64,9 +65,9 @@ namespace DSP
             const LFO& operator=(LFO&&) = delete;
             //-------
 
+            Parameter<float> frequency;        // Hz
         private:
             float sampleRate;       // Hz
-            float frequency;        // Hz
             float phase{ 0.0f };    // [0…1)
             float phaseIncrement{ 0.0f };
             float amplitude{ 1.0f }; 

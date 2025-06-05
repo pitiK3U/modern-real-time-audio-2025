@@ -1,4 +1,5 @@
 #include "PluginProcessor.h"
+#include "LFO.h"
 #include "Parameter.h"
 #include "PluginEditor.h"
 #include "WavetablePlugins.h"
@@ -104,20 +105,16 @@ void setOutputVol(std::vector<DSP::WavetableSynthVoice*> voices, float dB, bool 
     std::for_each(voices.begin(), voices.end(), [dB, skipRamp] (auto& v) { v->setOutputVol(dB, skipRamp); });
 }
 
-namespace Wavetable {
-    using ParameterID = const juce::String&;
-}
+template<typename FloatType>
+using effectSetter = std::function<void(WavetableSynthAudioProcessor::ParameterID, float, DSP::DSP<FloatType> &reference)>;
 
 template<typename FloatType>
-using effectSetter = std::function<void(Wavetable::ParameterID, float, DSP::DSP<FloatType> &reference)>;
-
-template<typename FloatType>
-typename DSP::Parameter<FloatType>::EffectEvaluator getParameterEffect(Wavetable::ParameterID settingParameter)
+typename DSP::Parameter<FloatType>::EffectEvaluator getParameterEffect(WavetableSynthAudioProcessor::ParameterID settingParameter)
 {
     if (Param::ID::WavetablePosition.compare(settingParameter) == 0) {
         return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
-                    auto value = previousValue + Param::Ranges::WavetablePositionMax * valueMultiplier * dsp.getCurrentValue();
-                    return std::fmod(value, Param::Ranges::WavetablePositionMax + 1);
+                    auto value = previousValue + valueMultiplier * dsp.getCurrentValue();
+                    return std::fmod(value, Param::Ranges::WavetablePositionMax);
                 };
     } else if (Param::ID::VCF_Cutoff.compare(settingParameter) == 0) {
         // const auto freqMod { std::clamp(vcfEnv * vcfEnvAmout + vcfLFOAmount * lfo, -1.f, 1.f) };
@@ -137,6 +134,12 @@ typename DSP::Parameter<FloatType>::EffectEvaluator getParameterEffect(Wavetable
             auto multipliedVal = valueMultiplier * dsp.getCurrentValue();
             return previousValue * multipliedVal;
         };
+    } else if (Param::ID::LFO1_Freq.compare(settingParameter) == 0
+            || Param::ID::LFO2_Freq.compare(settingParameter) == 0) {
+        return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
+            auto freqMod = valueMultiplier * dsp.getCurrentValue();
+            return std::clamp(Param::Ranges::LFOFreqMax * (std::pow(2.f, freqMod) - 1.f) + previousValue, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax);
+        };
     }
 
     DBG("Unsupported ParameterID: " + settingParameter);
@@ -147,35 +150,43 @@ typename DSP::Parameter<FloatType>::EffectEvaluator getParameterEffect(Wavetable
 }
 
 template <typename FloatType>
-void applyParameterEffect(Wavetable::ParameterID settingParameter, Wavetable::ParameterID dspParameterID, std::vector<DSP::WavetableSynthVoice *>& voices, FloatType effectMultiplier, std::optional<std::reference_wrapper<DSP::DSP<FloatType>>> dsp)
+void WavetableSynthAudioProcessor::applyParameterEffect(ParameterID settingParameter, ParameterID dspParameterID, FloatType effectMultiplier, DspGetter<FloatType> getDSP)
 {
     auto effect = getParameterEffect<FloatType>(settingParameter);
     
     if (Param::ID::WavetablePosition.compare(settingParameter) == 0) {
-        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &dsp, effect](DSP::WavetableSynthVoice * & voice) {
-            auto reference = dsp.has_value() ? dsp.value() : voice->envGenA;
+        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &getDSP, effect](DSP::WavetableSynthVoice * & voice) {
+            auto reference = getDSP(voice);
             voice->wavetableIndex.setEffect(dspParameterID, effectMultiplier, reference, effect);
         });
     } else if (Param::ID::VCF_Cutoff.compare(settingParameter) == 0) {
-        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &dsp, effect](DSP::WavetableSynthVoice * & voice) {
-            auto reference = dsp.has_value() ? dsp.value() : voice->envGenA;
+        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &getDSP, effect](DSP::WavetableSynthVoice * & voice) {
+            auto reference = getDSP(voice);
             voice->vcfFreq.setEffect(dspParameterID, effectMultiplier, reference, effect);
         });
     } else if (Param::ID::VCF_Reso.compare(settingParameter) == 0) {
-        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &dsp, effect](DSP::WavetableSynthVoice * & voice) {
-            auto reference = dsp.has_value() ? dsp.value() : voice->envGenA;
+        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &getDSP, effect](DSP::WavetableSynthVoice * & voice) {
+            auto reference = getDSP(voice);
             voice->vcfReso.setEffect(dspParameterID, effectMultiplier, reference, effect);
         });
     } else if (Param::ID::WavetableVol.compare(settingParameter) == 0) {
-        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &dsp, effect](DSP::WavetableSynthVoice * & voice) {
-            auto reference = dsp.has_value() ? dsp.value() : voice->envGenA;
+        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &getDSP, effect](DSP::WavetableSynthVoice * & voice) {
+            auto reference = getDSP(voice);
             voice->wavetableVolRamp.setEffect(dspParameterID, effectMultiplier, reference, effect);
         });
     } else if (Param::ID::OutputVol.compare(settingParameter) == 0) {
-        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &dsp, effect](DSP::WavetableSynthVoice * & voice) {
-            auto reference = dsp.has_value() ? dsp.value() : voice->envGenA;
+        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &getDSP, effect](DSP::WavetableSynthVoice * & voice) {
+            auto reference = getDSP(voice);
             voice->outputVolRamp.setEffect(dspParameterID, effectMultiplier, reference, effect);
         });
+    } else if (Param::ID::LFO1_Freq.compare(settingParameter) == 0) {
+        // FIXME: nullptr bleh
+        auto reference = getDSP(nullptr);
+        lfo1.frequency.setEffect(dspParameterID, effectMultiplier, reference, effect);
+    } else if (Param::ID::LFO2_Freq.compare(settingParameter) == 0) {
+        // FIXME: nullptr bleh
+        auto reference = getDSP(nullptr);
+        lfo2.frequency.setEffect(dspParameterID, effectMultiplier, reference, effect);
     } else {   
         DBG("Unsupported ParameterID: " + settingParameter);
         jassertfalse;
@@ -211,7 +222,8 @@ static const std::vector<mrta::ParameterInfo> paramVector
     {Param::ID::LFO2_Offset, Param::Name::LFO2_Offset, "", 0.f, Param::Ranges::LFOOffsetMin, Param::Ranges::LFOOffsetMax, Param::Ranges::LFOOffsetInc, Param::Ranges::LFOOffsetSkw },
     {Param::ID::LFO2_Type, Param::Name::LFO2_Type, Param::Ranges::LFO1Type, 0},
     
-    { Param::ID::Envelope_mult, Param::Name::Envelope_mult, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
+    { Param::ID::EnvelopeA_mult, Param::Name::EnvelopeA_mult, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
+    { Param::ID::EnvelopeB_mult, Param::Name::EnvelopeB_mult, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
     { Param::ID::LFO1_mult, Param::Name::LFO1_mult, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
     { Param::ID::LFO2_mult, Param::Name::LFO2_mult, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
     
@@ -310,15 +322,16 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::Envelope_B_ReleaseCurveX, [this] (float value, bool force) { setRelCurveX(voices, value, 1); });
     paramManager.registerParameterCallback(Param::ID::Envelope_B_ReleaseCurveY, [this] (float value, bool force) { setRelCurveY(voices, value, 1); });
 
-    auto multipliers = [this](const juce::String& paramID, std::optional<std::reference_wrapper<DSP::DSP<float>>> dsp) {
-        return [this, &paramID, dsp] (float value, bool force) { 
+    auto multipliers = [this](const juce::String& paramID, DspGetter<float> getDSP) {
+        return [this, &paramID, getDSP] (float value, bool force) { 
             if (!selectedParameter.has_value()) return;
-            applyParameterEffect(selectedParameter.value(), paramID, voices, value, dsp);
+            applyParameterEffect(selectedParameter.value(), paramID, value, getDSP);
         };
     };
-    paramManager.registerParameterCallback(Param::ID::Envelope_mult, multipliers(Param::ID::Envelope_mult, std::nullopt));
-    paramManager.registerParameterCallback(Param::ID::LFO1_mult, multipliers(Param::ID::LFO1_mult, std::ref(lfo1)));
-    paramManager.registerParameterCallback(Param::ID::LFO2_mult, multipliers(Param::ID::LFO2_mult, std::ref(lfo2)));
+    paramManager.registerParameterCallback(Param::ID::EnvelopeA_mult, multipliers(Param::ID::EnvelopeA_mult, [](DSP::WavetableSynthVoice * voice) { return std::ref(voice->envGenA); }));
+    paramManager.registerParameterCallback(Param::ID::EnvelopeB_mult, multipliers(Param::ID::EnvelopeB_mult, [](DSP::WavetableSynthVoice * voice) { return std::ref(voice->envGenB); }));
+    paramManager.registerParameterCallback(Param::ID::LFO1_mult, multipliers(Param::ID::LFO1_mult, [this](DSP::WavetableSynthVoice * voice) { return std::ref(lfo1); }));
+    paramManager.registerParameterCallback(Param::ID::LFO2_mult, multipliers(Param::ID::LFO2_mult, [this](DSP::WavetableSynthVoice * voice) { return std::ref(lfo2); }));
 }
 
 WavetableSynthAudioProcessor::~WavetableSynthAudioProcessor()

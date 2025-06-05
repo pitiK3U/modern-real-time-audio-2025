@@ -14,14 +14,14 @@ LFO::LFO(float sr, float freq, Waveform wf)
 void LFO::prepare(float newSampleRate, float newFrequency, Waveform newWaveform)
 {
     sampleRate   = newSampleRate;
-    frequency    = newFrequency;
+    frequency.setValue(newFrequency, true);
     waveform     = newWaveform;
     updatePhaseIncrement();
 }
 
 void LFO::updatePhaseIncrement()
 {
-    phaseIncrement = frequency / sampleRate;
+    phaseIncrement = frequency.getCurrentValue() / sampleRate;
 }
 
 float LFO::computeWaveform (float p) const
@@ -66,6 +66,9 @@ float LFO::getValue(bool advance)
 
 void LFO::advancePhase()
 {
+    frequency.getNext();
+    updatePhaseIncrement();
+
     phase += phaseIncrement;
     if (phase >= 1.0f)
         phase -= 1.0f;
@@ -73,7 +76,7 @@ void LFO::advancePhase()
 
 // Set a new frequency for the oscillator in Hz
 void LFO::setFrequency(float freqHz) {
-    frequency = freqHz;
+    frequency.setValue(freqHz);
     updatePhaseIncrement();
 }
 
