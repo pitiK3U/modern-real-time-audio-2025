@@ -54,8 +54,6 @@ private:
     juce::Label envelopeLabel;
     juce::Label wavetableLabel;
 
-    juce::TextButton filePickerButton;
-
     juce::Label selectedComponentLabel;
     juce::TextButton selectButton;
     bool selectMode { false };

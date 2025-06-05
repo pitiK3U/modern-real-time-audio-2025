@@ -36,7 +36,8 @@ public:
     WavetablePlotComponent(
         std::vector<std::vector<float>> wavetable,
         mrta::ParameterManager& paramManager,
-        const juce::String& wavetablePresetId
+        const juce::String& wavetablePresetId,
+        std::function<void()> onFilePick
     );
 
     void paint(juce::Graphics& g) override;
@@ -106,6 +107,7 @@ private:
     };
 
     mrta::GenericParameterEditor pluginSelectionComponent;
+    juce::TextButton filePickerButton;
 };
 
 }

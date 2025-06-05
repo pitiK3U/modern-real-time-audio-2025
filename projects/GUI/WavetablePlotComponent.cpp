@@ -6,12 +6,16 @@ namespace GUI
 WavetablePlotComponent::WavetablePlotComponent(
     std::vector<std::vector<float>> wavetable,
     mrta::ParameterManager& paramManager,
-    const juce::String& wavetablePresetId
+    const juce::String& wavetablePresetId,
+    std::function<void()> onFilePick
 )
     : pluginSelectionComponent(paramManager, 100, {wavetablePresetId})
+    , filePickerButton("Load waveform file" )
 {
     addAndMakeVisible(pluginSelectionComponent);
+    addAndMakeVisible(filePickerButton);
     setWavetable(wavetable);
+    filePickerButton.onClick = std::move(onFilePick);
     setOpaque(true);
     startTimerHz(60);
 }
@@ -53,10 +57,13 @@ void WavetablePlotComponent::resized()
 {
     auto bounds = getLocalBounds();
 
+    const int fileButtonHeight = 35;
     const int pluginSelectorHeight = 100;
-    auto plotArea = bounds.removeFromTop(bounds.getHeight() - pluginSelectorHeight);
 
-    pluginSelectionComponent.setBounds(bounds.withTrimmedTop(5));
+    auto plotArea = bounds.removeFromTop(bounds.getHeight() - pluginSelectorHeight - fileButtonHeight);
+
+    pluginSelectionComponent.setBounds(bounds.removeFromTop(pluginSelectorHeight).reduced(5));
+    filePickerButton.setBounds(bounds.reduced(5));
 }
 
 void WavetablePlotComponent::paint(juce::Graphics& g)

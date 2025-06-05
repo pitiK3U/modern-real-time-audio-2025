@@ -60,10 +60,10 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     wavetablePlotComponent(
         DSP::WavetablePlugins::pluginA,
         p.getParamManager(),
-        Param::ID::SelectedWavetablePreset
+        Param::ID::SelectedWavetablePreset,
+        [this]() { openFilePicker(); }
     ),
-    selectButton("Select component"),
-    filePickerButton("Load waveform file" )
+    selectButton("Select component")
     {
     addAndMakeVisible(oscParamEditor);
     addAndMakeVisible(filterParamEditor);
@@ -91,11 +91,6 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     addAndMakeVisible(selectButton);
     selectButton.onClick = [this] {
         toggleSelectMode();
-    };
-
-    addAndMakeVisible(filePickerButton);
-    filePickerButton.onClick = [this] {
-        openFilePicker();
     };
 
     vts.addParameterListener (Param::ID::HistoryPlotBufferSize, this);
@@ -179,7 +174,6 @@ void WavetableSynthAudioProcessorEditor::resized()
     {
         auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
         wavetableLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
-        filePickerButton.setBounds(secBounds.removeFromBottom(LABEL_HEIGHT));
         wavetablePlotComponent.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
     }
 
