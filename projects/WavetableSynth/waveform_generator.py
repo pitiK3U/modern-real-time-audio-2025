@@ -105,7 +105,7 @@ def main():
     print("    {")
     print("        static const juce::StringArray names {")
     for name in presets.keys():
-        printable = name.replace("Plugin", "Plugin ") if "Plugin" in name else name
+        printable = name.replace("Plugin_", "Plugin ") if "Plugin" in name else name
         print(f"            \"{printable}\",")
     print("        };")
     print("        return names;")

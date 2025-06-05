@@ -74,8 +74,8 @@ namespace DSP::WavetablePlugins {
     inline const juce::StringArray& getPresetNames()
     {
         static const juce::StringArray names {
-            "Plugin _A",
-            "Plugin _B",
+            "Plugin A",
+            "Plugin B",
             "Ghostly",
             "Seafoam",
             "Glitch_Pop",
