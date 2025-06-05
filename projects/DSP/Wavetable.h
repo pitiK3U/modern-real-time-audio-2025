@@ -17,6 +17,7 @@ public:
     void fillWavetable();
     void loadFromBuffer(const AudioSampleBuffer& buffer, double bufferSampleRate);
     void loadFromPreset(const WavetablePlugins::PresetID wavetableId);
+    std::vector<std::vector<float>> getRenderPreview() const;
 
     std::vector<std::array<float, SampleSize>> wavetables;
     double sampleRate { DefaultSampleRate };

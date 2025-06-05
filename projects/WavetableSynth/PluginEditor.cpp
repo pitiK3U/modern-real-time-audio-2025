@@ -130,6 +130,11 @@ void WavetableSynthAudioProcessorEditor::openFilePicker()
             if (file != juce::File {}) // [9]
             {
                 audioProcessor.loadFile(file);
+                std::vector<std::vector<float>> wavetablePreview = audioProcessor.getWavetablePreview();
+
+                juce::MessageManager::callAsync([this, wavetablePreview]() {
+                    wavetablePlotComponent.setWavetable(wavetablePreview);
+                });
             }
         });
 }

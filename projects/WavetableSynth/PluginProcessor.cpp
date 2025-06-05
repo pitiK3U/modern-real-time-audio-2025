@@ -396,6 +396,10 @@ void WavetableSynthAudioProcessor::setWavetable(const DSP::WavetablePlugins::Pre
     wavetable.loadFromPreset(wavetableId);
 }
 
+std::vector<std::vector<float>> WavetableSynthAudioProcessor::getWavetablePreview() const {
+    return wavetable.getRenderPreview();
+}
+
 void WavetableSynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     paramManager.getStateInformation(destData);

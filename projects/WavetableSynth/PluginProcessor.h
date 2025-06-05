@@ -259,6 +259,7 @@ public:
 
     void loadFile(const juce::File& file);
     void setWavetable(const DSP::WavetablePlugins::PresetID wavetableId);
+    std::vector<std::vector<float>> getWavetablePreview() const;
 
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;

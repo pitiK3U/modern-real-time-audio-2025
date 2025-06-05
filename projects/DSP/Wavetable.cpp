@@ -65,4 +65,21 @@ void Wavetable::loadFromPreset(const DSP::WavetablePlugins::PresetID wavetableId
     originalSampleFrequency = 1.0;
 }
 
+std::vector<std::vector<float>> Wavetable::getRenderPreview() const
+{
+    constexpr int maxWavetables = 10;
+    constexpr int maxPreviewSize = 2048;
+
+    std::vector<std::vector<float>> preview;
+    preview.reserve(std::min<int>(wavetables.size(), maxWavetables));
+
+    for (size_t i = 0; i < std::min<size_t>(wavetables.size(), maxWavetables); ++i)
+    {
+        int size = std::min<int>(maxPreviewSize, SampleSize);
+        preview.emplace_back(wavetables[i].begin(), wavetables[i].begin() + size);
+    }
+
+    return preview;
+}
+
 }
