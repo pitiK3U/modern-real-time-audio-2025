@@ -2,6 +2,7 @@
 #include "Parameter.h"
 #include "PluginEditor.h"
 #include "WavetableSynth.h"
+#include "juce_audio_basics/juce_audio_basics.h"
 #include "juce_audio_processors/juce_audio_processors.h"
 #include "juce_core/juce_core.h"
 #include "juce_core/system/juce_PlatformDefs.h"
@@ -174,10 +175,10 @@ void applyParameterEffect(Wavetable::ParameterID settingParameter, Wavetable::Pa
             auto reference = dsp.has_value() ? dsp.value() : voice->envGen;
             voice->outputVolRamp.setEffect(dspParameterID, effectMultiplier, reference, effect);
         });
+    } else {   
+        DBG("Unsupported ParameterID: " + settingParameter);
+        jassertfalse;
     }
-
-    DBG("Unsupported ParameterID: " + settingParameter);
-    jassertfalse;
 }
 
 static const std::vector<mrta::ParameterInfo> paramVector
@@ -233,6 +234,8 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     lfo1(DSP::LFO(44100.f, Param::Ranges::LFODefaultFreq, DSP::Waveform::Sine)),
     lfo2(DSP::LFO(44100.f, Param::Ranges::LFODefaultFreq, DSP::Waveform::Sine))
 {
+    formatManager.registerBasicFormats();
+
     envelopeCollector = std::make_unique<DSP::EnvelopeStateCollector>(NUM_VOICES);
 
     synth.addSound(new DSP::SynthSound());
@@ -240,6 +243,7 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     {
         voices.emplace_back(new DSP::WavetableSynthVoice());
         voices.back()->setEnvelopeMonitor(*envelopeCollector, i);
+        voices.back()->fillWavetable();
         synth.addVoice(voices.back());
     }
     synth.setNoteStealingEnabled(false);
@@ -337,6 +341,23 @@ void WavetableSynthAudioProcessor::getLastLfo2Values (std::vector<float>& outVal
 DSP::EnvelopeStateCollector* WavetableSynthAudioProcessor::getEnvelopeStateCollector() const
 {
     return envelopeCollector.get();
+}
+
+void WavetableSynthAudioProcessor::loadFile(const juce::File& file)
+{
+    auto* reader = formatManager.createReaderFor (file);
+    if (reader == nullptr) return;
+
+    // auto newSource = std::make_unique<juce::AudioFormatReaderSource> (reader, true);
+
+    const int numberOfChannels = 1;
+    juce::AudioSampleBuffer buffer(numberOfChannels, reader->lengthInSamples);
+
+    reader->read(buffer.getArrayOfWritePointers(), numberOfChannels, 0, reader->lengthInSamples);
+    auto readerSampleRate = reader->sampleRate;
+    std::for_each(voices.begin(), voices.end(), [this, &buffer, readerSampleRate](DSP::WavetableSynthVoice *& voice) {
+        voice->loadFromBuffer(buffer, readerSampleRate);
+    });
 }
 
 void WavetableSynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

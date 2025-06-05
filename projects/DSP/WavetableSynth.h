@@ -46,6 +46,9 @@ public:
     const WavetableSynthVoice& operator=(const WavetableSynthVoice&) = delete;
     const WavetableSynthVoice& operator=(WavetableSynthVoice&&) = delete;
 
+    void clearWavetable();
+    void fillWavetable();
+    void loadFromBuffer(const AudioSampleBuffer& buffer, double bufferSampleRate);
 
     using EffectEvaluator = Parameter<float>::EffectEvaluator;
     static constexpr auto defaultEffect = Parameter<float>::defaultEffect;
@@ -88,7 +91,6 @@ public:
     void setOutputVol(float dB, bool skipRamp);
     void setEnvelopeMonitor(EnvelopeStateCollector& collector, size_t index);
 
-
     bool canPlaySound(juce::SynthesiserSound* ptr) override;
     void startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound*, int currentPitchWheelPosition) override;
     void stopNote(float velocity, bool allowTailOff) override;
@@ -104,10 +106,10 @@ public:
 
     static constexpr float FreqModRange { 10000.f };
 
-    static constexpr size_t SampleSize { 2048 };
+    static constexpr size_t SampleSize { 2048ul /* * 4994ul */ };
     static constexpr double DefaultSampleRate { 1.0 };
 
-    static constexpr float DefaultFreq { 1.f };
+    static constexpr float DefaultFrequency { 1.f };
     
     ADSREnvelopeGenerator envGen;
 
@@ -123,12 +125,12 @@ public:
     Parameter<float> outputVolRamp;
     
     private:
-    void fillWavetable();
     void updateUnisonIncrements();
     
-    static float getWavetableIncrement(float frequency, float defaultFrequency, size_t sampleSize, double SampleRate);
+    static float getWavetableIncrement(float frequency, double originalFrequency, size_t sampleSize, double SampleRate);
     
     double sampleRate { DefaultSampleRate };
+    double originalSampleFrequency { DefaultFrequency };
     
     float velocity { 1.f };
     
@@ -141,6 +143,8 @@ public:
     Parameter<float> unisonDetune {0.f };
     std::vector<float> unisonPhases;
     std::vector<float> unisonIncrements;
+
+    size_t processedSample { 0 };
 
     Ramp<float> vcfLPFRamp;
     Ramp<float> vcfBPFRamp;

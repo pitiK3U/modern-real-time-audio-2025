@@ -53,11 +53,17 @@ private:
     juce::Label envelopeLabel;
     juce::Label wavetableLabel;
 
+    juce::TextButton filePickerButton;
+
     juce::Label selectedComponentLabel;
     juce::TextButton selectButton;
     bool selectMode { false };
 
+    std::unique_ptr<FileChooser> fileChooser;
+
     void toggleSelectMode();
+    void openFilePicker();
+
 
     void setupLabel(juce::Label& label);
     void timerCallback() override;

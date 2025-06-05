@@ -109,7 +109,7 @@ namespace Param
     namespace Ranges
     {
         static constexpr float WavetablePositionMin { 0 };
-        static constexpr float WavetablePositionMax { 3 };
+        static constexpr float WavetablePositionMax { 4994 };
 
         static constexpr float UnisonVoicesMin { 1 };
         static constexpr float UnisonVoicesMax { 16 };
@@ -220,6 +220,8 @@ public:
 
     DSP::EnvelopeStateCollector* getEnvelopeStateCollector() const;
 
+    void loadFile(const juce::File& file);
+
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
@@ -256,6 +258,8 @@ private:
     DSP::ParameterHistoryBuffer<float> lfo2History { 32768 };  // remember up to 2^15 samples
 
     std::unique_ptr<DSP::EnvelopeStateCollector> envelopeCollector;
+
+    juce::AudioFormatManager formatManager;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableSynthAudioProcessor)

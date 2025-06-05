@@ -1,6 +1,7 @@
 #include "PluginEditor.h"
 #include "ADSREnvelopeComponent.h"
 #include "PluginProcessor.h"
+#include "juce_audio_formats/juce_audio_formats.h"
 #include "juce_core/juce_core.h"
 #include "juce_events/juce_events.h"
 #include "juce_graphics/juce_graphics.h"
@@ -42,7 +43,8 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     ),
     vts (p.getParamManager().getAPVTS()),
     wavetablePlotComponent(),
-    selectButton("Select component")
+    selectButton("Select component"),
+    filePickerButton("Load waveform file" )
     {
     addAndMakeVisible(oscParamEditor);
     addAndMakeVisible(filterParamEditor);
@@ -68,6 +70,11 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
         toggleSelectMode();
     };
 
+    addAndMakeVisible(filePickerButton);
+    filePickerButton.onClick = [this] {
+        openFilePicker();
+    };
+
     vts.addParameterListener (Param::ID::HistoryPlotBufferSize, this);
 
     startTimerHz ((int) REFRESH_RATE);
@@ -78,6 +85,23 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
 WavetableSynthAudioProcessorEditor::~WavetableSynthAudioProcessorEditor()
 {
     vts.removeParameterListener (Param::ID::HistoryPlotBufferSize, this);
+}
+
+void WavetableSynthAudioProcessorEditor::openFilePicker()
+{
+    fileChooser = std::make_unique<juce::FileChooser> ("Select a Wave file to play...",
+        juce::File {},
+        "*.wav"); // [7]
+        auto chooserFlags = juce::FileBrowserComponent::openMode
+        | juce::FileBrowserComponent::canSelectFiles;
+        fileChooser->launchAsync (chooserFlags, [this] (const juce::FileChooser& fc) // [8]
+        {
+            auto file = fc.getResult();
+            if (file != juce::File {}) // [9]
+            {
+                audioProcessor.loadFile(file);
+            }
+        });
 }
 
 void WavetableSynthAudioProcessorEditor::paint(juce::Graphics& g)
@@ -108,6 +132,7 @@ void WavetableSynthAudioProcessorEditor::resized()
     {
         auto secBounds { bounds.removeFromLeft(SECTION_WIDTH + SECTION_SPACER_WIDTH / 2) };
         wavetableLabel.setBounds(secBounds.removeFromTop(LABEL_HEIGHT));
+        filePickerButton.setBounds(secBounds.removeFromBottom(LABEL_HEIGHT));
         wavetablePlotComponent.setBounds(secBounds.withSizeKeepingCentre(SECTION_WIDTH, secBounds.getHeight()));
     }
 
