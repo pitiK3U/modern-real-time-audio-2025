@@ -58,8 +58,10 @@ void WavetableSynthVoice::setWavetableVol(float dB, bool skipRamp)
 void WavetableSynthVoice::setUnisonVoices(uint8_t numberOfVoices)
 {
     unisonVoices = numberOfVoices;
-    unisonPhases.resize(unisonVoices);
-    unisonIncrements.resize(unisonVoices);
+    for (int ch = 0; ch < Channels; ch++) {
+        unisonPhases[ch].resize(unisonVoices);
+        unisonIncrements[ch].resize(unisonVoices);
+    }
 }
 
 void WavetableSynthVoice::setUnisonDetune(float cents, bool skip)
@@ -179,6 +181,11 @@ void WavetableSynthVoice::setOutputVol(float dB, bool skipRamp)
     outputVolRamp.setValue(std::pow(10.f, 0.05f * dB), skipRamp);
 }
 
+void WavetableSynthVoice::setPanning(float value, bool skipRamp)
+{
+    panning.setValue(std::clamp(value, -1.f, 1.f), skipRamp);
+}
+
 void WavetableSynthVoice::setEnvelopeMonitor(EnvelopeStateCollector& collector, size_t index, int envelopeIndex)
 {
     if (envelopeIndex == 0) {
@@ -207,15 +214,13 @@ float WavetableSynthVoice::getWavetableIncrement(float frequency, double origina
 
 void WavetableSynthVoice::updateUnisonIncrements()
 {
-    for (auto unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
-        // to make it like: [0, 1, -1, 2, -2, 3, -3, ...]
-        auto unisonMultiplier = 0;
-        if (unisonVoice > 0) {
-            unisonMultiplier = (static_cast<float>(unisonVoice) - 1) / 2;
-            unisonMultiplier = std::copysign(unisonMultiplier, (static_cast<float>(unisonVoice % 2)) - 1);
+    for (auto ch = 0; ch < Channels; ch++) {
+        for (auto unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
+            float unisonMultiplier = unisonVoice * unisonStrength;
+            unisonMultiplier = std::copysign(unisonMultiplier, ch == 0 ? -1.f : 1.f);
+            const auto unisonFrequency = moveFrequencyByCents(frequency, unisonMultiplier * unisonDetune.getCurrentValue());
+            unisonIncrements[ch][unisonVoice] = getWavetableIncrement(unisonFrequency, wavetable.originalSampleFrequency, wavetable.SampleSize, sampleRate);
         }
-        const auto unisonFrequency = moveFrequencyByCents(frequency, unisonMultiplier * unisonDetune.getCurrentValue());
-        unisonIncrements[unisonVoice] = getWavetableIncrement(unisonFrequency, wavetable.originalSampleFrequency, wavetable.SampleSize, sampleRate);
     }
 }
 
@@ -225,9 +230,11 @@ void WavetableSynthVoice::startNote(int midiNoteNumber, float newVelocity, juce:
 
     updateUnisonIncrements();
 
-    for (auto unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
-        unisonPhases[unisonVoice] = 0.f;
-    }
+    for (auto ch = 0; ch < Channels; ch++) {
+        for (auto unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
+            unisonPhases[ch][unisonVoice] = 0.f;
+        }
+    }  
 
     velocity = newVelocity;
     voiceStarted = true;
@@ -259,10 +266,12 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
 
         envGenA.prepare(sampleRate);
         envGenB.prepare(sampleRate);
-        filter.prepare(sampleRate);
+        filter[0].prepare(sampleRate);
+        filter[1].prepare(sampleRate);
         wavetableVolRamp.prepare(sampleRate);
         outputVolRamp.prepare(sampleRate);
         unisonDetune.prepare(sampleRate);
+        panning.prepare(sampleRate);
         vcfFreq.prepare(sampleRate);
         vcfReso.prepare(sampleRate);
         vcfLPFRamp.prepare(sampleRate);
@@ -289,8 +298,10 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         const float fractionalIndex = std::modf(lastWavetablePosition, &integralIndexfloat);
         const auto integralIndex = static_cast<size_t>(integralIndexfloat);
 
-        for (auto unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
-            unisonPhases[unisonVoice] = std::fmod( unisonPhases[unisonVoice] + unisonIncrements[unisonVoice], wavetable.SampleSize);
+        for (auto ch = 0; ch < Channels; ch++) {
+            for (auto unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
+                unisonPhases[ch][unisonVoice] = std::fmod( unisonPhases[ch][unisonVoice] + unisonIncrements[ch][unisonVoice], wavetable.SampleSize);
+            }
         }
 
         const auto wavetableVol { wavetableVolRamp.getNext() };
@@ -301,11 +312,16 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         const auto vcfBPF { vcfBPFRamp.getNext() };
         const auto vcfHPF { vcfHPFRamp.getNext() };
 
+        const auto pan { panning.getNext() };
+
         const auto outputVol { outputVolRamp.getNext() };
+    
+        for (int ch = 0; ch < Channels /* outputBuffer.getNumChannels() */ ; ++ch)
+        {
 
         float wavetableOut = 0.f;
         for (int unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
-            const auto unisonPhaseInteger = static_cast<size_t>(unisonPhases[unisonVoice]);
+            const auto unisonPhaseInteger = static_cast<size_t>(unisonPhases[ch][unisonVoice]);
             const auto unisonLerped = naive_lerp(wavetable.wavetables[integralIndex % wavetable.wavetables.size()][unisonPhaseInteger], wavetable.wavetables[(integralIndex + 1) % wavetable.wavetables.size()][unisonPhaseInteger], fractionalIndex);
             const auto unisonOut { unisonLerped };
 
@@ -317,21 +333,28 @@ void WavetableSynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer
         float lpfOut { 0.f };
         float bpfOut { 0.f };
         float hpfOut { 0.f };
-        filter.process(&lpfOut, &bpfOut, &hpfOut, &wavetableOut, &vcfFreqCurrent, &vcfResoCurrent, 1);
+        filter[ch].process(&lpfOut, &bpfOut, &hpfOut, &wavetableOut, &vcfFreqCurrent, &vcfResoCurrent, 1);
 
         const auto out { (vcfLPF * lpfOut + vcfBPF * bpfOut + vcfHPF * hpfOut) * outputVol };
-        for (int ch = 0; ch < outputBuffer.getNumChannels(); ++ch)
-        {
-            outputBuffer.addSample(ch, startSample + i, out);
-        }
 
-        if (std::isnan(out))
-        {
+            float channelMultiplier = 1.f;
+
+            if (ch == 1) {
+                channelMultiplier = 1.f - std::fabs(std::clamp(pan, -1.f, 0.f));
+            } else if (ch == 0) {
+                channelMultiplier = 1.f - std::clamp(pan, 0.f, 1.f);
+            }
+
+            outputBuffer.addSample(ch, startSample + i, channelMultiplier * out);
+            
+            if (std::isnan(out))
+            {
             voiceStarted = false;
             clearCurrentNote();
             DBG("WavetableSynthVoice: NaN detected in output buffer");
             return;
         }
+    }
 
         if (voiceStarted && envGenA.isOff() && envGenB.isOff())
         {

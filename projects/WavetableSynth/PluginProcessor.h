@@ -22,6 +22,8 @@ namespace Param
         static const juce::String UnisonVoices { "unison_voices" };
         static const juce::String UnisonDetune { "unison_detune" };
 
+        static const juce::String Pan { "pan" };
+
         static const juce::String VCF_AttTime { "vcf_att_time" };
         static const juce::String VCF_DecayTime { "vcf_decay_time" };
         static const juce::String VCF_Sustain { "vcf_sustain" };
@@ -84,6 +86,8 @@ namespace Param
 
         static const juce::String UnisonVoices { "Unison Voices" };
         static const juce::String UnisonDetune { "Unison Detune" };
+
+        static const juce::String Pan { "Pan" };
 
         static const juce::String VCF_AttTime { "VCF Attack Time" };
         static const juce::String VCF_DecayTime { "VCF Decay Time" };

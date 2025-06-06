@@ -106,6 +106,11 @@ void setOutputVol(std::vector<DSP::WavetableSynthVoice*> voices, float dB, bool 
     std::for_each(voices.begin(), voices.end(), [dB, skipRamp] (auto& v) { v->setOutputVol(dB, skipRamp); });
 }
 
+void setPan(std::vector<DSP::WavetableSynthVoice*> voices, float value, bool skipRamp)
+{
+    std::for_each(voices.begin(), voices.end(), [value, skipRamp](DSP::WavetableSynthVoice* &voice) { voice->setPanning(value, skipRamp);});
+}
+
 template<typename FloatType>
 using effectSetter = std::function<void(WavetableSynthAudioProcessor::ParameterID, float, DSP::DSP<FloatType> &reference)>;
 
@@ -239,6 +244,11 @@ void WavetableSynthAudioProcessor::applyParameterEffect(ParameterID settingParam
         // FIXME: nullptr bleh
         auto reference = getDSP(nullptr);
         lfo2.frequency.setEffect(dspParameterID, effectMultiplier, reference, effect);
+    } else if (Param::ID::Pan.compare(settingParameter) == 0) {
+        std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &getDSP, effect](DSP::WavetableSynthVoice * & voice) {
+            auto reference = getDSP(voice);
+            voice->panning.setEffect(dspParameterID, effectMultiplier, reference);
+        });
     } else {   
         DBG("Unsupported ParameterID: " + settingParameter);
         jassertfalse;
@@ -252,17 +262,20 @@ static const std::vector<mrta::ParameterInfo> paramVector
     { Param::ID::UnisonVoices, Param::Name::UnisonVoices, "", 1.f, Param::Ranges::UnisonVoicesMin, Param::Ranges::UnisonVoicesMax, Param::Ranges::UnisonVoicesInc, Param::Ranges::UnisonVoicesSkw },
     { Param::ID::UnisonDetune, Param::Name::UnisonDetune, Param::Units::Cent, 0.f, Param::Ranges::UnisonDetuneMin, Param::Ranges::UnisonDetuneMax, Param::Ranges::UnisonDetuneInc, Param::Ranges::UnisonDetuneSkw },
 
+    
     { Param::ID::VCF_AttTime,   Param::Name::VCF_AttTime,   Param::Units::Ms,  10.0f, Param::Ranges::EnvTimeMin,    Param::Ranges::EnvTimeMax,    Param::Ranges::EnvTimeInc,    Param::Ranges::EnvTimeSkw },
     { Param::ID::VCF_DecayTime, Param::Name::VCF_DecayTime, Param::Units::Ms, 100.0f, Param::Ranges::EnvTimeMin,    Param::Ranges::EnvTimeMax,    Param::Ranges::EnvTimeInc,    Param::Ranges::EnvTimeSkw },
     { Param::ID::VCF_Sustain,   Param::Name::VCF_Sustain,   "",                 0.9f, Param::Ranges::EnvSustainMin, Param::Ranges::EnvSustainMax, Param::Ranges::EnvSustainInc, Param::Ranges::EnvSustainSkw },
     { Param::ID::VCF_RelTime,  Param::Name::VCF_RelTime,   Param::Units::Ms, 100.0f, Param::Ranges::EnvTimeMin,    Param::Ranges::EnvTimeMax,    Param::Ranges::EnvTimeInc,    Param::Ranges::EnvTimeSkw },
-
+    
     { Param::ID::VCF_LFOFreq, Param::Name::VCF_LFOFreq, Param::Units::Hz, 0.5f, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax, Param::Ranges::LFOFreqInc, Param::Ranges::LFOFreqSkw },
     { Param::ID::VCF_LFOType, Param::Name::VCF_LFOType, Param::Ranges::LFOType, 0 },
-
+    
     { Param::ID::VCF_Cutoff, Param::Name::VCF_Cutoff, Param::Units::Hz, 2000.f, Param::Ranges::FilterFreqMin, Param::Ranges::FilterFreqMax, Param::Ranges::FilterFreqInc, Param::Ranges::FilterFreqSkw },
     { Param::ID::VCF_Reso,   Param::Name::VCF_Reso,   "",                0.71f, Param::Ranges::FilterResoMin, Param::Ranges::FilterResoMax, Param::Ranges::FilterResoInc, Param::Ranges::FilterResoSkw },
     { Param::ID::VCF_Type,   Param::Name::VCF_Type,   Param::Ranges::FilterType, 0 },
+   
+    { Param::ID::Pan, Param::Name::Pan, "", 0.f, Param::Ranges::AmountMin, Param::Ranges::AmountMax, Param::Ranges::AmountInc, Param::Ranges::AmountSkw },
 
     { Param::ID::OutputVol, Param::Name::OutputVol, Param::Units::dB, 0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
     
@@ -334,6 +347,7 @@ WavetableSynthAudioProcessor::WavetableSynthAudioProcessor() :
     paramManager.registerParameterCallback(Param::ID::WavetableVol, [this] (float value, bool force) { setWavetableVol(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::UnisonVoices, [this] (float value, bool force) { setUnisonVoices(voices, static_cast<uint8_t>(value)); });
     paramManager.registerParameterCallback(Param::ID::UnisonDetune, [this] (float value, bool force) { setUnisonDetune(voices, value, force); });
+    paramManager.registerParameterCallback(Param::ID::Pan, [this] (float value, bool force) { setPan(voices, value, force); });
 
     paramManager.registerParameterCallback(Param::ID::VCF_Cutoff, [this] (float value, bool force) { setFilterCutoff(voices, value, force); });
     paramManager.registerParameterCallback(Param::ID::VCF_Reso, [this] (float value, bool force) { setFilterReso(voices, value, force); });
