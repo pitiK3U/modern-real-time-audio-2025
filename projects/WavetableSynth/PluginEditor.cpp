@@ -12,7 +12,7 @@
 WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(WavetableSynthAudioProcessor& p) :
     juce::AudioProcessorEditor(p), audioProcessor(p),
     oscParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::WavetablePosition, Param::ID::UnisonVoices, Param::ID::UnisonDetune, Param::ID::WavetableVol, Param::ID::OutputVol }),
-    filterParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_Cutoff, Param::ID::VCF_Reso, Param::ID::VCF_Type }),
+    filterParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::VCF_Cutoff, Param::ID::VCF_Reso, Param::ID::VCF_Type, Param::ID::Pan }),
     lfo1ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO1_Freq, Param::ID::LFO1_Type, Param::ID::LFO1_Offset }),
     lfo2ParamEditor(p.getParamManager(), PARAM_HEIGHT, { Param::ID::LFO2_Freq, Param::ID::LFO2_Type, Param::ID::LFO2_Offset, Param::ID::HistoryPlotBufferSize }),
     effectParamEditor(p.getParamManager(), { Param::ID::EnvelopeA_mult, Param::ID::EnvelopeB_mult, Param::ID::LFO1_mult, Param::ID::LFO2_mult }),

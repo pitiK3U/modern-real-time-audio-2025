@@ -83,6 +83,8 @@ public:
     void setFilterReso(float Q, bool skipRamp);
     void setFilterType(FilterType type, bool skipRamp);
 
+    void setPanning(float value, bool skipRamp);
+
     void setOutputVol(float dB, bool skipRamp);
     void setEnvelopeMonitor(EnvelopeStateCollector& collector, size_t index, int envelopeIndex);
 
@@ -120,6 +122,11 @@ public:
     Parameter<float> wavetableVolRamp;
     // Volume of the voice after lfo's, env's and filter
     Parameter<float> outputVolRamp;
+
+    static constexpr int Channels = 2;
+
+    // -1 is left, 0 is center, 1 is right
+    Parameter<float> panning;
     
     private:
     void updateUnisonIncrements();
@@ -132,13 +139,14 @@ public:
     
     const Wavetable& wavetable;
 
-    StateVariableFilter filter;
+    StateVariableFilter filter[Channels];
 
     float frequency { 1.f };
+    float unisonStrength { 0.1f };
     uint8_t unisonVoices { 1 };
     Parameter<float> unisonDetune {0.f };
-    std::vector<float> unisonPhases;
-    std::vector<float> unisonIncrements;
+    std::array<std::vector<float>, Channels> unisonPhases;
+    std::array<std::vector<float>, Channels> unisonIncrements;
 
     Ramp<float> vcfLPFRamp;
     Ramp<float> vcfBPFRamp;
