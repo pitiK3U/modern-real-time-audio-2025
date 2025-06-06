@@ -245,11 +245,11 @@ void WavetableSynthAudioProcessor::applyParameterEffect(ParameterID settingParam
         });
     } else if (Param::ID::LFO1_Freq.compare(settingParameter) == 0) {
         // FIXME: nullptr bleh
-        auto reference = getDSP(nullptr);
+        auto reference = getDSP(voices[0]);
         lfo1.frequency.setEffect(dspParameterID, effectMultiplier, reference, effect);
     } else if (Param::ID::LFO2_Freq.compare(settingParameter) == 0) {
         // FIXME: nullptr bleh
-        auto reference = getDSP(nullptr);
+        auto reference = getDSP(voices[0]);
         lfo2.frequency.setEffect(dspParameterID, effectMultiplier, reference, effect);
     } else if (Param::ID::Pan.compare(settingParameter) == 0) {
         std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &getDSP, effect](DSP::WavetableSynthVoice * & voice) {
