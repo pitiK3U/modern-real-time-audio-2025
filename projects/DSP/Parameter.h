@@ -16,15 +16,15 @@ public:
 
   Parameter<FloatType>() : smoothedValue() {}
 
-  Parameter<FloatType>(FloatType defaultValue) : smoothedValue(defaultValue) {}
+  Parameter<FloatType>(FloatType defaultValue) : originalValue(defaultValue) {}
 
-  void prepare(double SampleRate) { smoothedValue.reset(SampleRate); }
+  void prepare(double SampleRate) { originalValue.reset(SampleRate, DefaultRampTimeInSecs); smoothedValue.reset(SampleRate, DefaultRampTimeInSecs); }
 
   void setValue(FloatType targetValue, bool force = false) {
     if (force) {
-      smoothedValue.setCurrentAndTargetValue(targetValue);
+      originalValue.setCurrentAndTargetValue(targetValue);
     } else {
-      smoothedValue.setTargetValue(targetValue);
+      originalValue.setTargetValue(targetValue);
     }
   }
 
@@ -52,20 +52,24 @@ public:
   }
 
   FloatType getCurrentValue() {
-    auto rampedValue = smoothedValue.getCurrentValue();
+    auto rampedValue = originalValue.getCurrentValue();
 
     auto finalValue = rampedValue;
     for (auto [_key, valueMultiplier, dspEffector, effect] : effects) {
       finalValue = effect(finalValue, rampedValue, valueMultiplier, dspEffector);
     }
 
-    return finalValue;
+    smoothedValue.setTargetValue(finalValue);
+    return smoothedValue.getCurrentValue();
+
+    // return finalValue;
   }
 
   /**
    * NOTE: You must first progress the `effect`s on their own before using `getNext()` on the final value.
    */
   FloatType getNext() {
+    originalValue.getNextValue();
     smoothedValue.getNextValue();
 
     return getCurrentValue();
@@ -77,8 +81,11 @@ public:
   };
 
 private:
+  juce::SmoothedValue<FloatType> originalValue;
   juce::SmoothedValue<FloatType> smoothedValue;
+
   double sampleRate { 48000.f };
+  static constexpr auto DefaultRampTimeInSecs = 0.05f;
 
   // Use vector, since hash map used more than 40% cpu on 2 parameters
   std::vector<std::tuple<juce::String, FloatType, std::reference_wrapper<DSP<FloatType>>, EffectEvaluator>>
