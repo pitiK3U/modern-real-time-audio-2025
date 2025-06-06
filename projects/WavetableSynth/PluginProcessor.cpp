@@ -254,7 +254,7 @@ void WavetableSynthAudioProcessor::applyParameterEffect(ParameterID settingParam
     } else if (Param::ID::Pan.compare(settingParameter) == 0) {
         std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &getDSP, effect](DSP::WavetableSynthVoice * & voice) {
             auto reference = getDSP(voice);
-            voice->panning.setEffect(dspParameterID, effectMultiplier, reference);
+            voice->panning.setEffect(dspParameterID, effectMultiplier, reference, effect);
         });
     } else {   
         DBG("Unsupported ParameterID: " + settingParameter);

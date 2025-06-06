@@ -230,10 +230,11 @@ void WavetableSynthVoice::startNote(int midiNoteNumber, float newVelocity, juce:
 
     updateUnisonIncrements();
 
-    for (auto ch = 0; ch < Channels; ch++) {
-        for (auto unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
+    for (auto unisonVoice = 0; unisonVoice < unisonVoices; unisonVoice++) {
+        unisonPhases[0][unisonVoice] = juce::Random::getSystemRandom().nextFloat() * wavetable.SampleSize;
+        for (auto ch = 1; ch < Channels; ch++) {
             // Initialize with random phase to avoid phase alignment
-            unisonPhases[ch][unisonVoice] = juce::Random::getSystemRandom().nextFloat() * wavetable.SampleSize;
+            unisonPhases[ch][unisonVoice] = unisonPhases[0][unisonVoice];
         }
     }  
 
