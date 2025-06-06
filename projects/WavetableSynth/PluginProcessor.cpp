@@ -147,6 +147,11 @@ typename DSP::Parameter<FloatType>::EffectEvaluator getParameterEffect(Wavetable
             auto freqMod = valueMultiplier * dsp.getCurrentValue();
             return std::clamp(Param::Ranges::LFOFreqMax * (std::pow(2.f, freqMod) - 1.f) + previousValue, Param::Ranges::LFOFreqMin, Param::Ranges::LFOFreqMax);
         };
+    } else if (Param::ID::Pan.compare(settingParameter) == 0) {
+        return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
+            auto panMod = valueMultiplier * dsp.getCurrentValue();
+            return std::clamp(Param::Ranges::AmountMax * (panMod) + previousValue, Param::Ranges::AmountMin, Param::Ranges::AmountMax);
+        };
     }
 
     DBG("Unsupported ParameterID: " + settingParameter);
@@ -197,6 +202,8 @@ const WavetableSynthAudioProcessor::TYPE& WavetableSynthAudioProcessor::getParam
         return  lfo1.frequency.effects;
     } else if (Param::ID::LFO2_Freq.compare(settingParameterId) == 0) {
         return  lfo2.frequency.effects;
+    } else if (Param::ID::Pan.compare(settingParameterId) == 0) {
+        return  voices[0]->panning.effects;
     }
 
     DBG("Unsupported ParameterID: " + settingParameterId);
