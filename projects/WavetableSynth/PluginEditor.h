@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ModernLookAndFeel.h"
 #include "PluginProcessor.h"
 #include "WavetablePlotComponent.h"
 #include "juce_core/juce_core.h"
@@ -33,6 +34,9 @@ public:
 
 private:
     WavetableSynthAudioProcessor& audioProcessor;
+
+    ModernLookAndFeel modernLookAndFeel;
+
     mrta::GenericParameterEditor oscParamEditor;
     mrta::GenericParameterEditor filterParamEditor;
     mrta::GenericParameterEditor lfo1ParamEditor;

@@ -146,15 +146,16 @@ add_plugin(wave_synth
         ${dsp_source}/EnvelopeGenerator.cpp
         ${dsp_source}/StateVariableFilter.cpp
         ${dsp_source}/LFO.cpp
-        ${gui_source}/HistoryPlotComponent.cpp
         ${dsp_source}/ParameterHistoryBuffer.h
-        ${gui_source}/ADSREnvelopeComponent.cpp
         ${dsp_source}/ADSREnvelopeGenerator.cpp
         ${dsp_source}/EnvelopeStateCollector.h
-        ${gui_source}/WavetablePlotComponent.cpp
-        ${gui_source}/HorizontalParameterEditor.cpp
         ${dsp_source}/WavetablePlugins.h
         ${dsp_source}/Wavetable.cpp
+        ${gui_source}/HistoryPlotComponent.cpp
+        ${gui_source}/ADSREnvelopeComponent.cpp
+        ${gui_source}/WavetablePlotComponent.cpp
+        ${gui_source}/HorizontalParameterEditor.cpp
+        ${gui_source}/ModernLookAndFeel.cpp
     INCLUDE_DIRS
         ${gui_source}
         ${dsp_source}

@@ -65,6 +65,8 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
     ),
     selectButton("Select component")
     {
+    setLookAndFeel(&modernLookAndFeel);
+
     addAndMakeVisible(oscParamEditor);
     addAndMakeVisible(filterParamEditor);
     addAndMakeVisible(lfo1ParamEditor);
@@ -114,6 +116,8 @@ WavetableSynthAudioProcessorEditor::WavetableSynthAudioProcessorEditor(Wavetable
 
 WavetableSynthAudioProcessorEditor::~WavetableSynthAudioProcessorEditor()
 {
+    setLookAndFeel(nullptr);
+    
     vts.removeParameterListener (Param::ID::HistoryPlotBufferSize, this);
 }
 
