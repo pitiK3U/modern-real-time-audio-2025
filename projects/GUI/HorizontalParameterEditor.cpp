@@ -30,7 +30,7 @@ HorizontalParameterEditor::HorizontalParameterEditor(mrta::ParameterManager& par
         switch (p.type)
         {
             case mrta::ParameterInfo::Float:
-                ptr = std::make_unique<mrta::ParameterSlider>(p.ID, apvts);
+                ptr = std::make_unique<mrta::ParameterSlider>(p.ID, apvts, p.startAngle, p.endAngle, p.stopAtEnd);
                 break;
 
             case mrta::ParameterInfo::Choice:

@@ -7,11 +7,12 @@ namespace mrta
 class ParameterSlider : public juce::Slider
 {
 public:
-    ParameterSlider(const juce::String& paramID, juce::AudioProcessorValueTreeState& apvts) :
+    ParameterSlider(const juce::String& paramID, juce::AudioProcessorValueTreeState& apvts, float startAngle, float endAngle, bool stopAtEnd) :
         juce::Slider(juce::Slider::RotaryHorizontalVerticalDrag, juce::Slider::TextBoxRight),
         att(apvts, paramID, *this),
         parameterID( paramID )
     {
+        setRotaryParameters(startAngle, endAngle, stopAtEnd);
         juce::AudioParameterFloat* param { dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter(paramID)) };
         if (!param)
         {

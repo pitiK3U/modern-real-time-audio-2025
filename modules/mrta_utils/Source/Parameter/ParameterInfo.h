@@ -1,5 +1,7 @@
 #pragma once
 
+#include <JuceHeader.h>
+
 namespace mrta
 {
 
@@ -15,11 +17,16 @@ struct ParameterInfo
     // Float ctor
     ParameterInfo(const juce::String& _ID, const juce::String& _name, const juce::String& _unit,
                   float _def, float _min, float _max,
-                  float _inc, float _skw) :
+                  float _inc, float _skw,
+                  float _startAngleRadians = DefaultStartAngle,
+                  float _endAngleRadians = DefaultEndAngle,
+                  bool _stopAtEnd = DefaultStopAtEnd) :
         ID { _ID }, name { _name }, unit { _unit }, steps { },
         type { Float },
         def { _def }, min { _min }, max { _max },
-        inc { _inc }, skw { _skw }
+        inc { _inc }, skw { _skw },
+        startAngle( _startAngleRadians ), endAngle( _endAngleRadians ),
+        stopAtEnd( _stopAtEnd )
     {
         jassert(ID.isNotEmpty());
         jassert(min < max);
@@ -33,7 +40,9 @@ struct ParameterInfo
         ID { _ID }, name { _name }, unit { }, steps { _steps },
         type { Choice },
         def { static_cast<float>(_def) }, min { 0.f }, max { static_cast<float>(_steps.size() - 1) },
-        inc { 1.f }, skw { 1.f }
+        inc { 1.f }, skw { 1.f },
+        startAngle( DefaultStartAngle ), endAngle( DefaultEndAngle ),
+        stopAtEnd( DefaultStopAtEnd )
     {
         jassert(ID.isNotEmpty());
         jassert(min < max);
@@ -48,7 +57,9 @@ struct ParameterInfo
         ID { _ID }, name { _name }, unit { }, steps { offStepName, onStepName },
         type { Bool },
         def { static_cast<float>(_def) }, min { 0.f }, max { 1.f },
-        inc { 1.f }, skw { 1.f }
+        inc { 1.f }, skw { 1.f },
+        startAngle( DefaultStartAngle ), endAngle( DefaultEndAngle ),
+        stopAtEnd( DefaultStopAtEnd )
     {
         jassert(ID.isNotEmpty());
     }
@@ -61,7 +72,9 @@ struct ParameterInfo
         ID { _ID }, name { _name }, unit { _unit }, steps { _steps },
         type { _type },
         def { _def }, min { _min }, max { _max },
-        inc { _inc }, skw { _skw }
+        inc { _inc }, skw { _skw },
+        startAngle( DefaultStartAngle ), endAngle( DefaultEndAngle ),
+        stopAtEnd( DefaultStopAtEnd )
     {
         jassert(ID.isNotEmpty());
         jassert(min < max);
@@ -75,7 +88,9 @@ struct ParameterInfo
         ID { other.ID }, name { other.name }, unit { other.unit }, steps { other.steps },
         type { other.type },
         def { other.def }, min { other.min }, max { other.max },
-        inc { other.inc }, skw { other.skw }
+        inc { other.inc }, skw { other.skw },
+        startAngle( other.startAngle ), endAngle( other.endAngle ),
+        stopAtEnd( other.stopAtEnd )
     { }
 
     // No move ctor
@@ -84,7 +99,9 @@ struct ParameterInfo
         unit { other.unit }, steps { other.steps },
         type { other.type },
         def { other.def }, min { other.min }, max { other.max },
-        inc { other.inc }, skw { other.skw }
+        inc { other.inc }, skw { other.skw },
+        startAngle( other.startAngle ), endAngle( other.endAngle ),
+        stopAtEnd( other.stopAtEnd )
     { }
 
     // No default ctor
@@ -110,6 +127,13 @@ struct ParameterInfo
     const float max;
     const float inc;
     const float skw;
+    const float startAngle;
+    const float endAngle;
+    const bool stopAtEnd;
+
+    static constexpr float DefaultStartAngle = juce::MathConstants<float>::pi * 1.2f;
+    static constexpr float DefaultEndAngle = juce::MathConstants<float>::pi * 2.8f;
+    static constexpr bool DefaultStopAtEnd = true;
 };
 
 }

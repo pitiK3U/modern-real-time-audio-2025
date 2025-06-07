@@ -213,10 +213,36 @@ const WavetableSynthAudioProcessor::TYPE& WavetableSynthAudioProcessor::getParam
     return voices[0]->wavetableIndex.effects;
 }
 
+template<typename FloatType>
+typename DSP::Parameter<FloatType>::EffectEvaluator getDSPParameterEffect(WavetableSynthAudioProcessor::ParameterID dspParameter)
+{
+    if (Param::ID::LFO1_mult.compare(dspParameter) == 0
+        || Param::ID::LFO2_mult.compare(dspParameter) == 0) {
+            return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
+                auto mod = valueMultiplier * dsp.getCurrentValue();
+                return std::clamp(Param::Ranges::AmountMax * (mod) + previousValue, Param::Ranges::AmountMin, Param::Ranges::AmountMax);
+            };
+    } else if (Param::ID::EnvelopeA_mult.compare(dspParameter) == 0
+            || Param::ID::EnvelopeB_mult.compare(dspParameter) == 0) {
+        return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
+            auto envMod = valueMultiplier * dsp.getCurrentValue();
+            return std::clamp((valueMultiplier == 0.f ? 1.f : envMod) * previousValue, Param::Ranges::AmountMin, Param::Ranges::AmountMax);
+        };
+    }
+
+    DBG("Unsupported ParameterID: " + dspParameter);
+    jassertfalse;
+    return [](float previousValue, float originalValue, float valueMultiplier, DSP::DSP<float>& dsp) {
+        return 0.0f;
+    };
+}
+
 template <typename FloatType>
 void WavetableSynthAudioProcessor::applyParameterEffect(ParameterID settingParameter, ParameterID dspParameterID, FloatType effectMultiplier, DspGetter<FloatType> getDSP)
 {
-    auto effect = getParameterEffect<FloatType>(settingParameter);
+    // auto effect = getParameterEffect<FloatType>(settingParameter);
+    auto effect = getDSPParameterEffect<FloatType>(dspParameterID);
+
     
     if (Param::ID::WavetablePosition.compare(settingParameter) == 0) {
         std::for_each(voices.begin(), voices.end(), [&dspParameterID, effectMultiplier, &getDSP, effect](DSP::WavetableSynthVoice * & voice) {
@@ -264,7 +290,7 @@ void WavetableSynthAudioProcessor::applyParameterEffect(ParameterID settingParam
 
 static const std::vector<mrta::ParameterInfo> paramVector
 {
-    { Param::ID::WavetablePosition, Param::Name::WavetablePos, "", 0, Param::Ranges::WavetablePositionMin, Param::Ranges::WavetablePositionMax, Param::Ranges::WavetablePositionInc, Param::Ranges::LinearSkw },
+    { Param::ID::WavetablePosition, Param::Name::WavetablePos, "", 0, Param::Ranges::WavetablePositionMin, Param::Ranges::WavetablePositionMax, Param::Ranges::WavetablePositionInc, Param::Ranges::LinearSkw, juce::MathConstants<float>::pi * 1.f, juce::MathConstants<float>::pi * 3.f },
     { Param::ID::WavetableVol,    Param::Name::WavetableVol,    Param::Units::dB,   0.f, Param::Ranges::VolMin, Param::Ranges::VolMax, Param::Ranges::VolInc, Param::Ranges::VolSkw },
     { Param::ID::UnisonVoices, Param::Name::UnisonVoices, "", 1.f, Param::Ranges::UnisonVoicesMin, Param::Ranges::UnisonVoicesMax, Param::Ranges::UnisonVoicesInc, Param::Ranges::UnisonVoicesSkw },
     { Param::ID::UnisonDetune, Param::Name::UnisonDetune, Param::Units::Cent, 0.f, Param::Ranges::UnisonDetuneMin, Param::Ranges::UnisonDetuneMax, Param::Ranges::UnisonDetuneInc, Param::Ranges::UnisonDetuneSkw },
