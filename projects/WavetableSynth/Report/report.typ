@@ -217,6 +217,45 @@ case Waveform::Sawtooth:
 
 In the current implementation only the "Envelope A" affects the volume of the synth voice, while the "Envelope B" is only used for the custom effects.
 
+= GUI
+
+== Envelope
+
+The envelope component in our synthesizer provides real-time, interactive control of the ADSR (Attack, Decay, Sustain, Release) envelope.
+
+=== Interactive Curve Rendering
+
+The `ADSREnvelopeComponent` is a JUCE-based component that visualizes the ADSR curve using three quadratic Bézier segments. These represent transitions between the envelope phases. The curve is defined by four main points (start, peak, sustain, end) and three control points that determine curvature.
+
+Users can manipulate the envelope either through rotary sliders or by dragging handles within the graphical view. Endpoint and control point positions are mapped between real-world values and pixel coordinates. Sliders are linked to the audio engine using `AudioProcessorValueTreeState::SliderAttachment`.
+
+Dragging endpoints updates ADSR values while enforcing timing constraints. Off-curve control points alter Bézier curvature and are stored in dedicated curve sliders (e.g. `attackCurveXSlider`).
+
+=== Envelope State Visualization
+
+To enhance feedback, the envelope includes a playhead visualization showing the phase of each active voice in real-time. Colored markers and guide lines move across the curve based on current phase and timing.
+
+This is updated at 60Hz using a timer, which queries per-voice state from a dedicated collector. The vertical position of each playhead is computed using Bézier interpolation via the `getYForX(x)` method.
+
+=== State Collector
+
+Each voice's envelope state is tracked using `EnvelopeStateCollector`, which stores atomic `EnvelopeInfo` structures. These hold the current state (e.g., ATTACK, DECAY) and elapsed time.
+
+When rendering a voice, its state is updated:
+
+```cpp
+envelopeStateCollectorA->setEnvelopeState(voiceIndex, envGenA.getCurrentState(), envGenA.getCurrentStateTimer());
+```
+
+And queried for GUI updates:
+
+```cpp
+auto states = envelopeStateCollector->getEnvelopeStateSnapshot();
+```
+
+This architecture decouples DSP-thread state from the GUI, ensuring thread safety and consistent feedback.
+
+
 = Discussion
 
 Reflect on the project as a whole. Reflect on what was difficult and what did you learn? In what direction could the work be taken in the future?
