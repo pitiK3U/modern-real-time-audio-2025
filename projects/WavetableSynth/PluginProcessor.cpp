@@ -240,8 +240,8 @@ typename DSP::Parameter<FloatType>::EffectEvaluator getDSPParameterEffect(Waveta
 template <typename FloatType>
 void WavetableSynthAudioProcessor::applyParameterEffect(ParameterID settingParameter, ParameterID dspParameterID, FloatType effectMultiplier, DspGetter<FloatType> getDSP)
 {
-    // auto effect = getParameterEffect<FloatType>(settingParameter);
-    auto effect = getDSPParameterEffect<FloatType>(dspParameterID);
+    auto effect = getParameterEffect<FloatType>(settingParameter);
+    // auto effect = getDSPParameterEffect<FloatType>(dspParameterID);
 
     
     if (Param::ID::WavetablePosition.compare(settingParameter) == 0) {

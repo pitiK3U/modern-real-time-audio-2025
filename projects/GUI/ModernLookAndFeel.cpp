@@ -72,4 +72,32 @@ void ModernLookAndFeel::drawRotarySlider(
     // pointer
     g.setColour (juce::Colours::white);
     g.fillPath (p);
+
+    slider.setColour(Slider::textBoxBackgroundColourId, Colour(44,53,70));
+    slider.setColour(Slider::textBoxTextColourId, Colour(104,130,179));
+    slider.setColour(Slider::textBoxOutlineColourId, Colours::black);
+}
+
+void ModernLookAndFeel::drawButtonBackground (Graphics& g,
+    Button& button,
+    const Colour& backgroundColour,
+    bool shouldDrawButtonAsHighlighted,
+    bool shouldDrawButtonAsDown)
+{
+  auto cornerSize = 6.0f;
+  auto bounds = button.getLocalBounds().toFloat().reduced(0.5f, 0.5f);
+
+  auto baseColour =
+      backgroundColour
+          .withMultipliedSaturation(button.hasKeyboardFocus(true) ? 1.3f : 0.9f)
+          .withMultipliedAlpha(button.isEnabled() ? 1.0f : 0.5f);
+
+  if (shouldDrawButtonAsDown || shouldDrawButtonAsHighlighted)
+    baseColour = baseColour.contrasting(shouldDrawButtonAsDown ? 0.2f : 0.05f);
+
+  g.setColour(baseColour);
+  g.fillRect(bounds);
+  
+  g.setColour(button.findColour(ComboBox::outlineColourId));
+  g.drawRect(bounds, 1.0f);
 }
