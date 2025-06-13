@@ -71,6 +71,8 @@
 
 = Introduction
 
+The overview of the project is mixed explained in #ref(<background>), since we are already above 6 pages.
+
 #alert[
 Write an introductory section, giving an overview of the project and explaining the motivation behind it.
 
@@ -95,7 +97,7 @@ Since the audio plugins are often very costly, especially for a teenager, I alwa
   ]
 ) <massive>
 
-= Background
+= Background <background>
 
 #alert[
 Write here about the theoretical background of the work, the algorithms used.
@@ -195,24 +197,6 @@ Afterwards, the filter for each channel is processed and combined together using
 == LFO
 The LFO provides the usual types: sine, square, triangle and sawtooth wave. The LFO uses the aliased version and calculates the value on the go (no wavetable used for the lfo). The frequency of the LFO is a public `Parameter` to allow changing it using the effects with selected component.
 
-```cpp
-case Waveform::Sine:
-    value = std::sin (2.0f * juce::MathConstants<float>::pi * phase);
-    break;
-
-case Waveform::Square:
-    value = (phase < 0.5f ?  1.0f : -1.0f);
-    break;
-
-case Waveform::Triangle:
-    value = 4.0f * std::abs (phase - 0.5f) - 1.0f;
-    break;
-
-case Waveform::Sawtooth:
-    value = 2.0f * (phase - 0.5f);
-    break;
-```
-
 == Envelope
 
 In the current implementation only the "Envelope A" affects the volume of the synth voice, while the "Envelope B" is only used for the custom effects.
@@ -306,8 +290,8 @@ To visualize the waveforms from the presets in the UI, a preview is extracted us
 
 = Discussion
 
-Reflect on the project as a whole. Reflect on what was difficult and what did you learn? In what direction could the work be taken in the future?
+#alert[Reflect on the project as a whole. Reflect on what was difficult and what did you learn? In what direction could the work be taken in the future?]
 
 As synthetizer are quite robust plugins there is a lot still that can be improved or added. Many wavetable synthetizers provide their own reverbs, more filter, but we could also add multiple oscillators instead of just one.
 
-- Pre-calculation of waveform lerps
+In case of the wavetable, it could be extended to precompute the lerps between waveform.
